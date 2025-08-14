@@ -1,0 +1,5 @@
+websockets
+requests
+python-dotenv
+aiohttp
+pytz
