@@ -21,7 +21,7 @@ RECONNECT_DELAY = 5  # seconds to wait before reconnecting
 # Shared WebSocket connection object
 ws = None
 # URL for the keep-alive endpoint
-KEEP_ALIVE_URL = f"http://localhost:{PORT}/keep-alive"
+KEEP_ALIVE_URL = f"https://meow-bot-ps.onrender.com/keep-alive"
 # -----------------------------------------------------------------------------
 # Bot Logic Functions
 # -----------------------------------------------------------------------------
