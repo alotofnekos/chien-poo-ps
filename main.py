@@ -4,7 +4,10 @@ import os
 import requests
 from dotenv import load_dotenv
 import json
-from tn import main as tours_main, listen_for_messages as tours_listen, scheduled_tours as tours_schedule
+import aiohttp
+import random
+from aiohttp import web
+from tn import listen_for_messages, scheduled_tours
 
 load_dotenv()
 
@@ -12,178 +15,140 @@ USERNAME = os.getenv("PS_USERNAME")
 PASSWORD = os.getenv("PS_PASSWORD")
 ROOM = os.getenv("ROOM", "monotype")
 SERVER = "wss://sim3.psim.us/showdown/websocket"
+PORT = int(os.getenv("PORT", 8080))
+RECONNECT_DELAY = 5  # seconds to wait before reconnecting
 
+# Shared WebSocket connection object
 ws = None
-
-# The HTML box content to send
-HTML_BOX_MESSAGE = '/addhtmlbox <a href="#" target="_blank" style="text-decoration: none; color: #000; background: linear-gradient(135deg, #EE99AC 0%, #705898 100%); padding: 1rem; border: .125rem solid transparent; border-radius: .25rem; display: flex;"><table cellpadding="0" cellspacing="0" width="100%"><tr><td style="background-color: rgba(255, 255, 255, 75%); padding: 1rem; border-radius: .25rem; font-size: .875rem;" valign="middle">Flutter Mane is the Pokemon of the day! What sets do you like using on it? How would you support it on its respective typings?</td><td style="width: 1rem;"></td><td valign="middle" style="padding: 1.5rem; border-radius: 100rem; border: .125rem solid #00d4ff;"><img src="https://www.smogon.com/dex/media/sprites//xy/flutter_mane.gif" width="90" height="82" style="vertical-align: middle"></td></tr></table></a>'
+# URL for the keep-alive endpoint
+KEEP_ALIVE_URL = f"http://localhost:{PORT}/keep-alive"
+# -----------------------------------------------------------------------------
+# Bot Logic Functions
+# -----------------------------------------------------------------------------
 
 async def login():
+    """Handles the login process and sets the global WebSocket object."""
     global ws
     print("Connecting to Pokemon Showdown...")
-    ws = await websockets.connect(SERVER)
-
+    
+    try:
+        ws = await websockets.connect(SERVER)
+    except Exception as e:
+        print(f"Failed to connect to WebSocket: {e}")
+        return False
+        
     while True:
         try:
             msg = await ws.recv()
-            print(f"Received: {msg[:100]}...")  # Debug output
+            print(f"Received: {msg[:100]}...")
 
             if "|challstr|" in msg:
                 challstr = msg.split("|challstr|")[1].strip()
                 print(f"Got challstr: {challstr[:20]}...")
-
-                # Login request
+                
                 resp = requests.post("https://play.pokemonshowdown.com/action.php", data={
                     'act': 'login',
                     'name': USERNAME,
                     'pass': PASSWORD,
                     'challstr': challstr
                 })
-
+                
                 if resp.status_code != 200:
                     print(f"Login request failed with status: {resp.status_code}")
-                    continue
-
+                    return False
+                
                 response_text = resp.text.strip()
-                print(f"Login response: {response_text[:100]}...")
-
                 if response_text.startswith(']'):
                     response_text = response_text[1:]
-
+                
                 try:
                     response_data = json.loads(response_text)
                     if 'assertion' not in response_data:
                         print(f"Login failed: {response_data}")
-                        continue
+                        return False
                     assertion = response_data['assertion']
-                    print("Successfully parsed JSON response")
                 except json.JSONDecodeError:
-                    if response_text.startswith(';;'):
-                        print(f"Login error: {response_text}")
-                        continue
-                    elif len(response_text) > 10:
-                        assertion = response_text
-                        print("Using response text as assertion")
-                    else:
-                        print(f"Unexpected response format: {response_text}")
-                        continue
-
+                    print(f"Unexpected response format: {response_text}")
+                    return False
+                
                 await ws.send(f"|/trn {USERNAME},0,{assertion}")
                 print("Login command sent")
+                await asyncio.sleep(1)
                 break
-
-        except websockets.exceptions.ConnectionClosed:
-            print("Connection closed during login")
-            raise
         except Exception as e:
             print(f"Error during login: {e}")
-            raise
+            return False
+    return True
 
 async def join_room():
+    """Joins the room and sets the bot's avatar."""
     await ws.send(f"|/join {ROOM}")
     print(f"Joined room: {ROOM}")
     await asyncio.sleep(0.5)
-    await ws.send(f"|/avatar pokekidf-gen8") # Set avatar
+    await ws.send(f"|/avatar pokekidf-gen8")
     print(f"Set avatar for {USERNAME}")
 
-async def send_html_box():
-    """Sends the HTML box message to the room."""
-    # Try the correct format for room commands
-    await ws.send(f"{ROOM}|{HTML_BOX_MESSAGE}")
-    print(f"Sent HTML box to room: {ROOM}")
+async def handle_keep_alive(request):
+    """Simple handler for the keep-alive endpoint."""
+    return web.Response(text="I'm awake!")
 
-async def send_test_message():
-    """Sends a simple test message to verify room messaging works."""
-    test_msg = "Meow!"
-    await ws.send(f"{ROOM}|{test_msg}")
-    print(f"Sent test message to room: {ROOM}")
+async def start_web_server():
+    """Starts the web server."""
+    app = web.Application()
+    app.router.add_get('/keep-alive', handle_keep_alive)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', PORT)
+    await site.start()
+    print(f"Web server started on port {PORT}")
+    await asyncio.Event().wait()
 
-#async def scheduled_tasks():
-#    """Schedules the initial and repeating HTML box messages."""
-#    # Send a test message first
-#    await asyncio.sleep(5)  
-#    await send_test_message()
-#    print(f"Sent initial test message to room: {ROOM}")
-    
-#    await asyncio.sleep(1 * 60)  
-#    await send_html_box()
-#    print(f"Sent initial HTML box to room: {ROOM}")
-
-#    while True:
-#        await asyncio.sleep(120 * 60) 
-#        await send_html_box()
-
-async def handle_messages():
-    print("Starting message handler...")
+async def keep_alive_loop():
+    """A loop that sends a request to the server every few minutes."""
     while True:
         try:
-            msg = await ws.recv()
-            
-            # Debug: Print all messages to see what we're receiving
-            if f">{ROOM}" in msg:
-                print(f"Room message received: {msg}")
-            
-            # Check if it's a chat message in our room
-            if f">{ROOM}" in msg and "|c|" in msg:
-                lines = msg.split('\n')
-                for line in lines:
-                    if line.startswith(f">{ROOM}") and "|c|" in line:
-                        parts = line.split("|")
-                        if len(parts) >= 4 and parts[1] == "c":
-                            user = parts[2].strip()
-                            message = "|".join(parts[3:]).strip()
-                            
-                            print(f"Chat from {user}: {message}")
-            
-            # Handle private messages
-            elif "|pm|" in msg:
-                lines = msg.split('\n')
-                for line in lines:
-                    if "|pm|" in line:
-                        parts = line.split("|")
-                        if len(parts) >= 5 and parts[1] == "pm":
-                            from_user = parts[2].strip()
-                            to_user = parts[3].strip()
-                            message = "|".join(parts[4:]).strip()
-                            
-                            # Prevent the bot from replying to itself
-                            if from_user.lower() == USERNAME.lower():
-                                continue
-
-                            else:
-                                pm_response = f"|/pm {from_user}, Meow! I'm still in progress!"
-                                await ws.send(pm_response)
-                                print(f"Sent auto PM response: {pm_response}")
-
-        except websockets.exceptions.ConnectionClosed:
-            print("Connection closed")
-            break
+            async with aiohttp.ClientSession() as session:
+                async with session.get(KEEP_ALIVE_URL) as resp:
+                    print(f"Keep-alive ping sent, status: {resp.status}")
         except Exception as e:
-            print(f"Error in message handler: {e}")
-            break
-
-async def main():
-    try:
-        await login()
-        await asyncio.sleep(1)
-        await join_room()
+            print(f"Keep-alive failed: {e}")
         
-        await asyncio.gather(
-            tours_schedule(ws, ROOM),
-            tours_listen(ws, ROOM), 
-            #scheduled_tasks(),
-        )
+        await asyncio.sleep(random.randint(1, 15) * 60) 
 
-    except Exception as e:
-        print(f"Error in main: {e}")
-    finally:
-        if ws:
-            await ws.close()
-            print("WebSocket connection closed")
+
+async def run_bot():
+    """The main function to run the bot's tasks after login."""
+    global ws
+    await join_room()
+
+    await asyncio.gather(
+        start_web_server(),
+        keep_alive_loop(),
+        scheduled_tours(ws, ROOM),
+        listen_for_messages(ws, ROOM),
+    )
+
+async def main_reconnection_loop():
+    """Main loop with reconnection logic."""
+    while True:
+        try:
+            success = await login()
+            if success:
+                await run_bot()
+        except (websockets.exceptions.ConnectionClosed, ConnectionRefusedError) as e:
+            print(f"Connection closed, attempting to reconnect in {RECONNECT_DELAY} seconds... Error: {e}")
+            if ws and not ws.closed:
+                await ws.close()
+            await asyncio.sleep(RECONNECT_DELAY)
+        except Exception as e:
+            print(f"An unexpected error occurred, attempting to reconnect in {RECONNECT_DELAY} seconds... Error: {e}")
+            if ws and not ws.closed:
+                await ws.close()
+            await asyncio.sleep(RECONNECT_DELAY)
 
 if __name__ == "__main__":
     try:
-        asyncio.run(main())
+        asyncio.run(main_reconnection_loop())
     except KeyboardInterrupt:
         print("Bot stopped by user.")
     except Exception as e:
