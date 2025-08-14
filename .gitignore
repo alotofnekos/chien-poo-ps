@@ -1,0 +1,15 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Environment variables
+.env
+
+# Logs
+*.log
+
+# VSCode config (optional)
+.vscode/
+
+# macOS metadata (optional)
+.DS_Store

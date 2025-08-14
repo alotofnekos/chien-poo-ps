@@ -1,0 +1,50 @@
+[
+{
+  "Tour": "UU",
+  "Code": "/tour new gen9monotype,elimination,,,UU Monotype\n/tour rules -Garchomp, -Ogerpon-wellspring, -Tornadus-therian, -Gliscor, -Cinderace, -Terapagos, -Hippowdon, -Scizor, -Spectrier, -Dragonite, -Kyurem, -Archaludon, -Iron Hands, -Great Tusk, -Ceruledge, -Corviknight, -Meowscarada, -Clodsire, -Hatterene, -Volcarona, -Greninja, -Flutter Mane, -Landorus-Base, -Ogerpon-Hearthflame, -Dragapult, -Iron Valiant, -Heatran, -Skarmory, -Iron Treads, -Sneasler, -Gholdengo, -Goodra-Hisui, -Toxapex, -Latios, -Urshifu*, -Ting-Lu, -Gallade, -Samurott-Hisui, -Pelipper, -Politoed, -Darkrai, -Zoroark-Hisui, -Mamoswine, -Roaring Moon, -Excadrill, -Araquanid, -Weezing-galar, -Swampert, -Barraskewda, -Brambleghast, -Raging Bolt\n!rfaq uu"
+},
+{
+    "Tour":"LC",
+    "Code":"/tour new gen9LC, elim,,,Monotype LC\n/tour rules sametypeclause, terastalclause, -Damp Rock, -Icy Rock, -King's Rock, -Quick Claw, -Minccino, -Meowth, +Diglett-Base, +Porygon, +Vulpix, +Vulpix-Alola, +Magby, +Snivy, +Scraggy, +Voltorb-Hisui, +Sticky Web\n/tour setautostart 8\n!rfaq LC"
+},
+{
+    "Tour": "Tera",
+    "Code": "/tour new gen9monotype,elim,,,Monotype Terastal\n/tour autostart 8\n/tour autodq 5\n/tour rules !terastalclause, -Flutter Mane, -Ogerpon-Hearthflame, -Sneasler, -Cresselia, -Spectrier, -Terapagos, -Volcarona, -Dragonite, -Latias, -Latios, -Raging Bolt, -Gliscor, -Heat Rock, -Icy Rock"
+},
+{
+    "Tour": "Ubers",
+    "Code": "/tour new gen9ubers, elim,,,Ubers Monotype\n/tour autostart 8\n/tour autodq 5\n/tour rules Same Type Clause, terastalclause, Evasion Abilities Clause, -Calyrex-Ice, -Koraidon, -Miraidon, -Zacian-Crowned, -Quick Claw"
+},
+{
+    "Tour": "CAP",
+    "Code": "/tour new gen9monotype, elim,,,Mono CAP\n/tour rules +CAP, -Cawmodore, -Fidgit, -Crucibellite, -Heat Rock\n/tour setautostart 8\n/tour autodq 5"
+},
+{
+    "Tour": "Monotype-Wildcard",
+    "Code": "/tour new gen9monotype,elim,,,Monotype Wildcard\n/tour autostart 8\n/tour autodq 5\n/tour rules !Same Type Clause, -Heat Rock\n/wall Gholdengo is restricted to its actual types!"
+},
+{ "Tour": "Monothreat Bug", "Code": "/tour new gen9monotype, elim,,,Monothreat Bug\n/tour rules Force Monotype = Bug" },
+{ "Tour": "Monothreat Dark", "Code": "/tour new gen9monotype, elim,,,Monothreat Dark\n/tour rules Force Monotype = Dark" },
+{ "Tour": "Monothreat Dragon", "Code": "/tour new gen9monotype, elim,,,Monothreat Dragon\n/tour rules Force Monotype = Dragon" },
+{ "Tour": "Monothreat Electric", "Code": "/tour new gen9monotype, elim,,,Monothreat Electric\n/tour rules Force Monotype = Electric" },
+{ "Tour": "Monothreat Fairy", "Code": "/tour new gen9monotype, elim,,,Monothreat Fairy\n/tour rules Force Monotype = Fairy" },
+{ "Tour": "Monothreat Fighting", "Code": "/tour new gen9monotype, elim,,,Monothreat Fighting\n/tour rules Force Monotype = Fighting" },
+{ "Tour": "Monothreat Fire", "Code": "/tour new gen9monotype, elim,,,Monothreat Fire\n/tour rules Force Monotype = Fire" },
+{ "Tour": "Monothreat Flying", "Code": "/tour new gen9monotype, elim,,,Monothreat Flying\n/tour rules Force Monotype = Flying" },
+{ "Tour": "Monothreat Ghost", "Code": "/tour new gen9monotype, elim,,,Monothreat Ghost\n/tour rules Force Monotype = Ghost" },
+{ "Tour": "Monothreat Grass", "Code": "/tour new gen9monotype, elim,,,Monothreat Grass\n/tour rules Force Monotype = Grass" },
+{ "Tour": "Monothreat Ground", "Code": "/tour new gen9monotype, elim,,,Monothreat Ground\n/tour rules Force Monotype = Ground" },
+{ "Tour": "Monothreat Ice", "Code": "/tour new gen9monotype, elim,,,Monothreat Ice\n/tour rules Force Monotype = Ice" },
+{ "Tour": "Monothreat Normal", "Code": "/tour new gen9monotype, elim,,,Monothreat Normal\n/tour rules Force Monotype = Normal" },
+{ "Tour": "Monothreat Poison", "Code": "/tour new gen9monotype, elim,,,Monothreat Poison\n/tour rules Force Monotype = Poison" },
+{ "Tour": "Monothreat Psychic", "Code": "/tour new gen9monotype, elim,,,Monothreat Psychic\n/tour rules Force Monotype = Psychic" },
+{ "Tour": "Monothreat Rock", "Code": "/tour new gen9monotype, elim,,,Monothreat Rock\n/tour rules Force Monotype = Rock" },
+{ "Tour": "Monothreat Steel", "Code": "/tour new gen9monotype, elim,,,Monothreat Steel\n/tour rules Force Monotype = Steel" },
+{ "Tour": "Monothreat Water", "Code": "/tour new gen9monotype, elim,,,Monothreat Water\n/tour rules Force Monotype = Water" },
+{ "Tour":"SV","Code":"/tour new gen9monotype,elimination\n!rfaq samples"},
+{ "Tour":"SS","Code":"/tour new gen9monotype,elimination\n!rfaq samples"},
+{ "Tour":"SM","Code":"/tour new gen9monotype,elimination\n!rfaq samples"},
+{ "Tour":"ORAS","Code":"/tour new gen9monotype,elimination\n!rfaq samples"},
+{ "Tour":"BW","Code":"/tour new gen9monotype,elimination\n!rfaq samples"},
+{ "Tour":"NatDex","Code":"/tour new gen9nationaldexmonotype,elimination\n!rfaq samples"}
+]
