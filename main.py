@@ -113,7 +113,7 @@ async def keep_alive_loop():
         except Exception as e:
             print(f"Keep-alive failed: {e}")
         
-        await asyncio.sleep(random.randint(1, 15) * 60) 
+        await asyncio.sleep(random.randint(1, 14) * 60) 
 
 
 async def run_bot():

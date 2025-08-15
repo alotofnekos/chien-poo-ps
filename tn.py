@@ -59,7 +59,7 @@ async def listen_for_messages(ws, ROOM):
     while True:
         try:
             msg = await ws.recv()
-            print(f"Received: {msg}")
+            #print(f"Received: {msg}")
 
             # Check if the message contains a .png file and belongs to the correct room.
             if f">{ROOM}" in msg and ".png" in msg:
