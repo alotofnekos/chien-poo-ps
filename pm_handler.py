@@ -28,8 +28,9 @@ async def handle_pmmessages(ws, USERNAME, msg):
                     print(f"Received Meow PM from {from_user}: {message}")
                     cat_url = await get_random_cat_url()
                     if cat_url:
-                        pm_response = f"|/pm {from_user}, !show ({cat_url})"
+                        pm_response = f"|/pm {from_user}, !show {cat_url}"
                         await ws.send(pm_response)
+                        await ws.send("Meow! Look at this car :3c")
                         print(f"Sent cat image: {pm_response}")
                 else:
                     pm_response = f"|/pm {from_user}, Meow! I'm still in progress!"

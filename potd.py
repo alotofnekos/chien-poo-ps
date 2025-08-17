@@ -186,7 +186,7 @@ async def build_daily_potd(ws, ROOM):
         Type2 = parts[1] if len(parts) > 1 else None
 
         html_card = await build_potw(pick, Type1, Type2, type_colors)
-        await ws.send(f"{ROOM}|/addhtmlbox {html_card}")
         print(f"Sent POTD for {pick} ({Type1}/{Type2}) to {ROOM}")
         await asyncio.sleep(2 * 60 * 60)  
+        await ws.send(f"{ROOM}|/addhtmlbox {html_card}")
 
