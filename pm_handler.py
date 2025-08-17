@@ -10,10 +10,8 @@ async def get_random_cat_url():
     return None
 
 
-async def handle_pmmessages(ws, USERNAME):
+async def handle_pmmessages(ws, USERNAME,msg):
     while True:
-        msg = await ws.recv()
-        if "|pm|" in msg:
             lines = msg.split('\n')
             for line in lines:
                 if "|pm|" in line:
