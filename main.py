@@ -8,6 +8,7 @@ import aiohttp
 import random
 from aiohttp import web
 from tn import listen_for_messages, scheduled_tours
+from potd import build_daily_potd
 
 load_dotenv()
 
@@ -126,6 +127,7 @@ async def run_bot():
         keep_alive_loop(),
         scheduled_tours(ws, ROOM),
         listen_for_messages(ws, ROOM),
+        build_daily_potd(ws, ROOM)
     )
 
 async def main_reconnection_loop():
