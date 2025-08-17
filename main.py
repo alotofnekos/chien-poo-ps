@@ -9,6 +9,7 @@ import random
 from aiohttp import web
 from tn import listen_for_messages, scheduled_tours
 from potd import build_daily_potd
+from pm_handler import handle_pmmessages
 
 load_dotenv()
 
@@ -87,6 +88,7 @@ async def join_room():
     print(f"Joined room: {ROOM}")
     await asyncio.sleep(0.5)
     await ws.send(f"|/avatar pokekidf-gen8")
+    await ws.send(f"|/status Send 'meow' in PMs :3c")
     print(f"Set avatar for {USERNAME}")
 
 async def handle_keep_alive(request):
@@ -127,7 +129,8 @@ async def run_bot():
         keep_alive_loop(),
         scheduled_tours(ws, ROOM),
         listen_for_messages(ws, ROOM),
-        build_daily_potd(ws, ROOM)
+        build_daily_potd(ws, ROOM),
+        handle_pmmessages(ws, USERNAME)
     )
 
 async def main_reconnection_loop():
