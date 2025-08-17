@@ -7,7 +7,7 @@ async def get_random_cat_url():
             if resp.status == 200:
                 data = await resp.json()
                 return data[0]["url"]  
-    return None
+    return "lol"
 
 
 async def handle_pmmessages(ws, USERNAME, msg):
@@ -28,7 +28,9 @@ async def handle_pmmessages(ws, USERNAME, msg):
                     print(f"Received Meow PM from {from_user}: {message}")
                     cat_url = await get_random_cat_url()
                     if cat_url:
-                        pm_response = f'|/pm {from_user}, /addhtmlbox <img src="{cat_url}">'
+                        pm_response = f'|/pm {from_user}, /addhtmlbox <img src="{cat_url}" height="0" width="0" style="height: auto; width: auto;">'
+                        await ws.send(pm_response)
+                        pm_response = f'|/pm {from_user}, I tried to send this link {cat_url}'
                         await ws.send(pm_response)
                         pm_response = f"|/pm {from_user}, Meow! Look at this car :3c"
                         await ws.send(pm_response)
@@ -37,4 +39,3 @@ async def handle_pmmessages(ws, USERNAME, msg):
                     pm_response = f"|/pm {from_user}, Meow! I'm still in progress!"
                     await ws.send(pm_response)
                     print(f"Sent auto PM response: {pm_response}")
-
