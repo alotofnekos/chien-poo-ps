@@ -2,7 +2,12 @@ import asyncio
 import datetime
 import pytz
 import json
+import os
+from dotenv import load_dotenv
+from pm_handler import handle_pmmessages
+load_dotenv()
 
+USERNAME = os.getenv("PS_USERNAME")
 # Timezone for tour scheduling.
 TIMEZONE = pytz.timezone('US/Eastern')
 
@@ -76,7 +81,8 @@ async def listen_for_messages(ws, ROOM):
                         await random_type_queue.put(random_type)
                 except Exception as e:
                     print(f"Error parsing randtype message: {e}")
-
+            elif f"|{ROOM}|pm|" in msg:
+                await handle_pmmessages(ws, USERNAME)
         except Exception as e:
             print(f"Error in message listener: {e}")
             await asyncio.sleep(1) # Wait a bit before retrying
