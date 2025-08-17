@@ -99,7 +99,7 @@ async def listen_for_messages(ws, ROOM):
                     if elapsed >= 300:  # 5 minutes = 300 seconds
                         cat_url = await get_random_cat_url()
                         if cat_url:
-                            await ws.send(f"{ROOM}|/addhtmlbox {cat_url}")
+                            await ws.send(f'{ROOM}|/addhtmlbox <img src="{cat_url}" height="0" width="0" style="height: auto; width: auto;">')
                             last_showcat[user] = now
                         else:
                             await ws.send(f"{ROOM}| No cat found :(")
