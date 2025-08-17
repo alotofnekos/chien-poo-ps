@@ -82,7 +82,7 @@ async def listen_for_messages(ws, ROOM):
                 except Exception as e:
                     print(f"Error parsing randtype message: {e}")
             elif f"|{ROOM}|pm|" in msg:
-                handle_pmmessages(ws, USERNAME,msg)
+                await handle_pmmessages(ws, USERNAME,msg)
         except Exception as e:
             print(f"Error in message listener: {e}")
             await asyncio.sleep(1) # Wait a bit before retrying
