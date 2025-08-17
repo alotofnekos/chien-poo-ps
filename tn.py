@@ -114,7 +114,7 @@ async def scheduled_tours(ws, ROOM):
                     print(f"It's {tour_hour:02}:{tour_minute:02} on {now.strftime('%A')}. Sending tour commands.")
 
                     if tour_name == "Random Monothreat Type":
-                        await ws.send(f"{ROOM}|!randtype")
+                        await ws.send(f"{ROOM}|/randtype")
                         
                         try:
                             random_type = await asyncio.wait_for(random_type_queue.get(), timeout=10.0)
