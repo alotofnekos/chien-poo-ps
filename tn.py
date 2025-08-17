@@ -4,9 +4,10 @@ import pytz
 import json
 import os
 from dotenv import load_dotenv
-from pm_handler import handle_pmmessages
+from pm_handler import handle_pmmessages, get_random_cat_url
+import time
 load_dotenv()
-
+last_showcat = {}
 USERNAME = os.getenv("PS_USERNAME")
 # Timezone for tour scheduling.
 TIMEZONE = pytz.timezone('US/Eastern')
@@ -63,6 +64,7 @@ async def listen_for_messages(ws, ROOM):
     print("Starting message listener...")
     while True:
         try:
+            global last_showcat
             msg = await ws.recv()
             #print(f"Received: {msg}")
 
@@ -83,6 +85,31 @@ async def listen_for_messages(ws, ROOM):
                     print(f"Error parsing randtype message: {e}")
             elif f"|pm|" in msg:
                 await handle_pmmessages(ws, USERNAME,msg)
+            elif f">{ROOM}" in msg and "showcat" in msg:
+                # Check if user has a special prefix and is privileged
+                parts = msg.split("|")
+                user = parts[2].lstrip()  
+                prefix = user[:1]
+                if prefix in ('%', '@', '#'):
+                    now = time.time()
+                    # Retrieve the last time we showed a cat for this user
+                    last_time = last_showcat.get(user, 0)
+                    elapsed = now - last_time
+
+                    if elapsed >= 300:  # 5 minutes = 300 seconds
+                        cat_url = await get_random_cat_url()
+                        if cat_url:
+                            await ws.send(f"{ROOM}|/addhtmlbox {cat_url}")
+                            last_showcat[user] = now
+                        else:
+                            await ws.send(f"{ROOM}| No cat found :(")
+                else:
+                # Optional: inform user of cooldown or silently ignore
+                    remaining = int(300 - elapsed)
+                    await ws.send(f"{ROOM}| Please wait {remaining} seconds before asking for another cat.")
+            else:
+                pass
+
         except Exception as e:
             print(f"Error in message listener: {e}")
             await asyncio.sleep(1) # Wait a bit before retrying
