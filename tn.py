@@ -81,7 +81,7 @@ async def listen_for_messages(ws, ROOM):
                         await random_type_queue.put(random_type)
                 except Exception as e:
                     print(f"Error parsing randtype message: {e}")
-            elif f"|{ROOM}|pm|" in msg:
+            elif f"|pm|" in msg:
                 await handle_pmmessages(ws, USERNAME,msg)
         except Exception as e:
             print(f"Error in message listener: {e}")
