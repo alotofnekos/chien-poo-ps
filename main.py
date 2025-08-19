@@ -17,7 +17,7 @@ USERNAME = os.getenv("PS_USERNAME")
 PASSWORD = os.getenv("PS_PASSWORD")
 ROOM = os.getenv("ROOM", "monotype")
 SERVER = "wss://sim3.psim.us/showdown/websocket"
-PORT = int(os.getenv("PORT", 8080))
+PORT = 10000
 RECONNECT_DELAY = 5  # seconds to wait before reconnecting
 
 # Shared WebSocket connection object
