@@ -69,9 +69,9 @@ async def listen_for_messages(ws, ROOM):
             global last_showcat
             msg = await ws.recv()
             #print(f"Received: {msg}")
-
-            # Check if the message contains a .png file and belongs to the correct room.
-            if f">{ROOM}" in msg:
+            if f"|pm|" in msg:
+                await handle_pmmessages(ws, USERNAME,msg)
+            elif f"|c:|" in msg:
                 if "meow" in msg:
                     parts = msg.split("|")
                     user = parts[2].lstrip()  
@@ -105,8 +105,7 @@ async def listen_for_messages(ws, ROOM):
                             await ws.send(f"{ROOM}|Meow is still in progress! Please wait for Neko to finish meow.")
                 if "You cannot have a tournament until" in msg:
                     await ws.send(f"{ROOM}|There's a tour going on right meow...")
-            elif f"|pm|" in msg:
-                await handle_pmmessages(ws, USERNAME,msg)
+            
             else:
                 pass
 
