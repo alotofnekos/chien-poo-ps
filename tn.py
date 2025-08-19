@@ -72,12 +72,12 @@ async def listen_for_messages(ws, ROOM):
             if f"|pm|" in msg:
                 await handle_pmmessages(ws, USERNAME,msg)
             elif f"|c:|" in msg:
-                if "meow" in msg:
-                    parts = msg.split("|")
-                    user = parts[2].lstrip()  
-                    msg_text = parts[3].strip()  
-                    prefix = user[:1]
-
+                # Syntax example: |c:|1755238230| ArkenCiel|ltranc are you here
+                parts = msg.split("|")
+                user    = parts[3].strip()     # "ArkenCiel"
+                msg_text = parts[4].strip()    # "ltranc are you here"
+                prefix  = user[:1]             # "A"
+                if "meow" in msg_text.lower():
                     if prefix in ('%', '@', '#'):  # auth check
                         print(f"Received: {msg} from {user} with message: {msg_text}")
 
@@ -102,7 +102,7 @@ async def listen_for_messages(ws, ROOM):
                                 send_potd(ws, ROOM)
                                 await ws.send(f"{ROOM}|Meow sent the Pokémon of the day!")
                         else:
-                            await ws.send(f"{ROOM}|Meow is still in progress! Please wait for Neko to finish meow.")
+                            await ws.send(f"{ROOM}|Meow :3")
                 if "You cannot have a tournament until" in msg:
                     await ws.send(f"{ROOM}|There's a tour going on right meow...")
             
