@@ -47,7 +47,8 @@ async def handle_root(request):
         <p class="status {('connected' if 'Connected' in connection_status else 'disconnected')}">
             {connection_status}
         </p>
-        <p>The web server is running independently of the Pokémon Showdown connection.</p>
+        <p>The web server shows the status of Meow. If its down and this page isnt down, it means the bot has trouble connecting to PS.</p>
+        <p>If you cant see this page, contact Neko immediately.</p>
         <p>This page automatically refreshes every 5 seconds.</p>
     </body>
     </html>
@@ -76,7 +77,7 @@ async def start_web_server():
 async def login(ws):
     """Login to PS using the provided websocket connection."""
     global connection_status
-    connection_status = "Trying to connect to Pokémon Showdown..."
+    connection_status = "Trying to connect to Pokemon Showdown..."
     print(connection_status)
 
     try:
@@ -109,7 +110,7 @@ async def login(ws):
         assertion = response_data['assertion']
         await ws.send(f"|/trn {USERNAME},0,{assertion}")
         await asyncio.sleep(2)  # short wait for PS to process
-        connection_status = "Connected to Pokémon Showdown!"
+        connection_status = "Connected to Pokemon Showdown!"
         return True
 
     except Exception as e:
