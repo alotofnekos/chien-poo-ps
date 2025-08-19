@@ -27,11 +27,12 @@ backoff = RECONNECT_DELAY
 
 KEEP_ALIVE_URL = f"https://meow-bot-ps.onrender.com/keep-alive"
 
+
 # -----------------------------------------------------------------------------
 # Web server endpoints
 # -----------------------------------------------------------------------------
 async def handle_root(request):
-    cat= await get_random_cat_url() 
+    cat = await get_random_cat_url()
     global connection_status, backoff
     refresh_time = max(backoff, 30)
     html_content = f"""
@@ -49,33 +50,35 @@ async def handle_root(request):
     </head>
     <body>
         <h1>Meow Bot Status</h1>
-        <img class="cat-photo" src="{cat}" alt="Random Cat" height =200/>
+        <img class="cat-photo" src="{cat}" alt="Random Cat" height="200"/>
         <p class="status {('connected' if 'Connected' in connection_status else 'disconnected')}">
             {connection_status}
         </p>
-        <p>The web server shows the status of Meow. If its down and this page isnt down, it means the bot has trouble connecting to PS.</p>
-        <p>If you cant see this page, contact Neko immediately.</p>
+        <p>The web server shows the status of Meow. If it's down and this page isn't down, it means the bot has trouble connecting to PS.</p>
+        <p>If you can't see this page, contact Neko immediately.</p>
         <p>This page automatically refreshes every {refresh_time} seconds.</p>
     </body>
     </html>
     """
     return web.Response(text=html_content, content_type="text/html")
 
+
 async def handle_keep_alive(request):
     global connection_status
     return web.json_response({"status": connection_status})
+
 
 async def start_web_server():
     app = web.Application()
     app.router.add_get('/', handle_root)
     app.router.add_get('/keep-alive', handle_keep_alive)
-
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, '0.0.0.0', PORT)
     await site.start()
     print(f"Web server started on port {PORT}")
-    await asyncio.Event().wait()  # keep running forever
+    await asyncio.Event().wait()
+
 
 # -----------------------------------------------------------------------------
 # Pokémon Showdown login + room join
@@ -87,18 +90,30 @@ async def login(ws):
     print(connection_status)
 
     try:
-        msg = await asyncio.wait_for(ws.recv(), timeout=10)
-        if "|challstr|" not in msg:
-            connection_status = "Login failed: No challstr"
-            return False
+        # Loop to find the challstr message
+        while True:
+            msg = await asyncio.wait_for(ws.recv(), timeout=10)
+            print(f"[DEBUG] Received message: {msg[:100]}...")  # Added for debugging
+            if "|challstr|" in msg:
+                print("[DEBUG] Found challstr.")  # Added for debugging
+                challstr = msg.split("|challstr|")[1].strip()
+                break  # Exit the loop once challstr is found
+            else:
+                print("[DEBUG] Challstr not in this message, waiting for next...")  # Added for debugging
 
-        challstr = msg.split("|challstr|")[1].strip()
-        resp = requests.post("https://play.pokemonshowdown.com/action.php", data={
-            'act': 'login',
-            'name': USERNAME,
-            'pass': PASSWORD,
-            'challstr': challstr
-        })
+        # Rest of your login logic
+        resp = requests.post(
+            "https://play.pokemonshowdown.com/action.php",
+            data={
+                'act': 'login',
+                'name': USERNAME,
+                'pass': PASSWORD,
+                'challstr': challstr
+            }
+        )
+
+        print(f"[DEBUG] Login HTTP response code: {resp.status_code}")
+        print(f"[DEBUG] Raw login response text: {resp.text[:300]}... (truncated)")
 
         if resp.status_code != 200:
             connection_status = "Login failed: HTTP error"
@@ -107,22 +122,32 @@ async def login(ws):
         response_text = resp.text.strip()
         if response_text.startswith(']'):
             response_text = response_text[1:]
+        print(f"[DEBUG] Cleaned response text: {response_text[:300]}... (truncated)")
+
         response_data = json.loads(response_text)
+        print(f"[DEBUG] Parsed response JSON: {response_data}")
 
         if 'assertion' not in response_data:
             connection_status = "Login failed: No assertion"
+            print("[DEBUG] Assertion missing in response JSON")
             return False
 
         assertion = response_data['assertion']
+        print(f"[DEBUG] Got assertion: {assertion[:100]}... (truncated)")
+
         await ws.send(f"|/trn {USERNAME},0,{assertion}")
+        print(f"[DEBUG] Sent /trn command for user {USERNAME}")
+
         await asyncio.sleep(2)  # short wait for PS to process
         connection_status = "Connected to Pokemon Showdown!"
+        print("[DEBUG] Login successful")
         return True
 
     except Exception as e:
-        print(f"Login error: {e}")
+        print(f"[DEBUG] Exception during login: {e}")
         connection_status = "Login failed"
         return False
+
 
 async def join_room(ws):
     """Joins the room and sets avatar/status."""
@@ -131,6 +156,7 @@ async def join_room(ws):
     await ws.send(f"|/avatar pokekidf-gen8")
     await ws.send(f"|/status Send 'meow' in PMs :3c")
     print(f"Joined room {ROOM} as {USERNAME}")
+
 
 # -----------------------------------------------------------------------------
 # Keep-alive pinger
@@ -144,6 +170,7 @@ async def keep_alive_loop(session: aiohttp.ClientSession):
             print(f"Keep-alive failed: {e}")
 
         await asyncio.sleep(random.randint(1, 14) * 60)
+
 
 # -----------------------------------------------------------------------------
 # Bot main loop
@@ -184,8 +211,8 @@ async def main_bot_logic():
             print(f"Unexpected error: {e}. Retrying in {backoff}s...")
             connection_status = "Error, reconnecting..."
             await asyncio.sleep(backoff)
-
             backoff = min(backoff * 2, 300) + random.randint(0, 5)
+
 
 # -----------------------------------------------------------------------------
 # Entrypoint
@@ -197,6 +224,7 @@ async def main():
             main_bot_logic(),
             keep_alive_loop(session)
         )
+
 
 if __name__ == "__main__":
     try:
