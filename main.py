@@ -7,6 +7,7 @@ import json
 import aiohttp
 from aiohttp import web
 import random
+from websockets.exceptions import ConnectionClosed
 from tn import listen_for_messages, scheduled_tours
 from potd import build_daily_potd
 
@@ -162,12 +163,17 @@ async def main_bot_logic():
                     build_daily_potd(ws, ROOM)
                 )
 
-        except (websockets.exceptions.ConnectionClosed, ConnectionRefusedError) as e:
-            print(f"Connection issue: {e}. Retrying in {backoff}s...")
-            connection_status = "Disconnected, reconnecting..."
-            await asyncio.sleep(backoff)
 
-            # Exponential backoff with jitter (random extra delay)
+        except ConnectionClosed as e:
+            print(f"PS closed the connection: code={e.code}, reason={e.reason}. Retrying in {backoff}s...")
+            connection_status = f"Disconnected: {e.reason or 'No reason given'}. Retrying in {backoff}s..."
+            await asyncio.sleep(backoff)
+            backoff = min(backoff * 2, 300) + random.randint(0, 5)
+
+        except ConnectionRefusedError as e:
+            print(f"Connection refused: {e}, Retrying in {backoff}s...")
+            connection_status = "Connection refused, retrying in {backoff}s..."
+            await asyncio.sleep(backoff)
             backoff = min(backoff * 2, 300) + random.randint(0, 5)
 
         except Exception as e:
