@@ -114,7 +114,7 @@ async def login():
             await ws.send(f"|/trn {USERNAME},0,{assertion}")
             print("Login command sent")
             # Wait for a success message from PS
-            await asyncio.sleep(2)
+            await asyncio.sleep(60)
             connection_status = "Connected to Pokémon Showdown!"
             return True
         else:
@@ -144,8 +144,11 @@ async def join_room():
         print("WebSocket is not open. Cannot join room.")
 
 async def handle_keep_alive(request):
-    """Simple handler for the keep-alive endpoint."""
-    return web.Response(text="I'm awake!")
+    """
+    Handler for the keep-alive endpoint, returns the bot's current status.
+    """
+    global connection_status
+    return web.json_response({"status": connection_status})
 
 async def start_web_server():
     """Starts the web server."""
