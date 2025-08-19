@@ -143,18 +143,18 @@ async def keep_alive_loop(session: aiohttp.ClientSession):
 # -----------------------------------------------------------------------------
 async def main_bot_logic():
     global connection_status
+    backoff = RECONNECT_DELAY
+
     while True:
         try:
-            # Each attempt creates a fresh connection that will be closed by async with
             async with websockets.connect(SERVER) as ws:
                 success = await login(ws)
                 if not success:
-                    await asyncio.sleep(RECONNECT_DELAY)
-                    continue
+                    raise ConnectionRefusedError("Login failed")
 
                 await join_room(ws)
+                backoff = RECONNECT_DELAY  # reset on success
 
-                # Run bot tasks until WS closes
                 await asyncio.gather(
                     scheduled_tours(ws, ROOM),
                     listen_for_messages(ws, ROOM),
@@ -162,14 +162,19 @@ async def main_bot_logic():
                 )
 
         except (websockets.exceptions.ConnectionClosed, ConnectionRefusedError) as e:
-            print(f"Connection closed: {e}. Reconnecting in {RECONNECT_DELAY}s...")
+            print(f"Connection issue: {e}. Retrying in {backoff}s...")
             connection_status = "Disconnected, reconnecting..."
-            await asyncio.sleep(RECONNECT_DELAY)
+            await asyncio.sleep(backoff)
+
+            # Exponential backoff with jitter (random extra delay)
+            backoff = min(backoff * 2, 300) + random.randint(0, 5)
 
         except Exception as e:
-            print(f"Unexpected bot error: {e}. Reconnecting in {RECONNECT_DELAY}s...")
+            print(f"Unexpected error: {e}. Retrying in {backoff}s...")
             connection_status = "Error, reconnecting..."
-            await asyncio.sleep(RECONNECT_DELAY)
+            await asyncio.sleep(backoff)
+
+            backoff = min(backoff * 2, 300) + random.randint(0, 5)
 
 # -----------------------------------------------------------------------------
 # Entrypoint
