@@ -173,20 +173,27 @@ async def build_potw(Pokemon: str, Type1: str | None, Type2: str | None, type_co
     return potw
 
 
+async def send_potd(ws, ROOM):
+    """Build and send the POTD card once to a room via ws."""
+    pokemon_list = load_Pokemon()
+    type_colors = load_type_colors("colors.txt")
+
+    pick, typing = pick_daily_pokemon(pokemon_list, tz="US/Eastern")
+    parts = [p.strip() for p in typing.split("/")]
+
+    Type1 = parts[0] if parts else None
+    Type2 = parts[1] if len(parts) > 1 else None
+
+    html_card = await build_potw(pick, Type1, Type2, type_colors)
+    print(f"Sent POTD for {pick} ({Type1}/{Type2}) to {ROOM}")
+
+    await ws.send(f"{ROOM}|/addhtmlbox {html_card}")
+
+
 async def build_daily_potd(ws, ROOM):
     """Send the POTD card every 2 hours to a room via ws."""
     while True:
-        pokemon_list = load_Pokemon()
-        type_colors = load_type_colors("colors.txt")
+        await asyncio.sleep(2 * 60 * 60)  # wait 2 hours
+        await send_potd(ws, ROOM)
 
-        pick, typing = pick_daily_pokemon(pokemon_list, tz="US/Eastern")
-        parts = [p.strip() for p in typing.split("/")]
-
-        Type1 = parts[0] if parts else None
-        Type2 = parts[1] if len(parts) > 1 else None
-
-        html_card = await build_potw(pick, Type1, Type2, type_colors)
-        print(f"Sent POTD for {pick} ({Type1}/{Type2}) to {ROOM}")
-        await asyncio.sleep(2 * 60 * 60)  
-        await ws.send(f"{ROOM}|/addhtmlbox {html_card}")
 

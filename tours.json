@@ -23,6 +23,12 @@
     "Tour": "Monotype-Wildcard",
     "Code": "/tour new gen9monotype,elim,,,Monotype Wildcard\n/tour autostart 8\n/tour autodq 5\n/tour rules !Same Type Clause, -Heat Rock\n/wall Gholdengo is restricted to its actual types!\n.official"
 },
+{ "Tour":"SV","Code":"/tour new gen9monotype,elimination\n!rfaq samples\n.official"},
+{ "Tour":"SS","Code":"/tour new gen8monotype,elimination\n!rfaq samples\n.official"},
+{ "Tour":"SM","Code":"/tour new gen7monotype,elimination\n!rfaq samples\n.official"},
+{ "Tour":"ORAS","Code":"/tour new gen6monotype,elimination\n!rfaq samples\n.official"},
+{ "Tour":"BW","Code":"/tour new gen5monotype,elimination\n!rfaq samples\n.official"},
+{ "Tour":"NatDex","Code":"/tour new gen9nationaldexmonotype,elimination\n!rfaq samples\n.official"},
 { "Tour": "Monothreat Bug", "Code": "/tour new gen9monotype, elim,,,Monothreat Bug\n/tour rules Force Monotype = Bug\n.official" },
 { "Tour": "Monothreat Dark", "Code": "/tour new gen9monotype, elim,,,Monothreat Dark\n/tour rules Force Monotype = Dark\n.official" },
 { "Tour": "Monothreat Dragon", "Code": "/tour new gen9monotype, elim,,,Monothreat Dragon\n/tour rules Force Monotype = Dragon\n.official" },
@@ -40,11 +46,5 @@
 { "Tour": "Monothreat Psychic", "Code": "/tour new gen9monotype, elim,,,Monothreat Psychic\n/tour rules Force Monotype = Psychic\n.official" },
 { "Tour": "Monothreat Rock", "Code": "/tour new gen9monotype, elim,,,Monothreat Rock\n/tour rules Force Monotype = Rock\n.official" },
 { "Tour": "Monothreat Steel", "Code": "/tour new gen9monotype, elim,,,Monothreat Steel\n/tour rules Force Monotype = Steel\n.official" },
-{ "Tour": "Monothreat Water", "Code": "/tour new gen9monotype, elim,,,Monothreat Water\n/tour rules Force Monotype = Water\n.official" },
-{ "Tour":"SV","Code":"/tour new gen9monotype,elimination\n!rfaq samples\n.official"},
-{ "Tour":"SS","Code":"/tour new gen8monotype,elimination\n!rfaq samples\n.official"},
-{ "Tour":"SM","Code":"/tour new gen7monotype,elimination\n!rfaq samples\n.official"},
-{ "Tour":"ORAS","Code":"/tour new gen6monotype,elimination\n!rfaq samples\n.official"},
-{ "Tour":"BW","Code":"/tour new gen5monotype,elimination\n!rfaq samples\n.official"},
-{ "Tour":"NatDex","Code":"/tour new gen9nationaldexmonotype,elimination\n!rfaq samples\n.official"}
+{ "Tour": "Monothreat Water", "Code": "/tour new gen9monotype, elim,,,Monothreat Water\n/tour rules Force Monotype = Water\n.official" }
 ]

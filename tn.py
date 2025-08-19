@@ -6,6 +6,8 @@ import os
 from dotenv import load_dotenv
 from pm_handler import handle_pmmessages, get_random_cat_url
 import time
+import random
+from potd import send_potd
 load_dotenv()
 last_showcat = {}
 USERNAME = os.getenv("PS_USERNAME")
@@ -69,44 +71,42 @@ async def listen_for_messages(ws, ROOM):
             #print(f"Received: {msg}")
 
             # Check if the message contains a .png file and belongs to the correct room.
-            if f">{ROOM}" in msg and ".png" in msg:
-                try:
-                    # Find the index of the last pipe character.
-                    last_pipe_index = msg.rfind('|')
-                    # Find the index of the '.png' substring.
-                    png_index = msg.find('.png')
-                    # Ensure both are found and in the correct order.
-                    if last_pipe_index != -1 and png_index != -1 and last_pipe_index < png_index:
-                        # Extract the substring between the last pipe and '.png'.
-                        random_type = msg[last_pipe_index + 1:png_index]
-                        print(f"Parsed random type: {random_type}")
-                        await random_type_queue.put(random_type)
-                except Exception as e:
-                    print(f"Error parsing randtype message: {e}")
+            if f">{ROOM}" in msg:
+                if "meow" in msg:
+                    parts = msg.split("|")
+                    user = parts[2].lstrip()  
+                    msg_text = parts[3].strip()  
+                    prefix = user[:1]
+
+                    if prefix in ('%', '@', '#'):  # auth check
+                        print(f"Received: {msg} from {user} with message: {msg_text}")
+
+                        if msg_text.lower().startswith("meow start"):
+                            # Extract tour_name after "meow start"
+                            _, _, tour_name = msg_text.partition("meow start")
+                            tour_name = tour_name.strip()
+
+                            # Make lookup case-insensitive
+                            lower_map = {k.lower(): k for k in TOUR_COMMANDS.keys()}
+
+                            if tour_name.lower() in lower_map:
+                                lookup_key = lower_map[tour_name.lower()]
+                                tour_commands = TOUR_COMMANDS[lookup_key].split('\n')
+                                for command in tour_commands:
+                                    await ws.send(f"{ROOM}|{command.strip()}")
+                            else:
+                                # Send available tour names
+                                available = ", ".join(TOUR_COMMANDS.keys())
+                                await ws.send(f"{ROOM}|Meow couldn’t find '{tour_name}'. Available tours: {available}")
+                        elif msg_text.lower().startswith("meow show potd"):
+                                send_potd(ws, ROOM)
+                                await ws.send(f"{ROOM}|Meow sent the Pokémon of the day!")
+                        else:
+                            await ws.send(f"{ROOM}|Meow is still in progress! Please wait for Neko to finish meow.")
+                if "You cannot have a tournament until" in msg:
+                    await ws.send(f"{ROOM}|There's a tour going on right meow...")
             elif f"|pm|" in msg:
                 await handle_pmmessages(ws, USERNAME,msg)
-            elif f">{ROOM}" in msg and "showcat" in msg:
-                # Check if user has a special prefix and is privileged
-                parts = msg.split("|")
-                user = parts[2].lstrip()  
-                prefix = user[:1]
-                if prefix in ('%', '@', '#'):
-                    now = time.time()
-                    # Retrieve the last time we showed a cat for this user
-                    last_time = last_showcat.get(user, 0)
-                    elapsed = now - last_time
-
-                    if elapsed >= 300:  # 5 minutes = 300 seconds
-                        cat_url = await get_random_cat_url()
-                        if cat_url:
-                            await ws.send(f'{ROOM}|/addhtmlbox <img src="{cat_url}" height="0" width="0" style="height: auto; width: auto;">')
-                            last_showcat[user] = now
-                        else:
-                            await ws.send(f"{ROOM}| No cat found :(")
-                else:
-                # Optional: inform user of cooldown or silently ignore
-                    remaining = int(300 - elapsed)
-                    await ws.send(f"{ROOM}| Please wait {remaining} seconds before asking for another cat.")
             else:
                 pass
 
@@ -123,7 +123,7 @@ async def scheduled_tours(ws, ROOM):
         today_weekday = now.weekday()
         current_hour = now.hour
         current_minute = now.minute
-        print(f"Current time: {now.strftime('%Y-%m-%d %H:%M:%S')} (Weekday: {today_weekday}, Hour: {current_hour}, Minute: {current_minute})")
+        # print(f"Current time: {now.strftime('%Y-%m-%d %H:%M:%S')} (Weekday: {today_weekday}, Hour: {current_hour}, Minute: {current_minute})")
 
         # Only check once per minute to avoid duplicate triggers
         if current_minute == last_check_minute:
@@ -141,29 +141,23 @@ async def scheduled_tours(ws, ROOM):
                     print(f"It's {tour_hour:02}:{tour_minute:02} on {now.strftime('%A')}. Sending tour commands.")
 
                     if tour_name == "Random Monothreat Type":
-                        await ws.send(f"{ROOM}|/randtype")
-                        
-                        try:
-                            random_type = await asyncio.wait_for(random_type_queue.get(), timeout=10.0)
-                            lookup_key = f"Monothreat {random_type}"
-                            if lookup_key in TOUR_COMMANDS:
-                                tour_commands = TOUR_COMMANDS[lookup_key].split('\n')
-                                for command in tour_commands:
-                                    await ws.send(f"{ROOM}|{command.strip()}")
-                            else:
-                                await ws.send(f"{ROOM}|Meow wasnt able to get the random type. Please tell this to Neko")
-                                lookup_key = f"Monothreat Ghost"
-                                if lookup_key in TOUR_COMMANDS:
-                                    tour_commands = TOUR_COMMANDS[lookup_key].split('\n')
-                                    for command in tour_commands:
-                                        await ws.send(f"{ROOM}|{command.strip()}")
-                        except asyncio.TimeoutError:
-                            await ws.send(f"{ROOM}|Meow wasnt able to get the random type. Please tell this to Neko")
-                            lookup_key = f"Monothreat Fairy"
-                            if lookup_key in TOUR_COMMANDS:
-                                tour_commands = TOUR_COMMANDS[lookup_key].split('\n')
-                                for command in tour_commands:
-                                    await ws.send(f"{ROOM}|{command.strip()}")
+                        monothreat_keys = [key for key in TOUR_COMMANDS.keys() if key.startswith("Monothreat")]
+                        if monothreat_keys:
+                            lookup_key = random.choice(monothreat_keys)
+                        else:
+                            # fallback if something goes wrong
+                            await ws.send(f"{ROOM}|Meow wasnt able to pick a random type. Please tell Neko that meow did the dumb.")
+                            lookup_key = "Monothreat Fairy"
+
+                        # Double-check the key exists in TOUR_COMMANDS
+                        if lookup_key in TOUR_COMMANDS:
+                            tour_commands = TOUR_COMMANDS[lookup_key].split('\n')
+                            for command in tour_commands:
+                                await ws.send(f"{ROOM}|{command.strip()}")
+                        else:
+                            # Final fallback if even the chosen key isn't valid
+                            await ws.send(f"{ROOM}|Meow wasnt able to get the monothreat commands. Meow cant start the tour, ask an auth to start it meow.")
+                            await ws.send(f"{ROOM}|Also tell this to Neko meow ;w;")
                     else:
                         if tour_name in TOUR_COMMANDS:
                             tour_commands = TOUR_COMMANDS[tour_name].split('\n')
