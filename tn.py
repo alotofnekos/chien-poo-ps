@@ -102,7 +102,9 @@ async def listen_for_messages(ws, ROOM):
                                 send_potd(ws, ROOM)
                                 await ws.send(f"{ROOM}|Meow sent the Pokémon of the day!")
                         else:
-                            await ws.send(f"{ROOM}|Meow :3")
+                            emotion_bank = [":3", ":3c", ":<", ":c", ";w;", "'w'", "awa", "uwu", "owo","TwT","'x'"]
+                            emotion = random.choice(emotion_bank)
+                            await ws.send(f"{ROOM}|Meow {emotion}")
                 if "You cannot have a tournament until" in msg:
                     await ws.send(f"{ROOM}|There's a tour going on right meow...")
             
