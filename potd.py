@@ -207,8 +207,8 @@ async def send_potd(ws, ROOM):
 async def build_daily_potd(ws, ROOM):
     """Send the POTD card every 2 hours to a room via ws."""
     while True:
-        await send_potd(ws, ROOM)
         await asyncio.sleep(2 * 60 * 60)  # wait 2 hours
+        await send_potd(ws, ROOM)
         
 
 
