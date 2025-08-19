@@ -166,13 +166,13 @@ async def main_bot_logic():
 
         except ConnectionClosed as e:
             print(f"PS closed the connection: code={e.code}, reason={e.reason}. Retrying in {backoff}s...")
-            connection_status = f"Disconnected: {e.reason or 'No reason given'}. Retrying in {backoff}s..."
+            connection_status = f"Disconnected: {e.reason or 'No reason given'} retrying in {backoff}s..."
             await asyncio.sleep(backoff)
             backoff = min(backoff * 2, 300) + random.randint(0, 5)
 
         except ConnectionRefusedError as e:
             print(f"Connection refused: {e}, Retrying in {backoff}s...")
-            connection_status = "Connection refused, retrying in {backoff}s..."
+            connection_status = f"PS refused meow connection, retrying in {backoff}s..."
             await asyncio.sleep(backoff)
             backoff = min(backoff * 2, 300) + random.randint(0, 5)
 
