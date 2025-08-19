@@ -85,13 +85,19 @@ async def fetch_monotype_sentence(mon_name: str) -> str | None:
     if not analysis:
         return None
 
-    # Prefer a random set's description; fallback to overview
+    # Collect set descriptions, but exclude bad intros
     set_descs = []
     sets = analysis.get("sets") or {}
     for set_name, set_obj in sets.items():
         desc_html = (set_obj or {}).get("description")
         if desc_html:
-            set_descs.append(html_to_text(desc_html))
+            text = html_to_text(desc_html)
+            sent = first_sentence(text)
+            if not any(
+                bad in sent.lower()
+                for bad in ["the given ev", "winning set", "sample set"]
+            ):
+                set_descs.append(text)
 
     today = datetime.datetime.now(ZoneInfo("US/Eastern")).date().isoformat()
     seed_int = int(hashlib.sha256(f"{today}:{mon_name}".encode()).hexdigest(), 16)
@@ -100,13 +106,21 @@ async def fetch_monotype_sentence(mon_name: str) -> str | None:
     candidate = None
     if set_descs:
         candidate = rng.choice(set_descs)
-    elif analysis.get("overview"):
-        candidate = html_to_text(analysis["overview"])
+    else:
+        if analysis.get("overview"):
+            text = html_to_text(analysis["overview"])
+            sent = first_sentence(text)
+            if not any(
+                bad in sent.lower()
+                for bad in ["the given ev", "winning set", "sample set"]
+            ):
+                candidate = text
 
     if not candidate:
         return None
 
     return first_sentence(candidate)
+
 
 def load_type_colors(filepath="colors.txt"):
     """
@@ -193,7 +207,8 @@ async def send_potd(ws, ROOM):
 async def build_daily_potd(ws, ROOM):
     """Send the POTD card every 2 hours to a room via ws."""
     while True:
-        await asyncio.sleep(2 * 60 * 60)  # wait 2 hours
         await send_potd(ws, ROOM)
+        await asyncio.sleep(2 * 60 * 60)  # wait 2 hours
+        
 
 
