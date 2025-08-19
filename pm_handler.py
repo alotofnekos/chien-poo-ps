@@ -7,7 +7,7 @@ async def get_random_cat_url():
             if resp.status == 200:
                 data = await resp.json()
                 return data[0]["url"]  
-    return "lol"
+    return "No cat found :("
 
 
 async def handle_pmmessages(ws, USERNAME, msg):

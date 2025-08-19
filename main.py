@@ -10,6 +10,7 @@ import random
 from websockets.exceptions import ConnectionClosed
 from tn import listen_for_messages, scheduled_tours
 from potd import build_daily_potd
+from pm_handler import get_random_cat_url
 
 load_dotenv()
 
@@ -20,8 +21,9 @@ SERVER = "wss://sim3.psim.us/showdown/websocket"
 PORT = int(os.environ.get("PORT", 10000))
 RECONNECT_DELAY = 5  # seconds to wait before reconnecting
 
-# Global connection status only (no ws reference anymore)
+# Global connection status and backoff
 connection_status = "Disconnected"
+backoff = RECONNECT_DELAY
 
 KEEP_ALIVE_URL = f"https://meow-bot-ps.onrender.com/keep-alive"
 
@@ -29,13 +31,15 @@ KEEP_ALIVE_URL = f"https://meow-bot-ps.onrender.com/keep-alive"
 # Web server endpoints
 # -----------------------------------------------------------------------------
 async def handle_root(request):
-    global connection_status
+    cat= await get_random_cat_url() 
+    global connection_status, backoff
+    refresh_time = max(backoff, 30)
     html_content = f"""
     <!DOCTYPE html>
     <html>
     <head>
         <title>Meow Bot Status</title>
-        <meta http-equiv="refresh" content="5">
+        <meta http-equiv="refresh" content="{backoff}">
         <style>
             body {{ font-family: sans-serif; text-align: center; margin-top: 50px; }}
             .status {{ font-size: 2em; font-weight: bold; }}
@@ -45,12 +49,13 @@ async def handle_root(request):
     </head>
     <body>
         <h1>Meow Bot Status</h1>
+        <img class="cat-photo" src="{cat}" alt="Random Cat" height =200/>
         <p class="status {('connected' if 'Connected' in connection_status else 'disconnected')}">
             {connection_status}
         </p>
         <p>The web server shows the status of Meow. If its down and this page isnt down, it means the bot has trouble connecting to PS.</p>
         <p>If you cant see this page, contact Neko immediately.</p>
-        <p>This page automatically refreshes every 5 seconds.</p>
+        <p>This page automatically refreshes every {refresh_time} seconds.</p>
     </body>
     </html>
     """
@@ -144,7 +149,7 @@ async def keep_alive_loop(session: aiohttp.ClientSession):
 # Bot main loop
 # -----------------------------------------------------------------------------
 async def main_bot_logic():
-    global connection_status
+    global connection_status, backoff
     backoff = RECONNECT_DELAY
 
     while True:
@@ -162,7 +167,6 @@ async def main_bot_logic():
                     listen_for_messages(ws, ROOM),
                     build_daily_potd(ws, ROOM)
                 )
-
 
         except ConnectionClosed as e:
             print(f"PS closed the connection: code={e.code}, reason={e.reason}. Retrying in {backoff}s...")
