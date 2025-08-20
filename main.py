@@ -25,7 +25,7 @@ RECONNECT_DELAY = 5  # seconds to wait before reconnecting
 connection_status = "Disconnected"
 backoff = RECONNECT_DELAY
 
-KEEP_ALIVE_URL = f"https://meow-bot-ps.onrender.com/keep-alive"
+KEEP_ALIVE_URL = "https://meow-bot-ps.onrender.com/keep-alive"
 
 
 # -----------------------------------------------------------------------------
@@ -93,15 +93,14 @@ async def login(ws):
         # Loop to find the challstr message
         while True:
             msg = await asyncio.wait_for(ws.recv(), timeout=10)
-            print(f"[DEBUG] Received message: {msg[:100]}...")  # Added for debugging
+            print(f"[DEBUG] Received message: {msg[:100]}...")
             if "|challstr|" in msg:
-                print("[DEBUG] Found challstr.")  # Added for debugging
+                print("[DEBUG] Found challstr.")
                 challstr = msg.split("|challstr|")[1].strip()
-                break  # Exit the loop once challstr is found
+                break
             else:
-                print("[DEBUG] Challstr not in this message, waiting for next...")  # Added for debugging
+                print("[DEBUG] Challstr not in this message, waiting for next...")
 
-        # Rest of your login logic
         resp = requests.post(
             "https://play.pokemonshowdown.com/action.php",
             data={
@@ -219,11 +218,9 @@ async def main_bot_logic():
 # -----------------------------------------------------------------------------
 async def main():
     async with aiohttp.ClientSession() as session:
-        await asyncio.gather(
-            start_web_server(),
-            main_bot_logic(),
-            keep_alive_loop(session)
-        )
+        web_server_task = asyncio.create_task(start_web_server())
+        keep_alive_task = asyncio.create_task(keep_alive_loop(session))
+        await main_bot_logic()
 
 
 if __name__ == "__main__":
