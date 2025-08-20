@@ -8,15 +8,16 @@ import aiohttp
 from aiohttp import web
 import random
 from websockets.exceptions import ConnectionClosed
-from tn import listen_for_messages, scheduled_tours
+from tn import scheduled_tours, load_tour_data
 from potd import build_daily_potd
 from pm_handler import get_random_cat_url
+from rc_handler import listen_for_messages
 
 load_dotenv()
 
 USERNAME = os.getenv("PS_USERNAME")
 PASSWORD = os.getenv("PS_PASSWORD")
-ROOM = os.getenv("ROOM", "monotype")
+ROOMS = ["monotype", "nationaldexmonotype"]
 SERVER = "wss://sim3.psim.us/showdown/websocket"
 PORT = int(os.environ.get("PORT", 10000))
 RECONNECT_DELAY = 5  # seconds to wait before reconnecting
@@ -148,13 +149,15 @@ async def login(ws):
         return False
 
 
-async def join_room(ws):
-    """Joins the room and sets avatar/status."""
-    await ws.send(f"|/join {ROOM}")
-    await asyncio.sleep(0.5)
-    await ws.send(f"|/avatar pokekidf-gen8")
-    await ws.send(f"|/status Send 'meow' in PMs :3c")
-    print(f"Joined room {ROOM} as {USERNAME}")
+async def room_logic(ws, room_name):
+    """Encapsulates the logic for a single room."""
+    await ws.send(f"|/join {room_name}")
+    print(f"Joined room: {room_name}")
+
+    # Run room-specific tasks in the background
+    asyncio.create_task(scheduled_tours(ws, room_name))
+    asyncio.create_task(build_daily_potd(ws, room_name))
+    print(f"Started background tasks for room: {room_name}")
 
 
 # -----------------------------------------------------------------------------
@@ -180,23 +183,35 @@ async def main_bot_logic():
 
     while True:
         try:
-            async with websockets.connect(SERVER) as ws:
+            async with websockets.connect(
+                SERVER,
+                ping_interval=30,   # send a ping every 30s
+                ping_timeout=15     # if no pong within 15s, close the connection
+            ) as ws:
                 success = await login(ws)
                 if not success:
                     raise ConnectionRefusedError("Login failed")
 
-                await join_room(ws)
-                backoff = RECONNECT_DELAY  # reset on success
+                await ws.send(f"|/avatar pokekidf-gen8")
+                await ws.send(f"|/status Send 'meow' in PMs :3c")
 
-                await asyncio.gather(
-                    scheduled_tours(ws, ROOM),
-                    listen_for_messages(ws, ROOM),
-                    build_daily_potd(ws, ROOM)
-                )
+                for room in ROOMS:  
+                    await room_logic(ws, room)
+                    room_commands_map = {room: load_tour_data(room) for room in ROOMS}
+                asyncio.create_task(listen_for_messages(ws,room_commands_map))
+                backoff = RECONNECT_DELAY
+                connection_status = "Connected to Pokemon Showdown!"
+
+                # Keep the connection alive forever
+                await asyncio.Future()  # prevents exiting the `with` block
 
         except ConnectionClosed as e:
-            print(f"PS closed the connection: code={e.code}, reason={e.reason}. Retrying in {backoff}s...")
-            connection_status = f"Disconnected: {e.reason or 'No reason given'} retrying in {backoff}s..."
+            if e.reason is None and e.code == 1006:  # Abnormal close, often from missed heartbeat
+                reason = "missed heartbeat (Meow didnt get a response from PS in time?)"
+            else:
+                reason = e.reason or "No reason given"
+            print(f"PS closed the connection: code={e.code}, reason={reason}. Retrying in {backoff}s...")
+            connection_status = f"Disconnected: {reason} retrying in {backoff}s..."
             await asyncio.sleep(backoff)
             backoff = min(backoff * 2, 300) + random.randint(0, 5)
 
@@ -207,10 +222,12 @@ async def main_bot_logic():
             backoff = min(backoff * 2, 300) + random.randint(0, 5)
 
         except Exception as e:
-            print(f"Unexpected error: {e}. Retrying in {backoff}s...")
+            import traceback
+            print(f"Unexpected error: {e}\n{traceback.format_exc()}")
             connection_status = "Error, reconnecting..."
             await asyncio.sleep(backoff)
             backoff = min(backoff * 2, 300) + random.randint(0, 5)
+
 
 
 # -----------------------------------------------------------------------------
@@ -218,8 +235,8 @@ async def main_bot_logic():
 # -----------------------------------------------------------------------------
 async def main():
     async with aiohttp.ClientSession() as session:
-        web_server_task = asyncio.create_task(start_web_server())
-        keep_alive_task = asyncio.create_task(keep_alive_loop(session))
+        asyncio.create_task(start_web_server())
+        asyncio.create_task(keep_alive_loop(session))
         await main_bot_logic()
 
 

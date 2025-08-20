@@ -10,9 +10,9 @@ from zoneinfo import ZoneInfo
 import aiohttp
 
 # ---------- Data loading ----------
-def load_Pokemon():
+def load_Pokemon(ROOM):
     """Load Pokemon from local JSON file with fields Name, Type (e.g., 'Bug / Dark')."""
-    with open('pokemon.json', 'r', encoding='utf-8') as f:
+    with open(f'pokemon_{ROOM}.json', 'r', encoding='utf-8') as f:
         data = json.load(f)
     return {p['Name']: p['Type'] for p in data}
 
@@ -57,12 +57,17 @@ def html_to_text(html: str) -> str:
     return txt
 
 # ---------- Fetch analysis from data.pkmn.cc ----------
-async def fetch_monotype_sentence(mon_name: str) -> str | None:
+async def fetch_monotype_sentence(mon_name: str, ROOM) -> str | None:
     """
     Fetch a random set's first sentence for mon_name from Gen 9 Monotype analyses.
     Returns None if not available.
     """
-    url = "https://data.pkmn.cc/analyses/gen9monotype.json"
+    if ROOM == "monotype":
+        # Fetch from Monotype analyses
+        url = "https://data.pkmn.cc/analyses/gen9monotype.json"
+    elif ROOM == "nationaldexmonotype":
+        # Fetch from National Dex Monotype analyses
+        url = "https://pkmn.github.io/smogon/data/analyses/gen9nationaldexmonotype.json"
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             if resp.status != 200:
@@ -76,6 +81,7 @@ async def fetch_monotype_sentence(mon_name: str) -> str | None:
         alts = {
             mon_name.replace("’", "'"),
             mon_name.replace(" ", "-"),
+            mon_name.replace("-Mega", ""),
         }
         for a in alts:
             if a in data:
@@ -154,8 +160,8 @@ def get_gradient_for_types(type1, type2, type_colors):
 
 
 # ---------- Build card ----------
-async def build_potw(Pokemon: str, Type1: str | None, Type2: str | None, type_colors):
-    sentence = await fetch_monotype_sentence(Pokemon)
+async def build_potw(Pokemon: str, Type1: str | None, Type2: str | None, type_colors, ROOM):
+    sentence = await fetch_monotype_sentence(Pokemon, ROOM)
     if not sentence:
         # fallback if no Monotype analysis exists for the mon / we suck at coding
         type_text = f"{Type1}/{Type2}" if Type2 else f"{Type1}"
@@ -167,7 +173,10 @@ async def build_potw(Pokemon: str, Type1: str | None, Type2: str | None, type_co
     )
 
     slug = slugify_name(Pokemon)
-    href = f"https://www.smogon.com/dex/sv/pokemon/{slug}/monotype/"
+    if ROOM == "nationaldexmonotype":
+        href = f"https://www.smogon.com/dex/sv/pokemon/{slug}/national-dex-monotype/"
+    elif ROOM == "monotype":
+        href = f"https://www.smogon.com/dex/sv/pokemon/{slug}/monotype/"
     gradient = get_gradient_for_types(Type1, Type2, type_colors)
     potw = f"""
 <table cellpadding="0" cellspacing="0" width="100%" style="color: #000; background: {gradient}; padding: 1rem; border: .125rem solid transparent; border-radius: .25rem; display: flex;">
@@ -189,7 +198,7 @@ async def build_potw(Pokemon: str, Type1: str | None, Type2: str | None, type_co
 
 async def send_potd(ws, ROOM):
     """Build and send the POTD card once to a room via ws."""
-    pokemon_list = load_Pokemon()
+    pokemon_list = load_Pokemon(ROOM)
     type_colors = load_type_colors("colors.txt")
 
     pick, typing = pick_daily_pokemon(pokemon_list, tz="US/Eastern")
@@ -198,7 +207,7 @@ async def send_potd(ws, ROOM):
     Type1 = parts[0] if parts else None
     Type2 = parts[1] if len(parts) > 1 else None
 
-    html_card = await build_potw(pick, Type1, Type2, type_colors)
+    html_card = await build_potw(pick, Type1, Type2, type_colors, ROOM)
     print(f"Sent POTD for {pick} ({Type1}/{Type2}) to {ROOM}")
 
     await ws.send(f"{ROOM}|/addhtmlbox {html_card}")
@@ -207,8 +216,8 @@ async def send_potd(ws, ROOM):
 async def build_daily_potd(ws, ROOM):
     """Send the POTD card every 2 hours to a room via ws."""
     while True:
-        await send_potd(ws, ROOM)
         await asyncio.sleep(2 * 60 * 60)  # wait 2 hours
+        await send_potd(ws, ROOM)
         
         
 
