@@ -99,7 +99,7 @@ async def listen_for_messages(ws, ROOM):
                                 available = ", ".join(TOUR_COMMANDS.keys())
                                 await ws.send(f"{ROOM}|Meow couldn’t find '{tour_name}'. Available tours: {available}")
                         elif msg_text.lower().startswith("meow show potd"):
-                                send_potd(ws, ROOM)
+                                await send_potd(ws, ROOM)
                                 await ws.send(f"{ROOM}|Meow sent the Pokémon of the day!")
                         else:
                             emotion_bank = [":3", ":3c", ":<", ":c", ";w;", "'w'", "awa", "uwu", "owo","TwT","'x'"]
