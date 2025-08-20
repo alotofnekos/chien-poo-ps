@@ -46,7 +46,7 @@ async def listen_for_messages(ws, room_commands_map):
                     if ts < listener_start_time:
                         continue
 
-                    if "meow" in msg_text.lower() and prefix in ('%', '@', '#'):
+                    if "meow" in msg_text.lower() and prefix in ('+','%', '@', '#'):
                         print(f"Received from {user} in {current_room}: {msg_text}")
 
                         TOUR_COMMANDS = room_commands_map.get(current_room, {})
@@ -69,14 +69,15 @@ async def listen_for_messages(ws, room_commands_map):
                             await send_potd(ws, current_room)
                             await ws.send(f"{current_room}|Meow sent the Pokémon of the day!")
 
-                        else:
+                        elif prefix in ('%', '@', '#'):
                             emotion_bank = [
                                 ":3", ":3c", ":<", ":c", ";w;", "'w'", "awa", "uwu",
                                 "owo", "TwT", ">:(", ">:3", ">:3c", ">:c"
                             ]
                             emotion = random.choice(emotion_bank)
                             await ws.send(f"{current_room}|Meow {emotion}")
-
+                        else:
+                            pass
                     if "You cannot have a tournament until" in line:
                         await ws.send(f">{current_room}|There's a tour going on right meow...")
 
