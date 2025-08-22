@@ -4,10 +4,8 @@ import pytz
 import json
 import os
 from dotenv import load_dotenv
-from pm_handler import handle_pmmessages, get_random_cat_url
-import time
 import random
-from potd import send_potd
+from calendar import monthrange
 load_dotenv()
 last_showcat = {}
 USERNAME = os.getenv("PS_USERNAME")
@@ -40,14 +38,14 @@ def load_tour_data(ROOM):
 
 # MONOTYPE
 TOUR_SCHEDULE_A = {
-    4: [(12, 0, 'SV'), (1, 0, 'Tera'), (2, 0, 'ORAS'), (18, 0, 'LC'), (19, 0, 'BW'), (20, 0, 'Monotype-Wildcard')],
+    4: [(0, 0, 'SV'), (1, 0, 'Tera'), (2, 0, 'ORAS'), (18, 0, 'LC'), (19, 0, 'BW'), (20, 0, 'Monotype-Wildcard')],
     1: [(9, 0, 'SV'), (10, 0, 'BW'), (11, 0, 'SS'), (21, 0, 'SM'), (22, 0, 'ORAS'), (23, 0, 'SV')],
     2: [(9, 0, 'UU'), (10, 0, 'SM'), (11, 0, 'SV'), (21, 0, 'SV'), (22, 0, 'SS'), (23, 0, 'NatDex')],
     3: [(9, 0, 'ORAS'), (10, 0, 'SV'), (11, 0, 'Random Monothreat Type'), (21, 0, 'CAP'), (22, 0, 'SV'), (23, 0, 'BW')]
 }
 
 TOUR_SCHEDULE_B = {
-    4: [(12, 0, 'SV'), (1, 0, 'Tera'), (2, 0, 'SS'), (18, 0, 'LC'), (19, 0, 'SM'), (20, 0, 'Monotype-Wildcard')],
+    4: [(0, 0, 'SV'), (1, 0, 'Tera'), (2, 0, 'SS'), (18, 0, 'LC'), (19, 0, 'SM'), (20, 0, 'Monotype-Wildcard')],
     1: [(9, 0, 'SM'), (10, 0, 'ORAS'), (11, 0, 'SV'), (21, 0, 'SV'), (22, 0, 'BW'), (23, 0, 'SS')],
     2: [(9, 0, 'SV'), (10, 0, 'SS'), (11, 0, 'NatDex'), (21, 0, 'UU'), (22, 0, 'SM'), (23, 0, 'SV')],
     3: [(9, 0, 'CAP'), (10, 0, 'SV'), (11, 0, 'BW'), (21, 0, 'ORAS'), (22, 0, 'SV'), (23, 0, 'Random Monothreat Type')]
@@ -139,5 +137,105 @@ async def scheduled_tours(ws, ROOM):
 
         await asyncio.sleep(59)
 
+
+def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
+    from calendar import monthrange
+    import datetime
+
+    color_sets = [
+        ("#F5F5F5", "#FFC0CB"),
+        ("#F0E68C", "#D3D3D3")
+    ]
+    header_color = "#B0C4DE"
+    text_color = "#0A0A0A"
+    num_days = monthrange(year, month)[1]
+
+    if room == "monotype":
+        schedules = {"A": TOUR_SCHEDULE_A, "B": TOUR_SCHEDULE_B}
+    elif room == "nationaldexmonotype":
+        schedules = {"NDM": TOUR_SCHEDULE_NDM}
+    else:
+        return f"<p style='color:{text_color};'>Invalid room specified</p>"
+
+    html = []
+
+    # Full-width header
+    html.append(
+        f"<div style='width:100%; background:{header_color}; text-align:center; font-weight:bold; padding:5px; color:{text_color};'>"
+        f"{room.capitalize()} Events ({datetime.date(year, month, 1).strftime('%B-%Y')})</div>"
+    )
+    html.append(
+        f"<div style='width:100%; text-align:center; background:#f0f0f0; font-size:12px; padding:3px; color:{text_color};'>"
+        f"Event Information Recorded in: (GMT-4)</div>"
+    )
+
+    # Flex container with fixed height
+    html.append(
+        f"<div style='display:flex; width:100%; border:1px solid #ccc; font-family:Arial; font-size:11px; color:{text_color}; height:390px;'>"
+    )
+
+    # Scrollable table container
+    html.append(f"<div style='overflow-y:auto; width:60%;'>")
+    html.append(
+        f"<table style='border-collapse:collapse; text-align:left; border:1px solid #ccc; color:{text_color}; width:100%;'>"
+    )
+
+    row_toggle = 0
+    for day in range(1, num_days + 1):
+        current_date = datetime.date(year, month, day)
+        weekday = current_date.weekday()
+
+        if room == "monotype":
+            weeks_passed = (current_date - START_DATE).days // 7
+            week_type = "A" if weeks_passed % 2 == 0 else "B"
+            schedule = schedules[week_type]
+        else:
+            schedule = schedules["NDM"]
+
+        if weekday not in schedule:
+            continue
+
+        events = schedule[weekday]
+        if not events:
+            continue
+
+        morning_events = [f"{hour:02}:{minute:02} {tour}" for hour, minute, tour in events if hour <= 12]
+        night_events = [f"{hour:02}:{minute:02} {tour}" for hour, minute, tour in events if hour > 12]
+
+        morning_color, night_color = color_sets[row_toggle]
+
+        html.append(
+            f"<tr>"
+            f"<td style='background:{header_color}; text-align:center; padding:4px; font-weight:bold; width:15%; border:1px solid #ccc; color:{text_color};'>{current_date.strftime('%m/%d')}</td>"
+            f"<td style='background:{morning_color}; padding:4px; width:42.5%; border:1px solid #ccc; color:{text_color};'>{'<br>'.join(morning_events) if morning_events else ''}</td>"
+            f"<td style='background:{night_color}; padding:4px; width:42.5%; border:1px solid #ccc; color:{text_color};'>{'<br>'.join(night_events) if night_events else ''}</td>"
+            f"</tr>"
+        )
+
+        row_toggle = 1 - row_toggle
+
+    html.append("</table>")
+    html.append("</div>")  # close scrollable container
+
+    # Image side stays fixed
+    html.append(
+        f"<div style='width:40%; display:flex; align-items:center; justify-content:center; background:#fafafa; border-left:1px solid #ccc; color:{text_color};'>"
+        f"""<img src="https://i.ibb.co/zHt57cMy/209.png" height="750" width="900" style="height: auto; width: auto;">"""
+        f"</div>"
+    )
+
+    html.append("</div>")  # close flex container
+    return "\n".join(html)
+
+
+
+
+
+
 async def main(ws, ROOM):
     await scheduled_tours(ws, ROOM)
+
+# Debug output
+if __name__ == "__main__":
+    html_schedule = generate_monthly_tour_schedule_html(8, 2025, "monotype")
+    print(html_schedule)
