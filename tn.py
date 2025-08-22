@@ -227,11 +227,6 @@ def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
     html.append("</div>")  # close flex container
     return "\n".join(html)
 
-
-
-
-
-
 async def main(ws, ROOM):
     await scheduled_tours(ws, ROOM)
 

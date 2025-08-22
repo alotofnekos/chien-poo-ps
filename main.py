@@ -17,7 +17,7 @@ load_dotenv()
 
 USERNAME = os.getenv("PS_USERNAME")
 PASSWORD = os.getenv("PS_PASSWORD")
-ROOMS = ["Monotype", "Nationaldexmonotype"]
+ROOMS = ["monotype", "nationaldexmonotype"]
 SERVER = "wss://sim3.psim.us/showdown/websocket"
 PORT = int(os.environ.get("PORT", 10000))
 RECONNECT_DELAY = 5  # seconds to wait before reconnecting
@@ -173,7 +173,6 @@ async def keep_alive_loop(session: aiohttp.ClientSession):
 
         await asyncio.sleep(random.randint(1, 14) * 60)
 
-
 # -----------------------------------------------------------------------------
 # Bot main loop
 # -----------------------------------------------------------------------------
@@ -185,31 +184,51 @@ async def main_bot_logic():
         try:
             async with websockets.connect(
                 SERVER,
-                ping_interval=30,   # send a ping every 30s
-                ping_timeout=15     # if no pong within 15s, close the connection
+                ping_interval=30,
+                ping_timeout=15
             ) as ws:
+                # Login
                 success = await login(ws)
                 if not success:
                     raise ConnectionRefusedError("Login failed")
 
-                await ws.send(f"|/avatar pokekidf-gen8")
-                await ws.send(f"|/status Send 'meow' in PMs :3c")
+                # Set avatar and status
+                await ws.send("|/avatar pokekidf-gen8")
+                await ws.send("|/status Send 'meow' in PMs :3c")
 
-                for room in ROOMS:  
+                # Join rooms + load tour data
+                for room in ROOMS:
                     await room_logic(ws, room)
-                    room_commands_map = {room: load_tour_data(room) for room in ROOMS}
-                asyncio.create_task(listen_for_messages(ws,room_commands_map))
-                backoff = RECONNECT_DELAY
-                connection_status = "Connected to Pokemon Showdown!"
+                room_commands_map = {room: load_tour_data(room) for room in ROOMS}
 
-                # Keep the connection alive forever
-                await asyncio.Future()  # prevents exiting the `with` block
+                # Start the listener
+                listener_task = asyncio.create_task(listen_for_messages(ws, room_commands_map))
+
+                connection_status = "Connected to Pokemon Showdown!"
+                backoff = RECONNECT_DELAY
+
+                # Wait until the listener crashes or WS closes
+                done, pending = await asyncio.wait(
+                    {listener_task},
+                    return_when=asyncio.FIRST_EXCEPTION
+                )
+
+                # Cancel any remaining tasks on reconnect
+                for task in pending:
+                    task.cancel()
+                    try:
+                        await task
+                    except asyncio.CancelledError:
+                        pass
+
+                # If the listener crashed, re-raise so we reconnect
+                for task in done:
+                    task.result()  # raises the exception if any
 
         except ConnectionClosed as e:
-            if e.reason is None and e.code == 1006:  # Abnormal close, often from missed heartbeat
-                reason = "missed heartbeat (Meow didnt get a response from PS in time?)"
-            else:
-                reason = e.reason or "No reason given"
+            reason = e.reason or "No reason given"
+            if e.reason is None and e.code == 1006:
+                reason = "missed heartbeat (Meow didn't get a response in time?)"
             print(f"PS closed the connection: code={e.code}, reason={reason}. Retrying in {backoff}s...")
             connection_status = f"Disconnected: {reason} retrying in {backoff}s..."
             await asyncio.sleep(backoff)
@@ -227,6 +246,7 @@ async def main_bot_logic():
             connection_status = "Error, reconnecting..."
             await asyncio.sleep(backoff)
             backoff = min(backoff * 2, 300) + random.randint(0, 5)
+
 
 
 

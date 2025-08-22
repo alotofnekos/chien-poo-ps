@@ -95,5 +95,5 @@ async def listen_for_messages(ws, room_commands_map):
 
         except Exception as e:
             print(f"Error in message listener: {e}")
-            await asyncio.sleep(1)
+            raise
 
