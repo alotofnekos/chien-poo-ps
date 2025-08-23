@@ -5,7 +5,7 @@
 },
 {
     "Tour":"LC",
-    "Code":"/tour new gen9LC, elim,,,Monotype LC\n/tour rules sametypeclause, terastalclause, -Damp Rock, -Icy Rock, -King's Rock, -Quick Claw, -Minccino, -Meowth, +Diglett-Base, +Porygon, +Vulpix, +Vulpix-Alola, +Magby, +Snivy, +Scraggy, +Voltorb-Hisui, +Sticky Web\n/tour setautostart 8\n!rfaq LC\n.official"
+    "Code":"/tour new gen9LC, elim,,,Monotype LC\n/tour rules sametypeclause, terastalclause, -Damp Rock, -Icy Rock, -King's Rock, -Quick Claw, -Light Clay, -Minccino, -Meowth, +Diglett-Base, +Porygon, +Vulpix, +Vulpix-Alola, +Magby, +Snivy, +Scraggy, +Voltorb-Hisui, +Sticky Web\n/tour setautostart 8\n!rfaq LC\n.official"
 },
 {
     "Tour": "Tera",
@@ -21,7 +21,7 @@
 },
 {
     "Tour": "Monotype-Wildcard",
-    "Code": "/tour new gen9monotype,elim,,,Monotype Wildcard\n/tour autostart 8\n/tour autodq 5\n/tour rules !Same Type Clause, -Heat Rock\n/wall Gholdengo is restricted to its actual types!\n.official"
+    "Code": "/tour new gen9monotype,elim,,,Monotype Wildcard\n/tour autostart 8\n/tour autodq 5\n/tour rules !Same Type Clause, -Heat Rock, -Smeargle \n/wall Gholdengo is restricted to its actual types!\n.official"
 },
 { "Tour":"SV","Code":"/tour new gen9monotype,elimination\n!rfaq samples\n.official"},
 { "Tour":"SS","Code":"/tour new gen8monotype,elimination\n!rfaq samples\n.official"},
