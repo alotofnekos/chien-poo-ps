@@ -7,6 +7,7 @@ from potd import send_potd
 import time
 from tn import generate_monthly_tour_schedule_html
 import datetime
+from pm_handler import get_random_cat_url
 
 load_dotenv()
 USERNAME = os.getenv("PS_USERNAME")
@@ -82,12 +83,20 @@ async def listen_for_messages(ws, room_commands_map):
                             await ws.send(f"{current_room}|Meow, here are the commands! {help_msg}")
 
                         elif prefix in ('%', '@', '#'):
-                            emotion_bank = [
-                                ":3", ":3c", ":<", ":c", ";w;", "'w'", "awa", "uwu",
-                                "owo", "TwT", ">:(", ">:3", ">:3c", ">:c"
-                            ]
-                            emotion = random.choice(emotion_bank)
-                            await ws.send(f"{current_room}|Meow {emotion}")
+                            if msg_text.lower().startswith("meow show cat"):
+                                cat = await get_random_cat_url()
+                                print(f"Fetched cat URL: {cat}")
+                                if cat:
+                                    await ws.send(f'{current_room}|/addhtmlbox <img src="{cat}" height="0" width="0" style="max-height: 350px; height: auto; width: auto;">')
+                                else:
+                                    await ws.send(f"{current_room}|Meow, couldn't find a cat right meow ;w;")
+                            else:
+                                emotion_bank = [
+                                    ":3", ":3c", ":<", ":c", ";w;", "'w'", "awa", "uwu",
+                                    "owo", "TwT", ">:(", ">:3", ">:3c", ">:c"
+                                ]
+                                emotion = random.choice(emotion_bank)
+                                await ws.send(f"{current_room}|Meow {emotion}")
                         else:
                             pass
                     if "You cannot have a tournament until" in line:
