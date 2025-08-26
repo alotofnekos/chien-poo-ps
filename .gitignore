@@ -13,3 +13,4 @@ __pycache__/
 
 # macOS metadata (optional)
 .DS_Store
+*.nuget.cache 
