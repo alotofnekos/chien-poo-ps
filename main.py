@@ -273,7 +273,8 @@ async def main():
     async with aiohttp.ClientSession() as session:
         asyncio.create_task(start_web_server())
         asyncio.create_task(keep_alive_loop(session))
-        await main_bot_logic()
+        asyncio.create_task(main_bot_logic())
+        await asyncio.Event().wait()
 
 
 if __name__ == "__main__":
