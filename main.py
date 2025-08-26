@@ -21,12 +21,12 @@ ROOMS = ["monotype", "nationaldexmonotype"]
 SERVER = "wss://sim3.psim.us/showdown/websocket"
 PORT = int(os.environ.get("PORT", 10000))
 RECONNECT_DELAY = 5  # seconds to wait before reconnecting
-
+MAX_RETRIES = 1000
 # Global connection status and backoff
 connection_status = "Disconnected"
 backoff = RECONNECT_DELAY
 
-KEEP_ALIVE_URL = "https://meow-bot-ps.onrender.com/keep-alive"
+KEEP_ALIVE_URL = "https://chien-poo-ps.onrender.com"
 
 
 # -----------------------------------------------------------------------------
@@ -179,9 +179,12 @@ async def keep_alive_loop(session: aiohttp.ClientSession):
 async def main_bot_logic():
     global connection_status, backoff
     backoff = RECONNECT_DELAY
+    retries = 0
 
-    while True:
+    while MAX_RETRIES is None or retries < MAX_RETRIES:
         try:
+            print("Attempting connection to Pokemon Showdown...")
+
             async with websockets.connect(
                 SERVER,
                 ping_interval=30,
@@ -201,19 +204,21 @@ async def main_bot_logic():
                     await room_logic(ws, room)
                 room_commands_map = {room: load_tour_data(room) for room in ROOMS}
 
-                # Start the listener
+                # Start the listener task
                 listener_task = asyncio.create_task(listen_for_messages(ws, room_commands_map))
 
                 connection_status = "Connected to Pokemon Showdown!"
                 backoff = RECONNECT_DELAY
+                retries = 0  # Reset retries after a successful connection
+                print("Connected successfully!")
 
-                # Wait until the listener crashes or WS closes
+                # Wait until listener crashes or WS closes
                 done, pending = await asyncio.wait(
                     {listener_task},
                     return_when=asyncio.FIRST_EXCEPTION
                 )
 
-                # Cancel any remaining tasks on reconnect
+                # Cancel pending tasks before reconnecting
                 for task in pending:
                     task.cancel()
                     try:
@@ -221,9 +226,9 @@ async def main_bot_logic():
                     except asyncio.CancelledError:
                         pass
 
-                # If the listener crashed, re-raise so we reconnect
+                # If listener crashed, re-raise to trigger reconnect
                 for task in done:
-                    task.result()  # raises the exception if any
+                    task.result()
 
         except ConnectionClosed as e:
             reason = e.reason or "No reason given"
@@ -232,12 +237,21 @@ async def main_bot_logic():
             print(f"PS closed the connection: code={e.code}, reason={reason}. Retrying in {backoff}s...")
             connection_status = f"Disconnected: {reason} retrying in {backoff}s..."
             await asyncio.sleep(backoff)
+            retries += 1
             backoff = min(backoff * 2, 300) + random.randint(0, 5)
 
         except ConnectionRefusedError as e:
-            print(f"Connection refused: {e}, Retrying in {backoff}s...")
-            connection_status = f"PS refused meow connection, retrying in {backoff}s..."
+            print(f"Connection refused: {e}. Retrying in {backoff}s...")
+            connection_status = "PS refused meow connection, retrying..."
             await asyncio.sleep(backoff)
+            retries += 1
+            backoff = min(backoff * 2, 300) + random.randint(0, 5)
+
+        except TimeoutError as e:
+            print(f"Connection timed out: {e}. Retrying in {backoff}s...")
+            connection_status = "Timeout, reconnecting..."
+            await asyncio.sleep(backoff)
+            retries += 1
             backoff = min(backoff * 2, 300) + random.randint(0, 5)
 
         except Exception as e:
@@ -245,8 +259,10 @@ async def main_bot_logic():
             print(f"Unexpected error: {e}\n{traceback.format_exc()}")
             connection_status = "Error, reconnecting..."
             await asyncio.sleep(backoff)
+            retries += 1
             backoff = min(backoff * 2, 300) + random.randint(0, 5)
 
+    print("Max retries reached. Stopping bot.")
 
 
 
