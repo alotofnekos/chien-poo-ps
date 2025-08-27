@@ -82,7 +82,7 @@ async def listen_for_messages(ws, room_commands_map):
                                         "'meow show schedule', 'meow help'")
                             await ws.send(f"{current_room}|Meow, here are the commands! {help_msg}")
 
-                        elif prefix in ('%', '@', '#'):
+                        elif prefix in ('%', '@', '#', '~'):
                             if msg_text.lower().startswith("meow show cat"):
                                 cat = await get_random_cat_url()
                                 print(f"Fetched cat URL: {cat}")
