@@ -122,6 +122,10 @@ async def scheduled_tours(ws, ROOM):
                             tour_commands = TOUR_COMMANDS[lookup_key].split('\n')
                             for command in tour_commands:
                                 await ws.send(f"{ROOM}|{command.strip()}")
+                            #if "Monotype" in lookup_key or "Monothreat" in lookup_key:
+                            #    await ws.send(f"{current_room}|/tour name {lookup_key} Tour Nights")
+                            #else:
+                            #    await ws.send(f"{current_room}|/tour name {lookup_key} {current_room.title()} Tour Nights")
                         else:
                             # Final fallback if even the chosen key isn't valid
                             await ws.send(f"{ROOM}|Meow wasnt able to get the monothreat commands. Meow cant start the tour, ask an auth to start it meow.")

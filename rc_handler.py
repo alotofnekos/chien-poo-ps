@@ -61,6 +61,10 @@ async def listen_for_messages(ws, room_commands_map):
                                 tour_commands = TOUR_COMMANDS[lookup_key].split('\n')
                                 for command in tour_commands:
                                     await ws.send(f"{current_room}|{command.strip()}")
+                                if "Monotype" in lookup_key or "Monothreat" in lookup_key:
+                                    await ws.send(f"{current_room}|/tour name {lookup_key}")
+                                else:
+                                    await ws.send(f"{current_room}|/tour name {lookup_key} {current_room.title()}")
                             else:
                                 available = ", ".join(TOUR_COMMANDS.keys())
                                 await ws.send(f"{current_room}|Meow couldn’t find '{tour_name}'. "
