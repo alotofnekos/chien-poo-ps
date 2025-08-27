@@ -11,6 +11,9 @@ __pycache__/
 # VSCode config (optional)
 .vscode/
 
+#also test cases as it uses local paths
+test_cases/
 # macOS metadata (optional)
 .DS_Store
 *.nuget.cache 
+"test_cases/" 
