@@ -8,10 +8,8 @@ import time
 from tn import generate_monthly_tour_schedule_html
 import datetime
 from pm_handler import get_random_cat_url
-
 load_dotenv()
 USERNAME = os.getenv("PS_USERNAME")
-
 
 async def listen_for_messages(ws, room_commands_map):
     """Listens for and processes ALL messages from the WebSocket, dispatching by room."""
@@ -49,7 +47,7 @@ async def listen_for_messages(ws, room_commands_map):
                     if ts < listener_start_time:
                         continue
 
-                    if "meow" in msg_text.lower() and prefix in ('+','%', '@', '#'):
+                    if "meow" in msg_text.lower() and prefix in ('+','%', '@', '#', '~'):
                         print(f"Received from {user} in {current_room}: {msg_text}")
 
                         TOUR_COMMANDS = room_commands_map.get(current_room, {})
@@ -79,7 +77,7 @@ async def listen_for_messages(ws, room_commands_map):
                         
                         elif msg_text.lower().startswith("meow help"):
                             help_msg = ("Meow commands: 'meow start [tour name]', 'meow show potd', "
-                                        "'meow show schedule', 'meow help'")
+                                        "'meow show schedule', 'meow help', 'meow show cat', 'meow uptime'")
                             await ws.send(f"{current_room}|Meow, here are the commands! {help_msg}")
 
                         elif prefix in ('%', '@', '#', '~'):
@@ -90,6 +88,9 @@ async def listen_for_messages(ws, room_commands_map):
                                     await ws.send(f'{current_room}|/addhtmlbox <img src="{cat}" height="0" width="0" style="max-height: 350px; height: auto; width: auto;">')
                                 else:
                                     await ws.send(f"{current_room}|Meow, couldn't find a cat right meow ;w;")
+                            elif msg_text.lower().startswith("meow uptime"):
+                                uptime_msg = get_uptime(listener_start_time)
+                                await ws.send(f"{current_room}|{uptime_msg}")
                             else:
                                 emotion_bank = [
                                     ":3", ":3c", ":<", ":c", ";w;", "'w'", "awa", "uwu",
@@ -105,4 +106,10 @@ async def listen_for_messages(ws, room_commands_map):
         except Exception as e:
             print(f"Error in message listener: {e}")
             raise
+
+def get_uptime(listener_start_time):
+    uptime_seconds = time.time() - listener_start_time
+    hours, remainder = divmod(uptime_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f"Meow is up for the last {int(hours)}h(s) {int(minutes)}m(s). Last restart: {datetime.datetime.fromtimestamp(listener_start_time).strftime('%Y-%m-%d %H:%M:%S')}"
 
