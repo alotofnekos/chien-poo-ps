@@ -104,7 +104,9 @@ async def scheduled_tours(ws, ROOM):
         if today_weekday in current_schedule:
             for tour_schedule in current_schedule[today_weekday]:
                 tour_hour, tour_minute, tour_name = tour_schedule
-                if (current_hour, current_minute) == (tour_hour, tour_minute-5):
+                tour_time = tour_hour * 60 + tour_minute
+                current_time = current_hour * 60 + current_minute
+                if current_time == tour_time - 5:
                     await ws.send(f"{ROOM}|Meow, there will be a tour in 5 minutes! Get ready nya!")
                 if (current_hour, current_minute) == (tour_hour, tour_minute):
                     print(f"It's {tour_hour:02}:{tour_minute:02} on {now.strftime('%A')}. Sending tour commands.")
