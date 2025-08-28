@@ -104,7 +104,8 @@ async def scheduled_tours(ws, ROOM):
         if today_weekday in current_schedule:
             for tour_schedule in current_schedule[today_weekday]:
                 tour_hour, tour_minute, tour_name = tour_schedule
-                
+                if (current_hour, current_minute) == (tour_hour, tour_minute-5):
+                    await ws.send(f"{ROOM}|Meow, there will be a tour in 5 minutes! Get ready nya!")
                 if (current_hour, current_minute) == (tour_hour, tour_minute):
                     print(f"It's {tour_hour:02}:{tour_minute:02} on {now.strftime('%A')}. Sending tour commands.")
 
@@ -121,6 +122,7 @@ async def scheduled_tours(ws, ROOM):
                         if lookup_key in TOUR_COMMANDS:
                             tour_commands = TOUR_COMMANDS[lookup_key].split('\n')
                             for command in tour_commands:
+                                await ws.send(f"{ROOM}|/tour end")
                                 await ws.send(f"{ROOM}|{command.strip()}")
                             #if "Monotype" in lookup_key or "Monothreat" in lookup_key:
                             #    await ws.send(f"{current_room}|/tour name {lookup_key} Tour Nights")
