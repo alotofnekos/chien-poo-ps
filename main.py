@@ -28,7 +28,7 @@ backoff = RECONNECT_DELAY
 
 KEEP_ALIVE_URL = "https://chien-poo-ps.onrender.com"
 
-
+room_tasks = []
 # -----------------------------------------------------------------------------
 # Web server endpoints
 # -----------------------------------------------------------------------------
@@ -150,15 +150,26 @@ async def login(ws):
 
 
 async def room_logic(ws, room_name):
-    """Encapsulates the logic for a single room."""
+    """Join room and start background tasks for that room."""
     await ws.send(f"|/join {room_name}")
     print(f"Joined room: {room_name}")
 
-    # Run room-specific tasks in the background
-    asyncio.create_task(scheduled_tours(ws, room_name))
-    asyncio.create_task(build_daily_potd(ws, room_name))
-    print(f"Started background tasks for room: {room_name}")
+    # Start background tasks for this room and track them
+    t1 = asyncio.create_task(scheduled_tours(ws, room_name))
+    t2 = asyncio.create_task(build_daily_potd(ws, room_name))
+    room_tasks.extend([t1, t2])
 
+    print(f"Started tasks for {room_name}")
+
+async def cancel_room_tasks():
+    """Cancel all running room tasks and clear the list."""
+    for task in room_tasks:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+    room_tasks.clear()
 
 # -----------------------------------------------------------------------------
 # Keep-alive pinger
@@ -199,17 +210,17 @@ async def main_bot_logic():
                 await ws.send("|/avatar pokekidf-gen8")
                 await ws.send("|/status Send 'meow' in PMs :3c")
 
-                # Join rooms + load tour data
+                # Join rooms and start background tasks
                 for room in ROOMS:
                     await room_logic(ws, room)
                 room_commands_map = {room: load_tour_data(room) for room in ROOMS}
 
-                # Start the listener task
+                # Start the listener
                 listener_task = asyncio.create_task(listen_for_messages(ws, room_commands_map))
 
                 connection_status = "Connected to Pokemon Showdown!"
                 backoff = RECONNECT_DELAY
-                retries = 0  # Reset retries after a successful connection
+                retries = 0
                 print("Connected successfully!")
 
                 # Wait until listener crashes or WS closes
@@ -218,7 +229,10 @@ async def main_bot_logic():
                     return_when=asyncio.FIRST_EXCEPTION
                 )
 
-                # Cancel pending tasks before reconnecting
+                # Cancel background tasks before reconnecting
+                await cancel_room_tasks()
+
+                # Cancel pending tasks too
                 for task in pending:
                     task.cancel()
                     try:
@@ -226,7 +240,7 @@ async def main_bot_logic():
                     except asyncio.CancelledError:
                         pass
 
-                # If listener crashed, re-raise to trigger reconnect
+                # Re-raise listener exceptions to trigger reconnect
                 for task in done:
                     task.result()
 
@@ -240,16 +254,9 @@ async def main_bot_logic():
             retries += 1
             backoff = min(backoff * 2, 300) + random.randint(0, 5)
 
-        except ConnectionRefusedError as e:
-            print(f"Connection refused: {e}. Retrying in {backoff}s...")
-            connection_status = "PS refused meow connection, retrying..."
-            await asyncio.sleep(backoff)
-            retries += 1
-            backoff = min(backoff * 2, 300) + random.randint(0, 5)
-
-        except TimeoutError as e:
-            print(f"Connection timed out: {e}. Retrying in {backoff}s...")
-            connection_status = "Timeout, reconnecting..."
+        except (ConnectionRefusedError, TimeoutError) as e:
+            print(f"Connection error: {e}. Retrying in {backoff}s...")
+            connection_status = f"Connection issue: {e}, retrying..."
             await asyncio.sleep(backoff)
             retries += 1
             backoff = min(backoff * 2, 300) + random.randint(0, 5)

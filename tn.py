@@ -72,13 +72,13 @@ def get_current_tour_schedule(ROOM):
         weeks_passed = (today - START_DATE).days // 7
         
         if weeks_passed % 2 == 0:
-            print("It's currently Week A.")
+            #print("It's currently Week A.")
             return TOUR_SCHEDULE_A
         else:
-            print("It's currently Week B.")
+            #print("It's currently Week B.")
             return TOUR_SCHEDULE_B
     elif ROOM == "nationaldexmonotype":
-        print("NDM schedule is ready")
+        #print("NDM schedule is ready")
         return TOUR_SCHEDULE_NDM
 
 async def scheduled_tours(ws, ROOM):
