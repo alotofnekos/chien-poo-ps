@@ -122,9 +122,11 @@ async def scheduled_tours(ws, ROOM):
 
                         # Double-check the key exists in TOUR_COMMANDS
                         if lookup_key in TOUR_COMMANDS:
+                            await ws.send(f"{ROOM}|/tour end")
+                            await asyncio.sleep(2)  # Short delay to ensure the tour ends before starting a new one
                             tour_commands = TOUR_COMMANDS[lookup_key].split('\n')
+                            
                             for command in tour_commands:
-                                await ws.send(f"{ROOM}|/tour end")
                                 await ws.send(f"{ROOM}|{command.strip()}")
                             #if "Monotype" in lookup_key or "Monothreat" in lookup_key:
                             #    await ws.send(f"{current_room}|/tour name {lookup_key} Tour Nights")
@@ -143,7 +145,7 @@ async def scheduled_tours(ws, ROOM):
                             print(f"Error: No command found for '{tour_name}'.")
                             await ws.send(f"{ROOM}|Meow tried to create a tour for {tour_name}, but I couldnt read it or Neko is being stinky. Please tell this to Neko.")
 
-        await asyncio.sleep(59)
+        await asyncio.sleep(58)
 
 
 def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
