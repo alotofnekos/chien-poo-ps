@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 from pm_handler import handle_pmmessages
 from potd import send_potd
 import time
-from tn import generate_monthly_tour_schedule_html
+import re
+from tn import generate_monthly_tour_schedule_html,get_next_tournight
 import datetime
 from pm_handler import get_random_cat_url
 load_dotenv()
@@ -72,16 +73,19 @@ async def listen_for_messages(ws, room_commands_map):
 
                         elif msg_text.lower().startswith("meow show potd"):
                             await send_potd(ws, current_room)
-                            await ws.send(f"{current_room}|Meow sent the Pokémon of the day!")
 
                         elif msg_text.lower().startswith("meow show schedule"):
                             now = datetime.datetime.now()
                             html_schedule = generate_monthly_tour_schedule_html(now.month, now.year, room=current_room)
                             await ws.send(f"{current_room}|/addhtmlbox {html_schedule}")
                         
+                        elif msg_text.lower().startswith("meow when next tournight"):
+                            next_tour = get_next_tournight(current_room)
+                            await ws.send(f"{current_room}|Meow, the next tournight is {next_tour['name']} at {next_tour['hour']}:{next_tour['minute']} (GMT-4). Its in {next_tour['minutes_until']} minute(s)!")
+                        
                         elif msg_text.lower().startswith("meow help"):
                             help_msg = ("Meow commands: 'meow start [tour name]', 'meow show potd', "
-                                        "'meow show schedule', 'meow help', 'meow show cat', 'meow uptime'")
+                                        "'meow show schedule', 'meow help', 'meow show cat', 'meow uptime', 'meow when next tournight'")
                             await ws.send(f"{current_room}|Meow, here are the commands! {help_msg}")
 
                         elif prefix in ('%', '@', '#', '~'):
@@ -95,7 +99,7 @@ async def listen_for_messages(ws, room_commands_map):
                             elif msg_text.lower().startswith("meow uptime"):
                                 uptime_msg = get_uptime(listener_start_time)
                                 await ws.send(f"{current_room}|{uptime_msg}")
-                            else:
+                            elif re.search(r"\bmeow\b", msg_text, re.IGNORECASE):
                                 emotion_bank = [
                                     ":3", ":3c", ":<", ":c", ";w;", "'w'", "awa", "uwu",
                                     "owo", "TwT", ">:(", ">:3", ">:3c", ">:c"

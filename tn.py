@@ -38,28 +38,31 @@ def load_tour_data(ROOM):
 
 # MONOTYPE
 TOUR_SCHEDULE_A = {
-    4: [(0, 0, 'SV'), (1, 0, 'Tera'), (2, 0, 'ORAS'), (18, 0, 'LC'), (19, 0, 'BW'), (20, 0, 'Monotype-Wildcard')],
-    1: [(9, 0, 'SV'), (10, 0, 'BW'), (11, 0, 'SS'), (21, 0, 'SM'), (22, 0, 'ORAS'), (23, 0, 'SV')],
-    2: [(9, 0, 'UU'), (10, 0, 'SM'), (11, 0, 'SV'), (21, 0, 'SV'), (22, 0, 'SS'), (23, 0, 'NatDex')],
-    3: [(9, 0, 'ORAS'), (10, 0, 'SV'), (11, 0, 'Random Monothreat Type'), (21, 0, 'CAP'), (22, 0, 'SV'), (23, 0, 'BW')]
+    0: [(9, 0, 'SV'), (10, 0, 'Tera'), (11, 0, 'ORAS'), (21, 0, 'LC'), (22, 0, 'BW'), (23, 0, 'Monotype-Wildcard')],
+    4: [(9, 0, 'SV'), (10, 0, 'BW'), (11, 0, 'SS'), (21, 0, 'SM'), (22, 0, 'ORAS'), (23, 0, 'SV')],
+    5: [(9, 0, 'UU'), (10, 0, 'SM'), (11, 0, 'SV'), (21, 0, 'SV'), (22, 0, 'SS'), (23, 0, 'NatDex')],
+    6: [(9, 0, 'ORAS'), (10, 0, 'SV'), (11, 0, 'Random Monothreat Type'), (21, 0, 'CAP'), (22, 0, 'SV'), (23, 0, 'BW')]
 }
 
+
+# September 1 prep
 TOUR_SCHEDULE_B = {
-    4: [(0, 0, 'SV'), (1, 0, 'Tera'), (2, 0, 'SS'), (18, 0, 'LC'), (19, 0, 'SM'), (20, 0, 'Monotype-Wildcard')],
-    1: [(9, 0, 'SM'), (10, 0, 'ORAS'), (11, 0, 'SV'), (21, 0, 'SV'), (22, 0, 'BW'), (23, 0, 'SS')],
-    2: [(9, 0, 'SV'), (10, 0, 'SS'), (11, 0, 'NatDex'), (21, 0, 'UU'), (22, 0, 'SM'), (23, 0, 'SV')],
-    3: [(9, 0, 'CAP'), (10, 0, 'SV'), (11, 0, 'BW'), (21, 0, 'ORAS'), (22, 0, 'SV'), (23, 0, 'Random Monothreat Type')]
+    0: [(9, 0, 'SV'), (10, 0, 'Tera'), (11, 0, 'SS'), (21, 0, 'LC'), (22, 0, 'SM'), (23, 0, 'Monotype-Wildcard')],
+    4: [(9, 0, 'SM'), (10, 0, 'ORAS'), (11, 0, 'SV'), (21, 0, 'SV'), (22, 0, 'BW'), (23, 0, 'SS')],
+    5: [(9, 0, 'SV'), (10, 0, 'SS'), (11, 0, 'NatDex'), (21, 0, 'UU'), (22, 0, 'SM'), (23, 0, 'SV')],
+    6: [(9, 0, 'CAP'), (10, 0, 'SV'), (11, 0, 'BW'), (21, 0, 'ORAS'), (22, 0, 'SV'), (23, 0, 'Random Monothreat Type')]
 }
+
 
 # National Dex Monotype
 TOUR_SCHEDULE_NDM = {
-    0: [(2,0,'NatDex'), (4,0,'Random Monothreat Type'), (6,0,'SS NatDex'),(22,0,'Z-less'),(24,0,'RU')],
-    1: [(2,0,'NatDex'), (4,0,'Random Monothreat Type'), (6,0,'SS NatDex'),(22,0,'Z-less'),(24,0,'RU')],
-    2: [(2,0,'NatDex'), (4,0,'Random Monothreat Type'), (6,0,'SS NatDex'),(22,0,'Z-less'),(24,0,'RU')],
-    3: [(2,0,'NatDex'), (4,0,'Random Monothreat Type'), (6,0,'SS NatDex'),(22,0,'Z-less'),(24,0,'RU')],
-    4: [(2,0,'NatDex'), (4,0,'Random Monothreat Type'), (6,0,'SS NatDex'),(22,0,'Z-less'),(24,0,'RU')],
-    5: [(2,0,'NatDex'), (4,0,'Random Monothreat Type'), (6,0,'SS NatDex'),(22,0,'Z-less'),(24,0,'RU')],
-    6: [(2,0,'NatDex'), (4,0,'Random Monothreat Type'), (6,0,'SS NatDex'),(22,0,'Z-less'),(24,0,'RU')]
+    0: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    1: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    2: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    3: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    4: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    5: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    6: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
 }
 
 # The queue for storing the random type.
@@ -80,77 +83,129 @@ def get_current_tour_schedule(ROOM):
     elif ROOM == "nationaldexmonotype":
         #print("NDM schedule is ready")
         return TOUR_SCHEDULE_NDM
+    
+def get_next_tournight(schedule, search_horizon_days=7):
+    """
+    Returns a dict describing the next tour from 'now', scanning up to 'search_horizon_days'.
+    Shape:
+      {
+        "name": str,
+        "hour": int,
+        "minute": int,
+        "weekday": int,        # 0=Mon..6=Sun
+        "day_offset": int,     # 0=today, 1=tomorrow, ...
+        "scheduled_at": datetime.datetime,
+        "minutes_until": int
+      }
+    or None if no tours found.
+    """
+    if not schedule:
+        return None
+    now = datetime.datetime.now(TIMEZONE)
+    tz = now.tzinfo
+    today_weekday = now.weekday()
+    best = None
+
+    for day_offset in range(search_horizon_days + 1):
+        weekday = (today_weekday + day_offset) % 7
+        tours = schedule.get(weekday, [])
+        if not tours:
+            continue
+
+        # Sort tours by time of day
+        for tour_hour, tour_minute, tour_name in sorted(tours, key=lambda t: t[0]*60 + t[1]):
+            # Build the candidate datetime in the same timezone as 'now'
+            candidate_date = (now.date() + datetime.timedelta(days=day_offset))
+            candidate_dt = datetime.datetime(
+                candidate_date.year, candidate_date.month, candidate_date.day,
+                tour_hour, tour_minute, tzinfo=tz
+            )
+
+            # Skip past tours today
+            if candidate_dt < now:
+                continue
+
+            minutes_until = int((candidate_dt - now).total_seconds() // 60)
+
+            cand = {
+                "name": tour_name,
+                "hour": tour_hour,
+                "minute": tour_minute,
+                "weekday": weekday,
+                "day_offset": day_offset,
+                "scheduled_at": candidate_dt,
+                "minutes_until": minutes_until,
+            }
+
+            if best is None or cand["scheduled_at"] < best["scheduled_at"]:
+                best = cand
+
+        if best:
+            break
+
+    return best
 
 async def scheduled_tours(ws, ROOM):
-    """Checks the time and starts a tour based on the schedule."""
+    """Continuously checks the schedule and triggers tours at the right time."""
     print(f"Starting tour scheduler for {ROOM}...")
     TOUR_COMMANDS = load_tour_data(ROOM)
     last_check_minute = -1
+
     while True:
         now = datetime.datetime.now(TIMEZONE)
         today_weekday = now.weekday()
-        current_hour = now.hour
-        current_minute = now.minute
-        # print(f"Current time: {now.strftime('%Y-%m-%d %H:%M:%S')} (Weekday: {today_weekday}, Hour: {current_hour}, Minute: {current_minute})")
+        current_hour, current_minute = now.hour, now.minute
 
-        # Only check once per minute to avoid duplicate triggers
+        # Check only once per minute
         if current_minute == last_check_minute:
             await asyncio.sleep(1)
             continue
         last_check_minute = current_minute
 
+        # Get current schedule
         current_schedule = get_current_tour_schedule(ROOM)
-        
-        if today_weekday in current_schedule:
-            for tour_schedule in current_schedule[today_weekday]:
-                tour_hour, tour_minute, tour_name = tour_schedule
-                tour_time = tour_hour * 60 + tour_minute
-                current_time = current_hour * 60 + current_minute
-                if current_time == tour_time - 5:
-                    await ws.send(f"{ROOM}|Meow, there will be a tour in 5 minutes! Get ready nya!")
-                if (current_hour, current_minute) == (tour_hour, tour_minute):
-                    print(f"It's {tour_hour:02}:{tour_minute:02} on {now.strftime('%A')}. Sending tour commands.")
+        next_tour = get_next_tournight(current_schedule, today_weekday, current_hour, current_minute)
 
-                    if tour_name == "Random Monothreat Type":
-                        monothreat_keys = [key for key in TOUR_COMMANDS.keys() if key.startswith("Monothreat")]
-                        if monothreat_keys:
-                            lookup_key = random.choice(monothreat_keys)
-                        else:
-                            # fallback if something goes wrong
-                            await ws.send(f"{ROOM}|Meow wasnt able to pick a random type. Please tell Neko that meow did the dumb.")
-                            lookup_key = "Monothreat Fairy"
+        if next_tour:
+            next_tour_time, next_tour_name = next_tour
+            tour_hour, tour_minute = divmod(next_tour_time, 60)
 
-                        # Double-check the key exists in TOUR_COMMANDS
-                        if lookup_key in TOUR_COMMANDS:
-                            await ws.send(f"{ROOM}|/tour end")
-                            await asyncio.sleep(2)  # Short delay to ensure the tour ends before starting a new one
-                            tour_commands = TOUR_COMMANDS[lookup_key].split('\n')
-                            
-                            for command in tour_commands:
-                                await ws.send(f"{ROOM}|{command.strip()}")
-                            #if "Monotype" in lookup_key or "Monothreat" in lookup_key:
-                            #    await ws.send(f"{current_room}|/tour name {lookup_key} Tour Nights")
-                            #else:
-                            #    await ws.send(f"{current_room}|/tour name {lookup_key} {current_room.title()} Tour Nights")
+            # 5-minute warning
+            if current_hour * 60 + current_minute == next_tour_time - 5:
+                await ws.send(f"{ROOM}|Meow, there will be a {next_tour_name} tour in 5 minutes! Get ready nya!")
+
+            # Start the tour
+            if (current_hour, current_minute) == (tour_hour, tour_minute):
+                print(f"It's {tour_hour:02}:{tour_minute:02} on {now.strftime('%A')}. Sending tour commands.")
+
+                if next_tour_name == "Random Monothreat Type":
+                    monothreat_keys = [key for key in TOUR_COMMANDS.keys() if key.startswith("Monothreat")]
+                    lookup_key = random.choice(monothreat_keys) if monothreat_keys else "Monothreat Fairy"
+
+                    if lookup_key in TOUR_COMMANDS:
+                        await ws.send(f"{ROOM}|/tour end")
+                        await asyncio.sleep(2)
+                        for cmd in TOUR_COMMANDS[lookup_key].split('\n'):
+                            await ws.send(f"{ROOM}|{cmd.strip()}")
+                        if "Monotype" in lookup_key or "Monothreat" in lookup_key:
+                            await ws.send(f"{ROOM}|/tour name {lookup_key} Tour Nights")
                         else:
-                            # Final fallback if even the chosen key isn't valid
-                            await ws.send(f"{ROOM}|Meow wasnt able to get the monothreat commands. Meow cant start the tour, ask an auth to start it meow.")
-                            await ws.send(f"{ROOM}|Also tell this to Neko meow ;w;")
+                            await ws.send(f"{ROOM}|/tour name {lookup_key} {current_room.title()} Tour Nights")
                     else:
-                        if tour_name in TOUR_COMMANDS:
-                            tour_commands = TOUR_COMMANDS[tour_name].split('\n')
-                            for command in tour_commands:
-                                await ws.send(f"{ROOM}|{command.strip()}")
-                        else:
-                            print(f"Error: No command found for '{tour_name}'.")
-                            await ws.send(f"{ROOM}|Meow tried to create a tour for {tour_name}, but I couldnt read it or Neko is being stinky. Please tell this to Neko.")
+                        await ws.send(f"{ROOM}|Meow couldnt get the monothreat commands. Ask an auth meow.")
+                else:
+                    if next_tour_name in TOUR_COMMANDS:
+                        for cmd in TOUR_COMMANDS[next_tour_name].split('\n'):
+                            await ws.send(f"{ROOM}|{cmd.strip()}")
+                    else:
+                        print(f"Error: No command found for '{next_tour_name}'.")
+                        await ws.send(f"{ROOM}|Meow tried to create {next_tour_name}, but no commands found.")
 
         await asyncio.sleep(58)
 
 
 def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
-    from calendar import monthrange
-    import datetime
+
 
     color_sets = [
         ("#F5F5F5", "#FFC0CB"),
@@ -159,12 +214,8 @@ def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
     header_color = "#B0C4DE"
     text_color = "#0A0A0A"
     num_days = monthrange(year, month)[1]
-
-    if room == "monotype":
-        schedules = {"A": TOUR_SCHEDULE_A, "B": TOUR_SCHEDULE_B}
-    elif room == "nationaldexmonotype":
-        schedules = {"NDM": TOUR_SCHEDULE_NDM}
-    else:
+    schedule = get_current_tour_schedule(room)
+    if schedule is None:
         return f"<p style='color:{text_color};'>Invalid room specified</p>"
 
     html = []
@@ -194,14 +245,6 @@ def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
     for day in range(1, num_days + 1):
         current_date = datetime.date(year, month, day)
         weekday = current_date.weekday()
-
-        if room == "monotype":
-            weeks_passed = (current_date - START_DATE).days // 7
-            week_type = "A" if weeks_passed % 2 == 0 else "B"
-            schedule = schedules[week_type]
-        else:
-            schedule = schedules["NDM"]
-
         if weekday not in schedule:
             continue
 
@@ -244,3 +287,5 @@ async def main(ws, ROOM):
 if __name__ == "__main__":
     html_schedule = generate_monthly_tour_schedule_html(8, 2025, "monotype")
     print(html_schedule)
+    Sched = get_current_tour_schedule("nationaldexmonotype")
+    print(get_next_tournight(Sched))
