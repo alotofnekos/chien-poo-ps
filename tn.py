@@ -288,4 +288,5 @@ if __name__ == "__main__":
     html_schedule = generate_monthly_tour_schedule_html(8, 2025, "monotype")
     print(html_schedule)
     Sched = get_current_tour_schedule("nationaldexmonotype")
-    print(get_next_tournight(Sched))
+    next_tour = get_next_tournight(Sched)
+    print(f"m|Meow, the next tournight is {next_tour['name']} at {next_tour['hour']}:{next_tour['minute']} (GMT-4). Its in {next_tour['minutes_until']} minute(s)!")

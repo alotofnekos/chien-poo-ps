@@ -79,13 +79,13 @@ async def listen_for_messages(ws, room_commands_map):
                             html_schedule = generate_monthly_tour_schedule_html(now.month, now.year, room=current_room)
                             await ws.send(f"{current_room}|/addhtmlbox {html_schedule}")
                         
-                        elif msg_text.lower().startswith("meow when next tournight"):
+                        elif msg_text.lower().startswith("meow next tn"):
                             next_tour = get_next_tournight(current_room)
                             await ws.send(f"{current_room}|Meow, the next tournight is {next_tour['name']} at {next_tour['hour']}:{next_tour['minute']} (GMT-4). Its in {next_tour['minutes_until']} minute(s)!")
                         
                         elif msg_text.lower().startswith("meow help"):
                             help_msg = ("Meow commands: 'meow start [tour name]', 'meow show potd', "
-                                        "'meow show schedule', 'meow help', 'meow show cat', 'meow uptime', 'meow when next tournight'")
+                                        "'meow show schedule', 'meow help', 'meow show cat', 'meow uptime', 'meow next tn'")
                             await ws.send(f"{current_room}|Meow, here are the commands! {help_msg}")
 
                         elif prefix in ('%', '@', '#', '~'):
