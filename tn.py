@@ -214,7 +214,8 @@ async def scheduled_tours(ws, ROOM):
 
 
 def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
-
+    from calendar import monthrange
+    import datetime
 
     color_sets = [
         ("#F5F5F5", "#FFC0CB"),
@@ -223,8 +224,12 @@ def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
     header_color = "#B0C4DE"
     text_color = "#0A0A0A"
     num_days = monthrange(year, month)[1]
-    schedule = get_current_tour_schedule(room)
-    if schedule is None:
+
+    if room == "monotype":
+        schedules = {"A": TOUR_SCHEDULE_A, "B": TOUR_SCHEDULE_B}
+    elif room == "nationaldexmonotype":
+        schedules = {"NDM": TOUR_SCHEDULE_NDM}
+    else:
         return f"<p style='color:{text_color};'>Invalid room specified</p>"
 
     html = []
@@ -254,6 +259,14 @@ def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
     for day in range(1, num_days + 1):
         current_date = datetime.date(year, month, day)
         weekday = current_date.weekday()
+
+        if room == "monotype":
+            weeks_passed = (current_date - START_DATE).days // 7
+            week_type = "A" if weeks_passed % 2 == 0 else "B"
+            schedule = schedules[week_type]
+        else:
+            schedule = schedules["NDM"]
+
         if weekday not in schedule:
             continue
 
