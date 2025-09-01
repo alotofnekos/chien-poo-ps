@@ -56,13 +56,13 @@ TOUR_SCHEDULE_B = {
 
 # National Dex Monotype
 TOUR_SCHEDULE_NDM = {
-    0: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
-    1: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
-    2: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
-    3: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
-    4: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
-    5: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
-    6: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    0: [(8,0,'NatDex'), (9,35,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    1: [(8,0,'NatDex'), (9,35,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    2: [(8,0,'NatDex'), (9,35,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    3: [(8,0,'NatDex'), (9,35,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    4: [(8,0,'NatDex'), (9,35,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    5: [(8,0,'NatDex'), (9,35,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    6: [(8,0,'NatDex'), (9,35,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
 }
 
 # The queue for storing the random type.
@@ -146,66 +146,69 @@ def get_next_tournight(schedule, search_horizon_days=7):
     return best
 
 async def scheduled_tours(ws, ROOM):
-    """Continuously checks the schedule and triggers tours at the right time."""
+    """Checks the time and starts a tour based on the schedule."""
     print(f"Starting tour scheduler for {ROOM}...")
     TOUR_COMMANDS = load_tour_data(ROOM)
     last_check_minute = -1
-
     while True:
         now = datetime.datetime.now(TIMEZONE)
         today_weekday = now.weekday()
-        current_hour, current_minute = now.hour, now.minute
+        current_hour = now.hour
+        current_minute = now.minute
+        # print(f"Current time: {now.strftime('%Y-%m-%d %H:%M:%S')} (Weekday: {today_weekday}, Hour: {current_hour}, Minute: {current_minute})")
 
-        # Check only once per minute
+        # Only check once per minute to avoid duplicate triggers
         if current_minute == last_check_minute:
             await asyncio.sleep(1)
             continue
         last_check_minute = current_minute
 
-        # Get current schedule
         current_schedule = get_current_tour_schedule(ROOM)
-        next_tour = get_next_tournight(current_schedule, today_weekday, current_hour, current_minute)
+        
+        if today_weekday in current_schedule:
+            for tour_schedule in current_schedule[today_weekday]:
+                tour_hour, tour_minute, tour_name = tour_schedule
+                tour_time = tour_hour * 60 + tour_minute
+                current_time = current_hour * 60 + current_minute
+                if current_time == tour_time - 5:
+                    await ws.send(f"{ROOM}|Meow, there will be a tour in 5 minutes! Get ready nya!")
+                if (current_hour, current_minute) == (tour_hour, tour_minute):
+                    print(f"It's {tour_hour:02}:{tour_minute:02} on {now.strftime('%A')}. Sending tour commands.")
 
-        if next_tour:
-            next_tour_time, next_tour_name = next_tour
-            tour_hour, tour_minute = divmod(next_tour_time, 60)
-
-            # 5-minute warning
-            if current_hour * 60 + current_minute == next_tour_time - 5:
-                await ws.send(f"{ROOM}|Meow, there will be a {next_tour_name} tour in 5 minutes! Get ready nya!")
-
-            # Start the tour
-            if (current_hour, current_minute) == (tour_hour, tour_minute):
-                print(f"It's {tour_hour:02}:{tour_minute:02} on {now.strftime('%A')}. Sending tour commands.")
-
-                if next_tour_name == "Random Monothreat Type":
-                    monothreat_keys = [key for key in TOUR_COMMANDS.keys() if key.startswith("Monothreat")]
-                    lookup_key = random.choice(monothreat_keys) if monothreat_keys else "Monothreat Fairy"
-
-                    if lookup_key in TOUR_COMMANDS:
-                        await ws.send(f"{ROOM}|/tour end")
-                        await asyncio.sleep(2)
-                        for cmd in TOUR_COMMANDS[lookup_key].split('\n'):
-                            await ws.send(f"{ROOM}|{cmd.strip()}")
-                        if "Monotype" in lookup_key or "Monothreat" in lookup_key:
-                            await ws.send(f"{ROOM}|/tour name {lookup_key} Tour Nights")
+                    if tour_name == "Random Monothreat Type":
+                        monothreat_keys = [key for key in TOUR_COMMANDS.keys() if key.startswith("Monothreat")]
+                        if monothreat_keys:
+                            lookup_key = random.choice(monothreat_keys)
                         else:
-                            await ws.send(f"{ROOM}|/tour name {lookup_key} {ROOM.title()} Tour Nights")
-                        await ws.send(f"{ROOM}|/tour scouting off") # no scouting only for tounights
-                    else:
-                        await ws.send(f"{ROOM}|Meow couldnt get the monothreat commands. Ask an auth meow.")
-                else:
-                    if next_tour_name in TOUR_COMMANDS:
-                        for cmd in TOUR_COMMANDS[next_tour_name].split('\n'):
-                            await ws.send(f"{ROOM}|{cmd.strip()}")
-                        if "Monotype" in lookup_key or "Monothreat" in lookup_key:
-                            await ws.send(f"{ROOM}|/tour name {lookup_key} Tour Nights")
+                            # fallback if something goes wrong
+                            await ws.send(f"{ROOM}|Meow wasnt able to pick a random type. Please tell Neko that meow did the dumb.")
+                            lookup_key = "Monothreat Fairy"
+
+                        # Double-check the key exists in TOUR_COMMANDS
+                        if lookup_key in TOUR_COMMANDS:
+                            await ws.send(f"{ROOM}|/tour end")
+                            await asyncio.sleep(2)  # Short delay to ensure the tour ends before starting a new one
+                            tour_commands = TOUR_COMMANDS[lookup_key].split('\n')
+                            
+                            for command in tour_commands:
+                                await ws.send(f"{ROOM}|{command.strip()}")
+                            #if "Monotype" in lookup_key or "Monothreat" in lookup_key:
+                            #    await ws.send(f"{current_room}|/tour name {lookup_key} Tour Nights")
+                            #else:
+                            #    await ws.send(f"{current_room}|/tour name {lookup_key} {current_room.title()} Tour Nights")
+                            await ws.send(f"{ROOM}|/tour scouting off")
                         else:
-                            await ws.send(f"{ROOM}|/tour name {lookup_key} {ROOM.title()} Tour Nights")
-                        await ws.send(f"{ROOM}|/tour scouting off") # no scouting only for tounights
+                            # Final fallback if even the chosen key isn't valid
+                            await ws.send(f"{ROOM}|Meow wasnt able to get the monothreat commands. Meow cant start the tour, ask an auth to start it meow.")
+                            await ws.send(f"{ROOM}|Also tell this to Neko meow ;w;")
                     else:
-                        print(f"Error: No command found for '{next_tour_name}'.")
-                        await ws.send(f"{ROOM}|Meow tried to create {next_tour_name}, but no commands found.")
+                        if tour_name in TOUR_COMMANDS:
+                            tour_commands = TOUR_COMMANDS[tour_name].split('\n')
+                            for command in tour_commands:
+                                await ws.send(f"{ROOM}|{command.strip()}")
+                        else:
+                            print(f"Error: No command found for '{tour_name}'.")
+                            await ws.send(f"{ROOM}|Meow tried to create a tour for {tour_name}, but I couldnt read it or Neko is being stinky. Please tell this to Neko.")
 
         await asyncio.sleep(58)
 
