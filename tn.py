@@ -190,13 +190,19 @@ async def scheduled_tours(ws, ROOM):
                         if "Monotype" in lookup_key or "Monothreat" in lookup_key:
                             await ws.send(f"{ROOM}|/tour name {lookup_key} Tour Nights")
                         else:
-                            await ws.send(f"{ROOM}|/tour name {lookup_key} {current_room.title()} Tour Nights")
+                            await ws.send(f"{ROOM}|/tour name {lookup_key} {ROOM.title()} Tour Nights")
+                        await ws.send(f"{ROOM}|/tour scouting off") # no scouting only for tounights
                     else:
                         await ws.send(f"{ROOM}|Meow couldnt get the monothreat commands. Ask an auth meow.")
                 else:
                     if next_tour_name in TOUR_COMMANDS:
                         for cmd in TOUR_COMMANDS[next_tour_name].split('\n'):
                             await ws.send(f"{ROOM}|{cmd.strip()}")
+                        if "Monotype" in lookup_key or "Monothreat" in lookup_key:
+                            await ws.send(f"{ROOM}|/tour name {lookup_key} Tour Nights")
+                        else:
+                            await ws.send(f"{ROOM}|/tour name {lookup_key} {ROOM.title()} Tour Nights")
+                        await ws.send(f"{ROOM}|/tour scouting off") # no scouting only for tounights
                     else:
                         print(f"Error: No command found for '{next_tour_name}'.")
                         await ws.send(f"{ROOM}|Meow tried to create {next_tour_name}, but no commands found.")
