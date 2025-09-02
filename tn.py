@@ -56,13 +56,13 @@ TOUR_SCHEDULE_B = {
 
 # National Dex Monotype
 TOUR_SCHEDULE_NDM = {
-    0: [(8,0,'NatDex'), (9,35,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
-    1: [(8,0,'NatDex'), (9,35,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
-    2: [(8,0,'NatDex'), (9,35,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
-    3: [(8,0,'NatDex'), (9,35,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
-    4: [(8,0,'NatDex'), (9,35,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
-    5: [(8,0,'NatDex'), (9,35,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
-    6: [(8,0,'NatDex'), (9,35,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    0: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    1: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    2: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    3: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    4: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    5: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    6: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
 }
 
 # The queue for storing the random type.
@@ -171,7 +171,7 @@ async def scheduled_tours(ws, ROOM):
                 tour_time = tour_hour * 60 + tour_minute
                 current_time = current_hour * 60 + current_minute
                 if current_time == tour_time - 5:
-                    await ws.send(f"{ROOM}|Meow, there will be a tour in 5 minutes! Get ready nya!")
+                    await ws.send(f"{ROOM}|Meow, there will be a {tour_name.title()} tour in 5 minutes! Get ready nya!")
                 if (current_hour, current_minute) == (tour_hour, tour_minute):
                     print(f"It's {tour_hour:02}:{tour_minute:02} on {now.strftime('%A')}. Sending tour commands.")
 
@@ -192,10 +192,7 @@ async def scheduled_tours(ws, ROOM):
                             
                             for command in tour_commands:
                                 await ws.send(f"{ROOM}|{command.strip()}")
-                            #if "Monotype" in lookup_key or "Monothreat" in lookup_key:
-                            #    await ws.send(f"{current_room}|/tour name {lookup_key} Tour Nights")
-                            #else:
-                            #    await ws.send(f"{current_room}|/tour name {lookup_key} {current_room.title()} Tour Nights")
+                            await ws.send(f"{ROOM}|/tour name {lookup_key} Tour Nights")
                             await ws.send(f"{ROOM}|/tour scouting off")
                         else:
                             # Final fallback if even the chosen key isn't valid
@@ -206,6 +203,11 @@ async def scheduled_tours(ws, ROOM):
                             tour_commands = TOUR_COMMANDS[tour_name].split('\n')
                             for command in tour_commands:
                                 await ws.send(f"{ROOM}|{command.strip()}")
+                            if "Monotype" in tour_name or "Monothreat" in tour_name:
+                                await ws.send(f"{ROOM}|/tour name {tour_name} Tour Nights")
+                            else:
+                                await ws.send(f"{ROOM}|/tour name {tour_name} {ROOM.title()} Tour Nights")
+                            await ws.send(f"{ROOM}|/tour scouting off")
                         else:
                             print(f"Error: No command found for '{tour_name}'.")
                             await ws.send(f"{ROOM}|Meow tried to create a tour for {tour_name}, but I couldnt read it or Neko is being stinky. Please tell this to Neko.")

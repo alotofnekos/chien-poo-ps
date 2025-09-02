@@ -79,10 +79,14 @@ async def listen_for_messages(ws, room_commands_map):
                             html_schedule = generate_monthly_tour_schedule_html(now.month, now.year, room=current_room)
                             await ws.send(f"{current_room}|/addhtmlbox {html_schedule}")
                         
+                        elif msg_text.lower().startswith("meow who made you"):
+                            await ws.send(f"{current_room}|Meow was made by Neko >:3")    
+                        
                         elif msg_text.lower().startswith("meow next tn"):
                             nx_schedule = get_current_tour_schedule(current_room)
                             next_tour = get_next_tournight(nx_schedule)
                             await ws.send(f"{current_room}|Meow, the next tournight is {next_tour['name']} at {next_tour['hour']:02d}:{next_tour['minute']:02d} (GMT-4). Its in {next_tour['minutes_until']} minute(s)!")
+                        
                         elif msg_text.lower().startswith("meow help"):
                             help_msg = ("'meow start [tour name]', 'meow show potd', "
                                         "'meow show schedule', 'meow help', 'meow show cat', 'meow uptime', 'meow next tn'")
@@ -96,9 +100,11 @@ async def listen_for_messages(ws, room_commands_map):
                                     await ws.send(f'{current_room}|/addhtmlbox <img src="{cat}" height="0" width="0" style="max-height: 350px; height: auto; width: auto;">')
                                 else:
                                     await ws.send(f"{current_room}|Meow, couldn't find a cat right meow ;w;")
+                            
                             elif msg_text.lower().startswith("meow uptime"):
                                 uptime_msg = get_uptime(listener_start_time)
                                 await ws.send(f"{current_room}|{uptime_msg}")
+                            
                             elif re.search(r"\bmeow\b", msg_text, re.IGNORECASE):
                                 emotion_bank = [
                                     ":3", ":3c", ":<", ":c", ";w;", "'w'", "awa", "uwu",
