@@ -203,7 +203,7 @@ async def scheduled_tours(ws, ROOM):
                             tour_commands = TOUR_COMMANDS[tour_name].split('\n')
                             for command in tour_commands:
                                 await ws.send(f"{ROOM}|{command.strip()}")
-                            if "Monotype" in tour_name or "Monothreat" in tour_name:
+                            if "Monotype" in tour_name or "Monothreat" in tour_name or "NatDex" in tour_name:
                                 await ws.send(f"{ROOM}|/tour name {tour_name} Tour Nights")
                             else:
                                 await ws.send(f"{ROOM}|/tour name {tour_name} {ROOM.title()} Tour Nights")
@@ -309,7 +309,7 @@ async def main(ws, ROOM):
 
 # Debug output
 if __name__ == "__main__":
-    html_schedule = generate_monthly_tour_schedule_html(8, 2025, "monotype")
+    html_schedule = generate_monthly_tour_schedule_html(9, 2025, "monotype")
     print(html_schedule)
     Sched = get_current_tour_schedule("nationaldexmonotype")
     next_tour = get_next_tournight(Sched)

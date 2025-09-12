@@ -9,11 +9,11 @@
 },
 {
     "Tour": "Tera",
-    "Code": "/tour new gen9monotype,elim,,,Monotype Terastal\n/tour autostart 8\n/tour autodq 5\n/tour rules !terastalclause, -Flutter Mane, -Ogerpon-Hearthflame, -Sneasler, -Cresselia, -Spectrier, -Terapagos, -Volcarona, -Dragonite, -Latias, -Latios, -Raging Bolt, -Gliscor, -Heat Rock, -Icy Rock\n.official"
+    "Code": "/tour new gen9monotype,elim,,,Monotype Terastal\n/tour autodq 5\n/tour rules !terastalclause, -Flutter Mane, -Ogerpon-Hearthflame, -Sneasler, -Cresselia, -Spectrier, -Terapagos, -Volcarona, -Dragonite, -Latias, -Latios, -Raging Bolt, -Gliscor, -Heat Rock, -Icy Rock\n.official"
 },
 {
     "Tour": "Ubers",
-    "Code": "/tour new gen9ubers, elim,,,Ubers Monotype\n/tour autostart 8\n/tour autodq 5\n/tour rules Same Type Clause, terastalclause, Evasion Abilities Clause, -Calyrex-Ice, -Koraidon, -Miraidon, -Zacian-Crowned, -Quick Claw\n.official"
+    "Code": "/tour new gen9ubers, elim,,,Ubers Monotype\n/tour autodq 5\n/tour rules Same Type Clause, terastalclause, Evasion Abilities Clause, -Calyrex-Ice, -Koraidon, -Miraidon, -Zacian-Crowned, -Quick Claw\n.official"
 },
 {
     "Tour": "CAP",
@@ -21,7 +21,7 @@
 },
 {
     "Tour": "Monotype-Wildcard",
-    "Code": "/tour new gen9monotype,elim,,,Monotype Wildcard\n/tour autostart 8\n/tour autodq 5\n/tour rules !Same Type Clause, -Heat Rock, -Smeargle \n/wall Gholdengo is restricted to its actual types!\n.official"
+    "Code": "/tour new gen9monotype,elim,,,Monotype Wildcard\n/tour autodq 5\n/tour rules !Same Type Clause, -Heat Rock, -Smeargle \n/wall Gholdengo is restricted to its actual types!\n.official"
 },
 { "Tour":"SV","Code":"/tour new gen9monotype,elimination\n!rfaq samples\n.official"},
 { "Tour":"SS","Code":"/tour new gen8monotype,elimination\n!rfaq samples\n.official"},
