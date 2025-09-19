@@ -172,7 +172,7 @@ async def handle_tournament_message(line: str, room: str):
                 print(f"[{room}] Official tournament ended. Processing results...")
                 logs = TOURNAMENT_STATE.pop(room, [])
                 results = process_tourlogs(room, logs)
-                await save_tournament_results(room, logs)
+                 save_tournament_results(room, logs)
             else:
                 print(f"[{room}] Unofficial tournament ended. Ignoring results.")
 
