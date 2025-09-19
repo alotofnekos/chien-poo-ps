@@ -40,7 +40,12 @@ async def listen_for_messages(ws, room_commands_map):
                     await handle_pmmessages(ws, USERNAME, line)
                 
                 elif line.startswith("|tournament|") and current_room:
-                    await handle_tournament_message(line, current_room)
+                    # Try to grab the first number in the line as a timestamp
+                    match = re.search(r"\d+", line)
+                    ts = int(match.group()) if match else 0
+
+                    if ts > listener_start_time:
+                        await handle_tournament_message(line, current_room)
 
                 # chat messages
                 elif line.startswith("|c:|") and current_room:
@@ -148,20 +153,24 @@ async def handle_tournament_message(line: str, room: str):
     if not line.startswith("|tournament|"):
         return  # ignore all non-tournament lines
 
-    # start a new tournament
+    # --- Tournament created ---
     if "|tournament|create|" in line:
         if CURRENT_TOUR_EXISTS.get(room, False):
-            # failsafe: reset old unfinished tournament
+            # Failsafe: reset old unfinished tournament
             print(f"[{room}] Warning: New tournament created before previous ended. Resetting state.")
-        CURRENT_TOUR_EXISTS[room] = True
-        TOURNAMENT_STATE[room] = [line]
-        print(f"[{room}] Tournament created, logging started.")
 
-    # append tournament lines while active
-    elif CURRENT_TOUR_EXISTS.get(room, False):
+        CURRENT_TOUR_EXISTS[room] = True
+        TOURNAMENT_STATE[room] = [line]  # reset log storage
+        print(f"[{room}] Tournament created, logging started.")
+        return
+
+    # --- Tournament still active, log lines ---
+    if CURRENT_TOUR_EXISTS.get(room, False):
+        if room not in TOURNAMENT_STATE:
+            TOURNAMENT_STATE[room] = []  # ensure safe init
         TOURNAMENT_STATE[room].append(line)
 
-        # detect tournament end
+        # --- Tournament ended ---
         if "|tournament|end|" in line:
             if TRACK_OFFICIAL_TOUR.get(room, False):
                 print(f"[{room}] Official tournament ended. Processing results...")
@@ -171,7 +180,7 @@ async def handle_tournament_message(line: str, room: str):
             else:
                 print(f"[{room}] Unofficial tournament ended. Ignoring results.")
 
-            # always reset flags
+            # Always reset flags
             CURRENT_TOUR_EXISTS[room] = False
             TRACK_OFFICIAL_TOUR[room] = False
             print(f"[{room}] Tournament ended, logging stopped.")

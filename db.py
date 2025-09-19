@@ -43,6 +43,10 @@ class TournamentState:
             player = parts[3]
             self.players.add(player)
 
+        elif "|tournament|leave|" in line:
+            player = parts[3]
+            self.players.remove(player)
+
         elif "|tournament|start|" in line:
             self.player_count = int(parts[3])
             self.total_rounds = math.ceil(math.log2(self.player_count))
@@ -143,7 +147,7 @@ class TournamentManager:
 
 
 def get_leaderboard_html(room: str, limit: int = 20) -> str:
-    """Fetch leaderboard from Supabase and return as styled HTML table (per-room only, inline styles)."""
+    """Fetch leaderboard from Supabase and return as a simple HTML table (per-room only)."""
     resp = supabase.table("results") \
         .select("*") \
         .eq("room", room) \
@@ -154,39 +158,25 @@ def get_leaderboard_html(room: str, limit: int = 20) -> str:
     rows = resp.data or []
 
     html = [
-        f"""
-        <div style="width:75%;margin:2em auto;font-family:Arial,sans-serif;text-align:center;">
-            <div style="background:linear-gradient(90deg,#6c63ff,#8e7dff);color:white;
-                        font-size:1.5em;font-weight:bold;padding:10px;
-                        border-radius:8px 8px 0 0;margin-bottom:0;">
-                Leaderboard — {room}
-            </div>
-            <table style="border-collapse:collapse;width:100%;margin:0 auto;">
-                <thead>
-                    <tr style="background-color:#6c63ff;color:white;">
-                        <th style="border:1px solid #ccc;padding:8px 12px;">Rank</th>
-                        <th style="border:1px solid #ccc;padding:8px 12px;">User</th>
-                        <th style="border:1px solid #ccc;padding:8px 12px;">Points</th>
-                        <th style="border:1px solid #ccc;padding:8px 12px;">Resistance</th>
-                    </tr>
-                </thead>
-                <tbody>
-        """
+        f"<h2>Leaderboard — {room}</h2>",
+        "<table border='1' cellpadding='5' cellspacing='0'>",
+        "<thead><tr><th>Rank</th><th>User</th><th>Points</th><th>Resistance</th></tr></thead>",
+        "<tbody>"
     ]
 
     for i, row in enumerate(rows, start=1):
-        bg_color = "#e6f0ff" if i % 2 == 0 else "#f3e6ff"
         html.append(
-            f"<tr style='background-color:{bg_color};'>"
-            f"<td style='border:1px solid #ccc;padding:8px 12px;text-align:center;'>{i}</td>"
-            f"<td style='border:1px solid #ccc;padding:8px 12px;text-align:center;'>{row['user']}</td>"
-            f"<td style='border:1px solid #ccc;padding:8px 12px;text-align:center;'>{row['points']}</td>"
-            f"<td style='border:1px solid #ccc;padding:8px 12px;text-align:center;'>{round(row['resistance'], 2)}</td>"
+            f"<tr>"
+            f"<td>{i}</td>"
+            f"<td>{row['user']}</td>"
+            f"<td>{row['points']}</td>"
+            f"<td>{round(row['resistance'], 2)}</td>"
             "</tr>"
         )
 
-    html.append("</tbody></table></div>")
-    return "\n".join(html)
+    html.append("</tbody></table>")
+    return html
+
 
 
 
