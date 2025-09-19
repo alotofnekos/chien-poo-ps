@@ -10,7 +10,11 @@ from tn import generate_monthly_tour_schedule_html,get_next_tournight, get_curre
 import datetime
 from pm_handler import get_random_cat_url
 load_dotenv()
+from db import save_tournament_results, get_leaderboard_html,process_tourlogs
 USERNAME = os.getenv("PS_USERNAME")
+CURRENT_TOUR_EXISTS = {}  
+TRACK_OFFICIAL_TOUR = {}  
+TOURNAMENT_STATE = {}     
 
 async def listen_for_messages(ws, room_commands_map):
     """Listens for and processes ALL messages from the WebSocket, dispatching by room."""
@@ -34,6 +38,9 @@ async def listen_for_messages(ws, room_commands_map):
                 # PMs
                 if line.startswith("|pm|"):
                     await handle_pmmessages(ws, USERNAME, line)
+                
+                elif line.startswith("|tournament|") and current_room:
+                    await handle_tournament_message(line, current_room)
 
                 # chat messages
                 elif line.startswith("|c:|") and current_room:
@@ -48,12 +55,24 @@ async def listen_for_messages(ws, room_commands_map):
                     if ts < listener_start_time:
                         continue
 
-                    if "meow" in msg_text.lower() and prefix in ('+','%', '@', '#', '~'):
+                    if "meow" in msg_text.lower() and prefix in ('+','%', '@', '#', '~', '*'):
                         print(f"Received from {user} in {current_room}: {msg_text}")
 
                         TOUR_COMMANDS = room_commands_map.get(current_room, {})
+                        if msg_text.lower().startswith("meow official"):
+                            if CURRENT_TOUR_EXISTS.get(current_room, False):
+                                await ws.send(f"{current_room}|Tracking official tour in {current_room}, Nya >:3")
+                                TRACK_OFFICIAL_TOUR[current_room] = True
+                                TOURNAMENT_STATE[current_room] = []
+                            else:
+                                await ws.send(f"{current_room}| Nyo active tournament in {current_room}, ignoring 'meow official'. Stop bullying >:(")
 
-                        if msg_text.lower().startswith("meow start"):
+                        elif msg_text.lower().startswith("meow unofficial"):
+                            await ws.send(f"{current_room}| Meow stopped tracking this tour in {current_room}")
+                            TRACK_OFFICIAL_TOUR[current_room] = False
+                            TOURNAMENT_STATE.pop(current_room, None)
+
+                        elif msg_text.lower().startswith("meow start"):
                             tour_name = msg_text[len("meow start"):].strip()
 
                             lower_map = {k.lower(): k for k in TOUR_COMMANDS.keys()}
@@ -73,6 +92,9 @@ async def listen_for_messages(ws, room_commands_map):
 
                         elif msg_text.lower().startswith("meow show potd"):
                             await send_potd(ws, current_room)
+                        
+                        elif msg_text.lower().startswith("meow show lb"):
+                            await ws.send(f"{current_room}|/addhtmlbox {get_leaderboard_html(current_room)}")
 
                         elif msg_text.lower().startswith("meow show schedule"):
                             now = datetime.datetime.now()
@@ -120,6 +142,41 @@ async def listen_for_messages(ws, room_commands_map):
         except Exception as e:
             print(f"Error in message listener: {e}")
             raise
+
+async def handle_tournament_message(line: str, room: str):
+    """Logs tournament lines only, between create and end. Processes results if official."""
+    if not line.startswith("|tournament|"):
+        return  # ignore all non-tournament lines
+
+    # start a new tournament
+    if "|tournament|create|" in line:
+        if CURRENT_TOUR_EXISTS.get(room, False):
+            # failsafe: reset old unfinished tournament
+            print(f"[{room}] Warning: New tournament created before previous ended. Resetting state.")
+        CURRENT_TOUR_EXISTS[room] = True
+        TOURNAMENT_STATE[room] = [line]
+        print(f"[{room}] Tournament created, logging started.")
+
+    # append tournament lines while active
+    elif CURRENT_TOUR_EXISTS.get(room, False):
+        TOURNAMENT_STATE[room].append(line)
+
+        # detect tournament end
+        if "|tournament|end|" in line:
+            if TRACK_OFFICIAL_TOUR.get(room, False):
+                print(f"[{room}] Official tournament ended. Processing results...")
+                logs = TOURNAMENT_STATE.pop(room, [])
+                results = process_tourlogs(room, logs)
+                await save_tournament_results(room, logs)
+            else:
+                print(f"[{room}] Unofficial tournament ended. Ignoring results.")
+
+            # always reset flags
+            CURRENT_TOUR_EXISTS[room] = False
+            TRACK_OFFICIAL_TOUR[room] = False
+            print(f"[{room}] Tournament ended, logging stopped.")
+
+
 
 def get_uptime(listener_start_time):
     uptime_seconds = time.time() - listener_start_time

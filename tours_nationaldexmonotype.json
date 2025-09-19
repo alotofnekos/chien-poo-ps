@@ -1,34 +1,34 @@
 [
 {
   "Tour": "Z-less",
-  "Code":"/tour new nationaldexmonotype,elimination,,,Z-less NatDex Monotype\n/tour rules +Darkrai, +Dragapult, +Flutter Mane, +Gouging Fire, +Hoopa-Unbound, +Spectrier, +Zamazenta, Z-Move Clause\n.official"
+  "Code":"/tour new nationaldexmonotype,elimination,,,Z-less NatDex Monotype\n/tour rules +Darkrai, +Dragapult, +Flutter Mane, +Gouging Fire, +Hoopa-Unbound, +Spectrier, +Zamazenta, Z-Move Clause\n.official\nMeow official"
 },
 {
   "Tour": "Ubers",
-  "Code": "/tour new nationaldexubers,elimination,,,NatDex Monotype Ubers\n/tour rules -Calyrex-Shadow, Dynamax Clause, -Focus Band, -Gengarite, -King's Rock, -Marshadow, -Miraidon, +Shedinja, -Xerneas, Terastal Clause, Moody Clause, -Quick Claw, Same Type Clause, -Ultranecrozium Z, -Zacian-Crowned\n.official"
+  "Code": "/tour new nationaldexubers,elimination,,,NatDex Monotype Ubers\n/tour rules -Calyrex-Shadow, Dynamax Clause, -Focus Band, -Gengarite, -King's Rock, -Marshadow, -Miraidon, +Shedinja, -Xerneas, Terastal Clause, Moody Clause, -Quick Claw, Same Type Clause, -Ultranecrozium Z, -Zacian-Crowned\n.official\nMeow official"
 },
 {
   "Tour": "RU",
-  "Code": "/tour new gen9nationaldexru,elimination,,,NDM RU\n/tour rules Same Type Clause, +Drizzle, +Drought, -Terrain Extender, +Light Clay, -Booster Energy, -Icy Rock, -Pidgeotite, -Sablenite, -Swampertite, -Barraskewda, -Basculegion, -Basculegion-F, -Latias, +Golisopod, +Grafaiai, +Talonflame, +Grimmsnarl, -Blacephalon, -Cloyster, -Deoxys-Defense, -Damp Rock, -Smooth Rock, -Heat Rock\n.official"
+  "Code": "/tour new gen9nationaldexru,elimination,,,NDM RU\n/tour rules Same Type Clause, +Drizzle, +Drought, -Terrain Extender, +Light Clay, -Booster Energy, -Icy Rock, -Pidgeotite, -Sablenite, -Swampertite, -Barraskewda, -Basculegion, -Basculegion-F, -Latias, +Golisopod, +Grafaiai, +Talonflame, +Grimmsnarl, -Blacephalon, -Cloyster, -Deoxys-Defense, -Damp Rock, -Smooth Rock, -Heat Rock\n.official\nMeow official"
 },
-{ "Tour":"SS NatDex","Code":"/tour new gen8nationaldexmonotype,elimination\n.official"},
-{ "Tour":"NatDex","Code":"/tour new gen9nationaldexmonotype,elimination\n!rfaq samples\n.official"},
-{ "Tour": "Monothreat Bug", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Bug\n/tour rules Force Monotype = Bug\n.official" },
-{ "Tour": "Monothreat Dark", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Dark\n/tour rules Force Monotype = Dark\n.official" },
-{ "Tour": "Monothreat Dragon", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Dragon\n/tour rules Force Monotype = Dragon\n.official" },
-{ "Tour": "Monothreat Electric", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Electric\n/tour rules Force Monotype = Electric\n.official" },
-{ "Tour": "Monothreat Fairy", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Fairy\n/tour rules Force Monotype = Fairy\n.official" },
-{ "Tour": "Monothreat Fighting", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Fighting\n/tour rules Force Monotype = Fighting\n.official" },
-{ "Tour": "Monothreat Fire", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Fire\n/tour rules Force Monotype = Fire\n.official" },
-{ "Tour": "Monothreat Flying", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Flying\n/tour rules Force Monotype = Flying\n.official" },
-{ "Tour": "Monothreat Ghost", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Ghost\n/tour rules Force Monotype = Ghost\n.official" },
-{ "Tour": "Monothreat Grass", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Grass\n/tour rules Force Monotype = Grass\n.official" },
-{ "Tour": "Monothreat Ground", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Ground\n/tour rules Force Monotype = Ground\n.official" },
-{ "Tour": "Monothreat Ice", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Ice\n/tour rules Force Monotype = Ice\n.official" },
-{ "Tour": "Monothreat Normal", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Normal\n/tour rules Force Monotype = Normal\n.official" },
-{ "Tour": "Monothreat Poison", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Poison\n/tour rules Force Monotype = Poison\n.official" },
-{ "Tour": "Monothreat Psychic", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Psychic\n/tour rules Force Monotype = Psychic\n.official" },
-{ "Tour": "Monothreat Rock", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Rock\n/tour rules Force Monotype = Rock\n.official" },
-{ "Tour": "Monothreat Steel", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Steel\n/tour rules Force Monotype = Steel\n.official" },
-{ "Tour": "Monothreat Water", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Water\n/tour rules Force Monotype = Water\n.official" }
+{ "Tour":"SS NatDex","Code":"/tour new gen8nationaldexmonotype,elimination\n.official\nMeow official"},
+{ "Tour":"NatDex","Code":"/tour new gen9nationaldexmonotype,elimination\n!rfaq samples\n.official\nMeow official"},
+{ "Tour": "Monothreat Bug", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Bug\n/tour rules Force Monotype = Bug\n.official\nMeow official" },
+{ "Tour": "Monothreat Dark", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Dark\n/tour rules Force Monotype = Dark\n.official\nMeow official" },
+{ "Tour": "Monothreat Dragon", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Dragon\n/tour rules Force Monotype = Dragon\n.official\nMeow official" },
+{ "Tour": "Monothreat Electric", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Electric\n/tour rules Force Monotype = Electric\n.official\nMeow official" },
+{ "Tour": "Monothreat Fairy", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Fairy\n/tour rules Force Monotype = Fairy\n.official\nMeow official" },
+{ "Tour": "Monothreat Fighting", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Fighting\n/tour rules Force Monotype = Fighting\n.official\nMeow official" },
+{ "Tour": "Monothreat Fire", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Fire\n/tour rules Force Monotype = Fire\n.official\nMeow official" },
+{ "Tour": "Monothreat Flying", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Flying\n/tour rules Force Monotype = Flying\n.official\nMeow official" },
+{ "Tour": "Monothreat Ghost", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Ghost\n/tour rules Force Monotype = Ghost\n.official\nMeow official" },
+{ "Tour": "Monothreat Grass", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Grass\n/tour rules Force Monotype = Grass\n.official\nMeow official" },
+{ "Tour": "Monothreat Ground", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Ground\n/tour rules Force Monotype = Ground\n.official\nMeow official" },
+{ "Tour": "Monothreat Ice", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Ice\n/tour rules Force Monotype = Ice\n.official\nMeow official" },
+{ "Tour": "Monothreat Normal", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Normal\n/tour rules Force Monotype = Normal\n.official\nMeow official" },
+{ "Tour": "Monothreat Poison", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Poison\n/tour rules Force Monotype = Poison\n.official\nMeow official" },
+{ "Tour": "Monothreat Psychic", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Psychic\n/tour rules Force Monotype = Psychic\n.official\nMeow official" },
+{ "Tour": "Monothreat Rock", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Rock\n/tour rules Force Monotype = Rock\n.official\nMeow official" },
+{ "Tour": "Monothreat Steel", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Steel\n/tour rules Force Monotype = Steel\n.official\nMeow official" },
+{ "Tour": "Monothreat Water", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Water\n/tour rules Force Monotype = Water\n.official\nMeow official" }
 ]
