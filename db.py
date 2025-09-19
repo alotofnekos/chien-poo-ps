@@ -45,7 +45,7 @@ class TournamentState:
 
         elif "|tournament|leave|" in line:
             player = parts[3]
-            self.players.remove(player)
+            self.players.discard(player)  # safer than remove()
 
         elif "|tournament|start|" in line:
             self.player_count = int(parts[3])
@@ -53,7 +53,13 @@ class TournamentState:
 
         elif "|tournament|battlestart|" in line:
             p1, p2 = parts[3], parts[4]
-            self.matches.append({"p1": p1, "p2": p2, "winner": None, "loser": None, "round": None})
+            self.matches.append({
+                "p1": p1,
+                "p2": p2,
+                "winner": None,
+                "loser": None,
+                "round": None
+            })
 
         elif "|tournament|battleend|" in line:
             p1, p2, result = parts[3], parts[4], parts[5]
@@ -63,18 +69,37 @@ class TournamentState:
                     loser = p2 if result == "win" else p1
                     m["winner"], m["loser"] = winner, loser
 
-                    round_num = max(self.round_counter[winner], self.round_counter[loser]) + 1
+                    round_num = max(self.round_counter[winner],
+                                    self.round_counter[loser]) + 1
                     m["round"] = round_num
+
                     self.round_counter[winner] = round_num
                     self.round_counter[loser] = round_num
 
+                    # Give points for advancing
                     self.points[winner] += round_points(round_num)
+
+                    # Track survival depth
                     self.rounds_survived[winner] = max(self.rounds_survived[winner], round_num)
                     self.rounds_survived[loser] = max(self.rounds_survived[loser], round_num)
                     break
 
         elif "|tournament|end|" in line:
             self.finished = True
+
+            # ✅ Award placement bonuses
+            if self.matches:
+                final_match = max(self.matches, key=lambda m: m["round"] or 0)
+                if final_match["winner"] and final_match["loser"]:
+                    champ = final_match["winner"]
+                    runner_up = final_match["loser"]
+
+                    # Bonus for 1st place
+                    self.points[champ] += 15  
+
+                    # Bonus for 2nd place
+                    self.points[runner_up] += 5
+
 
     def apply_resistance(self):
         for m in self.matches:
