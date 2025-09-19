@@ -40,12 +40,8 @@ async def listen_for_messages(ws, room_commands_map):
                     await handle_pmmessages(ws, USERNAME, line)
                 
                 elif line.startswith("|tournament|") and current_room:
-                    # Try to grab the first number in the line as a timestamp
-                    match = re.search(r"\d+", line)
-                    ts = int(match.group()) if match else 0
-
-                    if ts > listener_start_time:
-                        await handle_tournament_message(line, current_room)
+                    
+                    await handle_tournament_message(line, current_room)
 
                 # chat messages
                 elif line.startswith("|c:|") and current_room:
