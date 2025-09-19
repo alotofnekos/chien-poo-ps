@@ -109,7 +109,7 @@ class TournamentState:
 
 # ---------- SUPABASE ----------
 def update_db(scoreboard, room):
-    supabase.table("results").upsert([
+    supabase.table("tour_lb").upsert([
         {
             "username": player,
             "points": pts,
@@ -144,7 +144,7 @@ class TournamentManager:
 
 def get_leaderboard_html(room: str, limit: int = 20) -> str:
     """Fetch leaderboard from Supabase and return as styled HTML table (per-room only, inline styles)."""
-    resp = supabase.table("results") \
+    resp = supabase.table("tour_lb") \
         .select("*") \
         .eq("room", room) \
         .order("points", desc=True) \
