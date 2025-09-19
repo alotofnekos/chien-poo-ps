@@ -178,7 +178,6 @@ def get_leaderboard_html(room: str, limit: int = 20) -> str:
             f"<td>{i}</td>"
             f"<td>{row['username']}</td>"
             f"<td>{row['points']}</td>"
-            f"<td>{round(row['resistance'], 2)}</td>"
             "</tr>"
         )
 
