@@ -85,6 +85,7 @@ class TournamentState:
                 self.points[loser] += resistance_points
 
     def get_scoreboard(self):
+        """Return scoreboard with points and resistance (0–1 only)."""
         resistance = defaultdict(float)
 
         for player in self.points.keys() | self.players:
@@ -98,17 +99,24 @@ class TournamentState:
                     opps.append(m["p1"])
 
             if opps and self.total_rounds > 0:
-                wrs = [self.rounds_survived[o] / self.total_rounds for o in opps]
-                resistance[player] = sum(wrs) / len(wrs) if wrs else 0.0
+                # normalized opponent WRs (always between 0 and 1)
+                wrs = [
+                    self.rounds_survived[o] / self.total_rounds
+                    for o in opps
+                    if self.total_rounds > 0
+                ]
+                resistance[player] = round(sum(wrs) / len(wrs), 2)
             else:
                 resistance[player] = 0.0
 
+        # build scoreboard as [player, points, resistance]
         scoreboard = [
-            [player, self.points[player], round(resistance[player], 2)]
+            [player, self.points[player], resistance[player]]
             for player in self.points.keys() | self.players
         ]
         scoreboard.sort(key=lambda x: (x[1], x[2]), reverse=True)
         return scoreboard
+
 
 
 # ---------- SUPABASE ----------
@@ -175,7 +183,7 @@ def get_leaderboard_html(room: str, limit: int = 20) -> str:
         )
 
     html.append("</tbody></table>")
-    return html
+    return "\n".join(html)
 
 
 
