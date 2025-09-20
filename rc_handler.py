@@ -10,7 +10,7 @@ from tn import generate_monthly_tour_schedule_html,get_next_tournight, get_curre
 import datetime
 from pm_handler import get_random_cat_url
 load_dotenv()
-from db import save_tournament_results, get_leaderboard_html,process_tourlogs
+from db import save_tournament_results, get_leaderboard_html,process_tourlogs, add_points
 USERNAME = os.getenv("PS_USERNAME")
 CURRENT_TOUR_EXISTS = {}  
 TRACK_OFFICIAL_TOUR = {}  
@@ -122,11 +122,30 @@ async def listen_for_messages(ws, room_commands_map):
                                     await ws.send(f'{current_room}|/addhtmlbox <img src="{cat}" height="0" width="0" style="max-height: 350px; height: auto; width: auto;">')
                                 else:
                                     await ws.send(f"{current_room}|Meow, couldn't find a cat right meow ;w;")
-                            
                             elif msg_text.lower().startswith("meow uptime"):
                                 uptime_msg = get_uptime(listener_start_time)
                                 await ws.send(f"{current_room}|{uptime_msg}")
                             
+                            elif prefix in ('#', '~') and msg_text.lower().startswith("meow add points"):
+                                try:
+                                    # Strip command part
+                                    args = msg_text[len("meow add points"):].strip()
+
+                                    # Expect format: "username, points"
+                                    if "," not in args:
+                                        await ws.send(f"{current_room}|Invalid format meow. Use: meow add points <username>, <points> >:(")
+                                        raise ValueError(f"{current_room}| Invalid format. Use: meow add points <username>, <points>")
+
+                                    username, pts_str = [a.strip() for a in args.split(",", 1)]
+                                    points = int(pts_str)
+
+                                    # Call your helper
+                                    new_total = add_points(current_room, username, points)
+
+                                    await ws.send(f"{current_room}| Added {points} points to {username} in {current_room}. New total: {new_total}")
+                                except Exception as e:
+                                    await ws.send(f"{current_room}| Error adding points: {e} ;w;")
+
                             elif re.search(r"\bmeow\b", msg_text, re.IGNORECASE):
                                 emotion_bank = [
                                     ":3", ":3c", ":<", ":c", ";w;", "'w'", "awa", "uwu",
@@ -134,6 +153,7 @@ async def listen_for_messages(ws, room_commands_map):
                                 ]
                                 emotion = random.choice(emotion_bank)
                                 await ws.send(f"{current_room}|Meow {emotion}")
+
                         else:
                             pass
                     if "You cannot have a tournament until" in line:

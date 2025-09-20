@@ -4,8 +4,8 @@ from supabase import create_client
 import os
 
 # ---------- CONFIG ----------
-BASE_POINTS = 15
-INCREMENT = 3
+BASE_POINTS = 10
+INCREMENT = 2
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE")
@@ -95,7 +95,7 @@ class TournamentState:
                     runner_up = final_match["loser"]
 
                     # Bonus for 1st place
-                    self.points[champ] += 15  
+                    self.points[champ] += 10  
 
                     # Bonus for 2nd place
                     self.points[runner_up] += 5
@@ -146,15 +146,62 @@ class TournamentState:
 
 # ---------- SUPABASE ----------
 def update_db(scoreboard, room):
-    supabase.table("tour_lb").upsert([
-        {
+    for player, pts, res in scoreboard:
+        # Fetch current points + resistance for this player in this room
+        resp = supabase.table("tour_lb") \
+            .select("points, resistance") \
+            .eq("username", player) \
+            .eq("room", room) \
+            .execute()
+
+        if resp.data:
+            current_points = resp.data[0]["points"]
+            current_res = resp.data[0]["resistance"]
+
+            new_points = current_points + pts
+
+            # Weighted average: old res weighted by old points, new res weighted by new points
+            if new_points > 0:
+                new_res = ((current_res * current_points) + (res * pts)) / new_points
+            else:
+                new_res = res
+        else:
+            # First entry for this player
+            current_points = 0
+            new_points = pts
+            new_res = res
+
+        # Upsert with accumulated points and averaged resistance
+        supabase.table("tour_lb").upsert({
             "username": player,
-            "points": pts,
-            "resistance": res,
+            "points": new_points,
+            "resistance": new_res,
             "room": room
-        }
-        for player, pts, res in scoreboard
-    ]).execute()
+        }).execute()
+
+def add_points(room: str, username: str, points: int):
+    """
+    Add points to a user's total in a given room.
+    If the user doesn't exist yet, they are inserted.
+    """
+    # Fetch current points for this user in this room
+    resp = supabase.table("tour_lb") \
+        .select("points") \
+        .eq("username", username) \
+        .eq("room", room) \
+        .execute()
+
+    current_points = resp.data[0]["points"] if resp.data else 0
+    new_points = current_points + points
+
+    # Upsert back into the table
+    supabase.table("tour_lb").upsert({
+        "username": username,
+        "room": room,
+        "points": new_points
+    }).execute()
+
+    return new_points
 
 
 # ---------- MULTI-ROOM MANAGER ----------
