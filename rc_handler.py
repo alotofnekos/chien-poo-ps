@@ -41,8 +41,7 @@ async def listen_for_messages(ws, room_commands_map):
                 
                 elif line.startswith("|tournament|") and current_room:
                     
-                    await handle_tournament_message(line, current_room)
-
+                    await handle_tournament_message(line, current_room,ws)
                 # chat messages
                 elif line.startswith("|c:|") and current_room:
 
@@ -144,7 +143,7 @@ async def listen_for_messages(ws, room_commands_map):
             print(f"Error in message listener: {e}")
             raise
 
-async def handle_tournament_message(line: str, room: str):
+async def handle_tournament_message(line: str, room: str,ws):
     """Logs tournament lines only, between create and end. Processes results if official."""
     if not line.startswith("|tournament|"):
         return  # ignore all non-tournament lines
@@ -173,6 +172,7 @@ async def handle_tournament_message(line: str, room: str):
                 logs = TOURNAMENT_STATE.pop(room, [])
                 results = process_tourlogs(room, logs)
                 save_tournament_results(room, logs)
+                await ws.send(f"{room}|/addhtmlbox {get_leaderboard_html(room)}")
             else:
                 print(f"[{room}] Unofficial tournament ended. Ignoring results.")
 

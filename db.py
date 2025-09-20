@@ -193,7 +193,7 @@ def get_leaderboard_html(room: str, limit: int = 20) -> str:
     html = [
         f"<h2>Leaderboard — {room}</h2>",
         "<table border='1' cellpadding='5' cellspacing='0'>",
-        "<thead><tr><th>Rank</th><th>User</th><th>Points</th><th>Resistance</th></tr></thead>",
+        "<thead><tr><th>Rank</th><th>User</th><th>Points</th></tr></thead>",
         "<tbody>"
     ]
 
