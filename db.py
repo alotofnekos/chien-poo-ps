@@ -147,37 +147,30 @@ class TournamentState:
 # ---------- SUPABASE ----------
 def update_db(scoreboard, room):
     for player, pts, res in scoreboard:
-        # Fetch current points + resistance for this player in this room
+        # Add points using the existing helper
+        new_points = add_points(room, player, pts)
+
+        # Fetch current resistance for weighted average
         resp = supabase.table("tour_lb") \
-            .select("points, resistance") \
+            .select("resistance") \
             .eq("username", player) \
             .eq("room", room) \
             .execute()
 
-        if resp.data:
-            current_points = resp.data[0]["points"]
-            current_res = resp.data[0]["resistance"]
+        current_res = resp.data[0]["resistance"] if resp.data else 0.0
 
-            new_points = current_points + pts
-
-            # Weighted average: old res weighted by old points, new res weighted by new points
-            if new_points > 0:
-                new_res = ((current_res * current_points) + (res * pts)) / new_points
-            else:
-                new_res = res
+        # Weighted average: old res weighted by old points, new res weighted by new points just added
+        if new_points > 0:
+            # current_points = new_points - pts
+            current_points = new_points - pts
+            weighted_res = ((current_res * current_points) + (res * pts)) / new_points
         else:
-            # First entry for this player
-            current_points = 0
-            new_points = pts
-            new_res = res
+            weighted_res = res
 
-        # Upsert with accumulated points and averaged resistance
-        supabase.table("tour_lb").upsert({
-            "username": player,
-            "points": new_points,
-            "resistance": new_res,
-            "room": room
-        }).execute()
+        # Update only the resistance
+        supabase.table("tour_lb").update({
+            "resistance": weighted_res
+        }).eq("username", player).eq("room", room).execute()
 
 def add_points(room: str, username: str, points: int):
     """
