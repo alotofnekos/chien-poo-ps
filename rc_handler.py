@@ -126,7 +126,7 @@ async def listen_for_messages(ws, room_commands_map):
                                 uptime_msg = get_uptime(listener_start_time)
                                 await ws.send(f"{current_room}|{uptime_msg}")
                             
-                            elif prefix in ('#', '~') and msg_text.lower().startswith("meow add points"):
+                            elif msg_text.lower().startswith("meow add points"):
                                 try:
                                     # Strip command part
                                     args = msg_text[len("meow add points"):].strip()

@@ -2,6 +2,10 @@ import math
 from collections import defaultdict
 from supabase import create_client
 import os
+import json
+from datetime import datetime
+
+
 
 # ---------- CONFIG ----------
 BASE_POINTS = 10
@@ -142,6 +146,54 @@ class TournamentState:
         scoreboard.sort(key=lambda x: (x[1], x[2]), reverse=True)
         return scoreboard
 
+# ----------- PARTBOTLIKE BEHAV -----
+def apply_placement_points_from_json(state: TournamentState, line: str):
+    """
+    #Apply placement-only points using the `bracketData` JSON from
+    #the |tournament|end| line itself.
+
+    #Champion = +3
+    #Runner-up = +2
+    #Semifinalists = +1 each
+    """
+    try:
+        data = json.loads(line.split("|tournament|end|", 1)[1])
+    except Exception as e:
+        print("⚠️ Could not parse tournament end JSON:", e)
+        return
+
+    bracket = data.get("bracketData", {}).get("rootNode")
+    if not bracket:
+        return
+
+    # Champion = rootNode["team"] if marked win
+    champ = data.get("results", [[None]])[0][0]
+    if not champ:
+        return
+
+    state.points[champ] += 3
+
+    # Runner-up = opponent in the final match
+    children = bracket.get("children", [])
+    if len(children) == 2:
+        left, right = children
+        runner_up = (
+            left.get("team") if left.get("team") != champ else right.get("team")
+        )
+        if runner_up:
+            state.points[runner_up] += 2
+
+        # Semifinalists = losers of the two semifinals
+        semifinalists = []
+        for child in children:
+            if "children" in child:
+                # semifinal match
+                for sf in child["children"]:
+                    if sf.get("team") and sf.get("team") != child.get("team"):
+                        semifinalists.append(sf["team"])
+
+        for sf in semifinalists:
+            state.points[sf] += 1
 
 
 # ---------- SUPABASE ----------
@@ -196,6 +248,37 @@ def add_points(room: str, username: str, points: int):
 
     return new_points
 
+def archive_monthly_results(room: str):
+    """
+    Move all records for this month in a given room
+    from tour_lb → tour_lb_archive,
+    tagging them with a YYYYMM month,
+    then delete them from tour_lb.
+    """
+    now = datetime.utcnow()
+    month_tag = now.strftime("%Y%m")  # e.g. "202509"
+
+    # 1. Fetch all rows for the room
+    resp = supabase.table("tour_lb") \
+        .select("username, room, points") \
+        .eq("room", room) \
+        .execute()
+
+    rows = resp.data or []
+    if not rows:
+        print(f"⚠️ No rows found for room {room}, nothing to archive.")
+        return
+
+    # 2. Add month field
+    archive_rows = [{**r, "month": month_tag} for r in rows]
+
+    # 3. Insert into the archive table
+    supabase.table("tour_lb_archive").upsert(archive_rows).execute()
+
+    # 4. Delete from main table
+    supabase.table("tour_lb").delete().eq("room", room).execute()
+
+    print(f"✅ Archived {len(rows)} rows for room '{room}' into tour_lb_archive (month={month_tag}), then cleared from tour_lb.")
 
 # ---------- MULTI-ROOM MANAGER ----------
 class TournamentManager:

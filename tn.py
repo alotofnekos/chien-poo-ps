@@ -38,7 +38,7 @@ def load_tour_data(ROOM):
 
 # MONOTYPE
 TOUR_SCHEDULE_A = {
-    0: [(9, 0, 'SV'), (10, 0, 'Tera'), (11, 0, 'ORAS'), (21, 0, 'LC'), (22, 0, 'BW'), (23, 0, 'Monotype-Wildcard')],
+    0: [(9, 0, 'SV'), (10, 0, 'Tera'), (11, 0, 'Ubers'), (21, 0, 'LC'), (22, 0, 'BW'), (23, 0, 'Monotype-Wildcard')],
     4: [(9, 0, 'SV'), (10, 0, 'BW'), (11, 0, 'SS'), (21, 0, 'SM'), (22, 0, 'ORAS'), (23, 0, 'SV')],
     5: [(9, 0, 'UU'), (10, 0, 'SM'), (11, 0, 'SV'), (21, 0, 'SV'), (22, 0, 'SS'), (23, 0, 'NatDex')],
     6: [(9, 0, 'ORAS'), (10, 0, 'SV'), (11, 0, 'Random Monothreat Type'), (21, 0, 'CAP'), (22, 0, 'SV'), (23, 0, 'BW')]
@@ -47,7 +47,7 @@ TOUR_SCHEDULE_A = {
 
 # September 1 prep
 TOUR_SCHEDULE_B = {
-    0: [(9, 0, 'SV'), (10, 0, 'Tera'), (11, 0, 'SS'), (21, 0, 'LC'), (22, 0, 'SM'), (23, 0, 'Monotype-Wildcard')],
+    0: [(9, 0, 'LC'), (10, 0, 'SM'), (11, 0, 'Monotype-Wildcard'),(21, 0, 'SV'), (22, 0, 'Tera'), (23, 0, 'Ubers')],
     4: [(9, 0, 'SM'), (10, 0, 'ORAS'), (11, 0, 'SV'), (21, 0, 'SV'), (22, 0, 'BW'), (23, 0, 'SS')],
     5: [(9, 0, 'SV'), (10, 0, 'SS'), (11, 0, 'NatDex'), (21, 0, 'UU'), (22, 0, 'SM'), (23, 0, 'SV')],
     6: [(9, 0, 'CAP'), (10, 0, 'SV'), (11, 0, 'BW'), (21, 0, 'ORAS'), (22, 0, 'SV'), (23, 0, 'Random Monothreat Type')]
@@ -220,8 +220,8 @@ def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
     import datetime
 
     color_sets = [
-        ("#F5F5F5", "#FFC0CB"),
-        ("#F0E68C", "#D3D3D3")
+        ("#F0FFFF", "#E6E6FA"),
+        ("#CCCCFF", "#D3D3D3")
     ]
     header_color = "#B0C4DE"
     text_color = "#0A0A0A"
@@ -297,7 +297,7 @@ def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
     # Image side stays fixed
     html.append(
         f"<div style='width:40%; display:flex; align-items:center; justify-content:center; background:#fafafa; border-left:1px solid #ccc; color:{text_color};'>"
-        f"""<img src="https://i.ibb.co/zHt57cMy/209.png" height="750" width="900" style="height: auto; width: auto;">"""
+        f"""<img src="https://i.ibb.co/zh9vQMnH/90.png" height="750" width="900" style="height: auto; width: auto;">"""
         f"</div>"
     )
 
