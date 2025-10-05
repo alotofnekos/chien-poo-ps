@@ -17,7 +17,7 @@
 },
 {
     "Tour": "CAP",
-    "Code": "/tour new gen9monotype, elim,,,Mono CAP\n/tour rules +CAP, -Cawmodore, -Fidgit, -Crucibellite, -Heat Rock\n/tour setautostart 8\n/tour autodq 5\n.official"
+    "Code": "/tour new gen9monotype, elim,,,Mono CAP\n/tour rules +CAP, -Cawmodore, -Fidgit, -Crucibellite, -Heat Rock\n/tour scouting off\n/tour autodq 5\n.official"
 },
 {
     "Tour": "Monotype-Wildcard",

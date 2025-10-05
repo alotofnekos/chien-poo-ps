@@ -309,7 +309,7 @@ async def main(ws, ROOM):
 
 # Debug output
 if __name__ == "__main__":
-    html_schedule = generate_monthly_tour_schedule_html(9, 2025, "monotype")
+    html_schedule = generate_monthly_tour_schedule_html(10, 2025, "monotype")
     print(html_schedule)
     Sched = get_current_tour_schedule("nationaldexmonotype")
     next_tour = get_next_tournight(Sched)
