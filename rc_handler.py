@@ -108,7 +108,9 @@ async def listen_for_messages(ws, room_commands_map):
                             nx_schedule = get_current_tour_schedule(current_room)
                             next_tour = get_next_tournight(nx_schedule)
                             await ws.send(f"{current_room}|Meow, the next tournight is {next_tour['name']} at {next_tour['hour']:02d}:{next_tour['minute']:02d} (GMT-4). Its in {next_tour['minutes_until']} minute(s)!")
-                        
+                        elif msg_text.lower().startswith("meow what time"):
+                            now = datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=4)
+                            await ws.send(f"{current_room}|Meow, the current time is {now.strftime('%Y-%m-%d %H:%M:%S')} (GMT-4)")
                         elif msg_text.lower().startswith("meow help"):
                             help_msg = ("'meow start [tour name]', 'meow show potd', "
                                         "'meow show schedule', 'meow help', 'meow show cat', 'meow uptime', 'meow next tn'")
