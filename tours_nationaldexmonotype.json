@@ -11,6 +11,10 @@
   "Tour": "RU",
   "Code": "/tour new gen9nationaldexru,elimination,,,NDM RU\n/tour rules Same Type Clause, +Drizzle, +Drought, -Terrain Extender, +Light Clay, -Booster Energy, -Icy Rock, -Pidgeotite, -Sablenite, -Swampertite, -Barraskewda, -Basculegion, -Basculegion-F, -Latias, +Golisopod, +Grafaiai, +Talonflame, +Grimmsnarl, -Blacephalon, -Cloyster, -Deoxys-Defense, -Damp Rock, -Smooth Rock, -Heat Rock\n.official"
 },
+{
+  "Tour": "ZA",
+  "Code": "/tour new gen9nationaldexmonotype, elim,,,ZA National Dex Monotype\n/tour rules +clefablite, +victreebelite, +starminite, +dragoninite, +meganiumite, +feraligite, +skarmorite, +emboarite, +excadrite, +scolipite, +scraftinite, +eelektrossite, +chandelurite, +chesnaughtite, +delphoxite, +greninjite, +pyroarite, +floettite, +malamarite, +barbaracite, +dragalgite, +hawluchanite, +drampanite,  +falinksite, +floette-eternal, +clefable-mega, +victreebel-mega, +starmie-mega, +dragonite-mega, +meganium-mega, +feraligatr-mega, +skarmory-mega, +emboar-mega, +excadrill-mega, +scolipede-mega, +scrafty-mega, +eelektross-mega, +chandelure-mega, +chesnaught-mega, +delphox-mega, +greninja-mega, +pyroar-mega, +floette-mega, +malamar-mega, +barbaracle-mega, +dragalge-mega, +hawlucha-mega, +drampa-mega, +falinks-mega\n/wall New Mega Pokemon use their first ability in their base form (i.e. Mega Clefable has Cute Charm)"
+},
 { "Tour":"SS NatDex","Code":"/tour new gen8nationaldexmonotype,elimination\n.official"},
 { "Tour":"NatDex","Code":"/tour new gen9nationaldexmonotype,elimination\n!rfaq samples\n.official"},
 { "Tour": "Monothreat Bug", "Code": "/tour new gen9nationaldexmonotype, elim,,,Monothreat Bug\n/tour rules Force Monotype = Bug\n.official" },
