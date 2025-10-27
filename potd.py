@@ -187,7 +187,9 @@ async def build_potw(Pokemon: str, Type1: str | None, Type2: str | None, type_co
     <td style="width: 1rem;"></td>
     <td valign="middle" style="padding: 1.5rem; border-radius: 100rem; border: .125rem solid #000000;">
       <a href="{href}" target="_blank" style="text-decoration: none;">
-        <img src="https://www.smogon.com/dex/media/sprites/xy/{slug}.gif" width="90" height="82" style="vertical-align: middle" alt="{Pokemon}">
+        <div width="90" height="90">
+            <img src="https://www.smogon.com/dex/media/sprites/xy/{slug}.gif" alt="{Pokemon}">
+        </div>
       </a>
     </td>
   </tr>
