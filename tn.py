@@ -13,7 +13,7 @@ USERNAME = os.getenv("PS_USERNAME")
 TIMEZONE = pytz.timezone('US/Eastern')
 
 # The key date for Week A. All odd-numbered weeks after this date are Week B.
-START_DATE = datetime.date(2025, 2, 10)
+START_DATE = datetime.date(2025, 2, 16)
 
 # Load tour schedules from tours.json.
 def load_tour_data(ROOM):
