@@ -187,9 +187,7 @@ async def build_potw(Pokemon: str, Type1: str | None, Type2: str | None, type_co
     <td style="width: 1rem;"></td>
     <td valign="middle" style="padding: 1.5rem; border-radius: 100rem; border: .125rem solid #000000;">
       <a href="{href}" target="_blank" style="text-decoration: none;">
-        <div width="90" height="90">
-            <img src="https://www.smogon.com/dex/media/sprites/xy/{slug}.gif" alt="{Pokemon}">
-        </div>
+         <img src="https://www.smogon.com/dex/media/sprites/xy/{slug}.gif" alt="{Pokemon}" width="90" height="90">
       </a>
     </td>
   </tr>
@@ -220,6 +218,18 @@ async def build_daily_potd(ws, ROOM):
     while True:
         await asyncio.sleep(2 * 60 * 60)  # wait 2 hours
         await send_potd(ws, ROOM)
+
+import asyncio
+
+import asyncio
+
+if __name__ == "__main__":
+    async def main():
+        potd = await build_potw("Suicune", "Water", None, load_type_colors(), "monotype")
+        print(potd)
+
+    asyncio.run(main())
+
         
         
 
