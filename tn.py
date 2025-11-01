@@ -194,6 +194,8 @@ async def scheduled_tours(ws, ROOM):
                                 await ws.send(f"{ROOM}|{command.strip()}")
                             await ws.send(f"{ROOM}|/tour name {lookup_key} Tour Nights")
                             await ws.send(f"{ROOM}|/tour scouting off")
+                            if ROOM == "nationaldexmonotype":
+                                await ws.send(f"{ROOM}|Meow official")
                         else:
                             # Final fallback if even the chosen key isn't valid
                             await ws.send(f"{ROOM}|Meow wasnt able to get the monothreat commands. Meow cant start the tour, ask an auth to start it meow.")
