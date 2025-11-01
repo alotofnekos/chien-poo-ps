@@ -8,9 +8,6 @@ from datetime import datetime
 
 
 # ---------- CONFIG ----------
-# Set to True for PartBot-style (placement only), False for round-based scoring
-USE_PARTBOT_SCORING = True
-
 BASE_POINTS = 10
 INCREMENT = 2
 
@@ -52,7 +49,7 @@ class TournamentState:
 
         elif "|tournament|leave|" in line:
             player = parts[3]
-            self.players.discard(player)
+            self.players.discard(player)  # safer than remove()
 
         elif "|tournament|start|" in line:
             self.player_count = int(parts[3])
@@ -69,103 +66,46 @@ class TournamentState:
             })
 
         elif "|tournament|battleend|" in line:
-            if not USE_PARTBOT_SCORING:
-                # Only track matches for round-based scoring
-                p1, p2, result = parts[3], parts[4], parts[5]
-                for m in self.matches:
-                    if {m["p1"], m["p2"]} == {p1, p2} and m["winner"] is None:
-                        winner = p1 if result == "win" else p2
-                        loser = p2 if result == "win" else p1
-                        m["winner"], m["loser"] = winner, loser
+            p1, p2, result = parts[3], parts[4], parts[5]
+            for m in self.matches:
+                if {m["p1"], m["p2"]} == {p1, p2} and m["winner"] is None:
+                    winner = p1 if result == "win" else p2
+                    loser = p2 if result == "win" else p1
+                    m["winner"], m["loser"] = winner, loser
 
-                        round_num = max(self.round_counter[winner],
-                                        self.round_counter[loser]) + 1
-                        m["round"] = round_num
+                    round_num = max(self.round_counter[winner],
+                                    self.round_counter[loser]) + 1
+                    m["round"] = round_num
 
-                        self.round_counter[winner] = round_num
-                        self.round_counter[loser] = round_num
+                    self.round_counter[winner] = round_num
+                    self.round_counter[loser] = round_num
 
-                        # Give points for advancing
-                        self.points[winner] += round_points(round_num)
+                    # Give points for advancing
+                    self.points[winner] += round_points(round_num)
 
-                        # Track survival depth
-                        self.rounds_survived[winner] = max(self.rounds_survived[winner], round_num)
-                        self.rounds_survived[loser] = max(self.rounds_survived[loser], round_num)
-                        break
+                    # Track survival depth
+                    self.rounds_survived[winner] = max(self.rounds_survived[winner], round_num)
+                    self.rounds_survived[loser] = max(self.rounds_survived[loser], round_num)
+                    break
 
         elif "|tournament|end|" in line:
             self.finished = True
-            
-            if USE_PARTBOT_SCORING:
-                # Apply PartBot-style placement points from JSON
-                self.apply_placement_points_from_json(line)
-            else:
-                # Apply round-based placement bonuses
-                if self.matches:
-                    final_match = max(self.matches, key=lambda m: m["round"] or 0)
-                    if final_match["winner"] and final_match["loser"]:
-                        champ = final_match["winner"]
-                        runner_up = final_match["loser"]
 
-                        # Bonus for 1st place
-                        self.points[champ] += 10  
+            # ✅ Award placement bonuses
+            if self.matches:
+                final_match = max(self.matches, key=lambda m: m["round"] or 0)
+                if final_match["winner"] and final_match["loser"]:
+                    champ = final_match["winner"]
+                    runner_up = final_match["loser"]
 
-                        # Bonus for 2nd place
-                        self.points[runner_up] += 5
+                    # Bonus for 1st place
+                    self.points[champ] += 10  
 
-    def apply_placement_points_from_json(self, line: str):
-        """
-        Apply placement-only points using the `bracketData` JSON from
-        the |tournament|end| line itself.
+                    # Bonus for 2nd place
+                    self.points[runner_up] += 5
 
-        Champion = +3
-        Runner-up = +2
-        Semifinalists = +1 each
-        """
-        try:
-            data = json.loads(line.split("|tournament|end|", 1)[1])
-        except Exception as e:
-            print("⚠️ Could not parse tournament end JSON:", e)
-            return
-
-        bracket = data.get("bracketData", {}).get("rootNode")
-        if not bracket:
-            return
-
-        # Champion = rootNode["team"] if marked win
-        champ = data.get("results", [[None]])[0][0]
-        if not champ:
-            return
-
-        self.points[champ] += 3
-
-        # Runner-up = opponent in the final match
-        children = bracket.get("children", [])
-        if len(children) == 2:
-            left, right = children
-            runner_up = (
-                left.get("team") if left.get("team") != champ else right.get("team")
-            )
-            if runner_up:
-                self.points[runner_up] += 2
-
-            # Semifinalists = losers of the two semifinals
-            semifinalists = []
-            for child in children:
-                if "children" in child:
-                    # semifinal match
-                    for sf in child["children"]:
-                        if sf.get("team") and sf.get("team") != child.get("team"):
-                            semifinalists.append(sf["team"])
-
-            for sf in semifinalists:
-                self.points[sf] += 1
 
     def apply_resistance(self):
-        """Only used for round-based scoring"""
-        if USE_PARTBOT_SCORING:
-            return
-            
         for m in self.matches:
             if m["winner"] and m["loser"]:
                 loser, opp = m["loser"], m["winner"]
@@ -174,77 +114,115 @@ class TournamentState:
                 self.points[loser] += resistance_points
 
     def get_scoreboard(self):
-        """Return scoreboard with points and optionally resistance."""
-        if USE_PARTBOT_SCORING:
-            # Simple scoreboard without resistance
-            scoreboard = [
-                [player, self.points[player]]
-                for player in self.points.keys() | self.players
-            ]
-            scoreboard.sort(key=lambda x: x[1], reverse=True)
-            return scoreboard
-        else:
-            # Scoreboard with resistance
-            resistance = defaultdict(float)
+        """Return scoreboard with points and resistance (0–1 only)."""
+        resistance = defaultdict(float)
 
-            for player in self.points.keys() | self.players:
-                opps = []
-                for m in self.matches:
-                    if m["winner"] is None:
-                        continue
-                    if m["p1"] == player:
-                        opps.append(m["p2"])
-                    elif m["p2"] == player:
-                        opps.append(m["p1"])
+        for player in self.points.keys() | self.players:
+            opps = []
+            for m in self.matches:
+                if m["winner"] is None:
+                    continue
+                if m["p1"] == player:
+                    opps.append(m["p2"])
+                elif m["p2"] == player:
+                    opps.append(m["p1"])
 
-                if opps and self.total_rounds > 0:
-                    wrs = [
-                        self.rounds_survived[o] / self.total_rounds
-                        for o in opps
-                        if self.total_rounds > 0
-                    ]
-                    resistance[player] = round(sum(wrs) / len(wrs), 2)
-                else:
-                    resistance[player] = 0.0
+            if opps and self.total_rounds > 0:
+                # normalized opponent WRs (always between 0 and 1)
+                wrs = [
+                    self.rounds_survived[o] / self.total_rounds
+                    for o in opps
+                    if self.total_rounds > 0
+                ]
+                resistance[player] = round(sum(wrs) / len(wrs), 2)
+            else:
+                resistance[player] = 0.0
 
-            scoreboard = [
-                [player, self.points[player], resistance[player]]
-                for player in self.points.keys() | self.players
-            ]
-            scoreboard.sort(key=lambda x: (x[1], x[2]), reverse=True)
-            return scoreboard
+        # build scoreboard as [player, points, resistance]
+        scoreboard = [
+            [player, self.points[player], resistance[player]]
+            for player in self.points.keys() | self.players
+        ]
+        scoreboard.sort(key=lambda x: (x[1], x[2]), reverse=True)
+        return scoreboard
+
+# ----------- PARTBOTLIKE BEHAV -----
+def apply_placement_points_from_json(state: TournamentState, line: str):
+    """
+    #Apply placement-only points using the `bracketData` JSON from
+    #the |tournament|end| line itself.
+
+    #Champion = +3
+    #Runner-up = +2
+    #Semifinalists = +1 each
+    """
+    try:
+        data = json.loads(line.split("|tournament|end|", 1)[1])
+    except Exception as e:
+        print("⚠️ Could not parse tournament end JSON:", e)
+        return
+
+    bracket = data.get("bracketData", {}).get("rootNode")
+    if not bracket:
+        return
+
+    # Champion = rootNode["team"] if marked win
+    champ = data.get("results", [[None]])[0][0]
+    if not champ:
+        return
+
+    state.points[champ] += 3
+
+    # Runner-up = opponent in the final match
+    children = bracket.get("children", [])
+    if len(children) == 2:
+        left, right = children
+        runner_up = (
+            left.get("team") if left.get("team") != champ else right.get("team")
+        )
+        if runner_up:
+            state.points[runner_up] += 2
+
+        # Semifinalists = losers of the two semifinals
+        semifinalists = []
+        for child in children:
+            if "children" in child:
+                # semifinal match
+                for sf in child["children"]:
+                    if sf.get("team") and sf.get("team") != child.get("team"):
+                        semifinalists.append(sf["team"])
+
+        for sf in semifinalists:
+            state.points[sf] += 1
 
 
 # ---------- SUPABASE ----------
-def update_db(scoreboard, room, USE_PARTBOT_SCORING=USE_PARTBOT_SCORING):
-    if USE_PARTBOT_SCORING:
-        # Simple points-only update
-        for player, pts in scoreboard:
-            add_points(room, player, pts)
-    else:
-        # Update with resistance tracking
-        for player, pts, res in scoreboard:
-            new_points = add_points(room, player, pts)
+def update_db(scoreboard, room):
+    for player, pts, res in scoreboard:
+        # Add points using the existing helper
+        new_points = add_points(room, player, pts)
 
-            # Fetch current resistance for weighted average
-            resp = supabase.table("tour_lb") \
-                .select("resistance") \
-                .eq("username", player) \
-                .eq("room", room) \
-                .execute()
+        # Fetch current resistance for weighted average
+        resp = supabase.table("tour_lb") \
+            .select("resistance") \
+            .eq("username", player) \
+            .eq("room", room) \
+            .execute()
 
-            current_res = resp.data[0]["resistance"] if resp.data else 0.0
+        current_res = resp.data[0]["resistance"] if resp.data else 0.0
 
-            if new_points > 0:
-                current_points = new_points - pts
-                weighted_res = ((current_res * current_points) + (res * pts)) / new_points
-            else:
-                weighted_res = res
+        # Weighted average: old res weighted by old points, new res weighted by new points just added
+        if new_points > 0:
+            # current_points = new_points - pts
+            current_points = new_points - pts
+            weighted_res = ((current_res * current_points) + (res * pts)) / new_points
+        else:
+            weighted_res = res
 
-            # Update only the resistance
-            supabase.table("tour_lb").update({
-                "resistance": weighted_res
-            }).eq("username", player).eq("room", room).execute()
+        # Update only the resistance
+        supabase.table("tour_lb").update({
+            "resistance": weighted_res
+        }).eq("username", player).eq("room", room).execute()
 
 def add_points(room: str, username: str, points: int):
     """
@@ -315,8 +293,7 @@ class TournamentManager:
         state.handle_line(line)
 
         if state.finished:
-            if not USE_PARTBOT_SCORING:
-                state.apply_resistance()
+            state.apply_resistance()
             scoreboard = state.get_scoreboard()
             update_db(scoreboard, room)
             print(f"Tournament in {room} finished. Final scoreboard:")
@@ -356,6 +333,8 @@ def get_leaderboard_html(room: str, limit: int = 20) -> str:
     return "\n".join(html)
 
 
+
+
 def process_tourlogs(room: str, log_lines: list[str]):
     """
     Process a complete set of tournament logs and return the final scoreboard.
@@ -367,20 +346,19 @@ def process_tourlogs(room: str, log_lines: list[str]):
 
     state = manager.states.get(room)
     if state and state.finished:
-        if not USE_PARTBOT_SCORING:
-            state.apply_resistance()
+        state.apply_resistance()
         return state.get_scoreboard()
 
     return []
 
 
-def save_tournament_results(room: str, log_lines: list[str], TO_PB_SCORE=USE_PARTBOT_SCORING):
+def save_tournament_results(room: str, log_lines: list[str]):
     """
     Process logs and immediately save the final scoreboard to Supabase.
     """
     scoreboard = process_tourlogs(room, log_lines)
     if scoreboard:
-        update_db(scoreboard, room, TO_PB_SCORE)
+        update_db(scoreboard, room)
         print(f"✅ Saved tournament results for room {room}")
     else:
         print(f"⚠️ No results to save for room {room}")
