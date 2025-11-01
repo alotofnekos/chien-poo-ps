@@ -13,7 +13,7 @@ USERNAME = os.getenv("PS_USERNAME")
 TIMEZONE = pytz.timezone('US/Eastern')
 
 # The key date for Week A. All odd-numbered weeks after this date are Week B.
-START_DATE = datetime.date(2025, 2, 16)
+START_DATE = datetime.date(2025, 2, 10)
 
 # Load tour schedules from tours.json.
 def load_tour_data(ROOM):
@@ -41,7 +41,7 @@ TOUR_SCHEDULE_A = {
     0: [(9, 0, 'SV'), (10, 0, 'Tera'), (11, 0, 'Ubers'), (21, 0, 'LC'), (22, 0, 'BW'), (23, 0, 'Monotype-Wildcard')],
     4: [(9, 0, 'SV'), (10, 0, 'BW'), (11, 0, 'SS'), (21, 0, 'SM'), (22, 0, 'ORAS'), (23, 0, 'SV')],
     5: [(9, 0, 'UU'), (10, 0, 'SM'), (11, 0, 'SV'), (21, 0, 'SV'), (22, 0, 'SS'), (23, 0, 'NatDex')],
-    6: [(9, 0, 'ORAS'), (10, 0, 'SV'), (11, 0, 'Random Monothreat Type'), (21, 0, 'CAP'), (22, 0, 'SV'), (23, 0, 'BW')]
+    6: [(9, 0, 'CAP'), (10, 0, 'SV'), (11, 0, 'BW'), (21, 0, 'ORAS'), (22, 0, 'SV'), (23, 0, 'Random Monothreat Type')]
 }
 
 
