@@ -9,19 +9,19 @@
 },
 {
     "Tour": "Tera",
-    "Code": "/tour new gen9monotype,elim,,,Monotype Terastal\n/tour autodq 5\n/tour rules !terastalclause, -Flutter Mane, -Ogerpon-Hearthflame, -Sneasler, -Cresselia, -Spectrier, -Terapagos, -Volcarona, -Dragonite, -Latias, -Latios, -Raging Bolt, -Gliscor, -Heat Rock, -Icy Rock\n.official"
+    "Code": "/tour new gen9monotype,elim,,,Monotype Terastal\n/tour autodq 3\n/tour rules !terastalclause, -Flutter Mane, -Ogerpon-Hearthflame, -Sneasler, -Cresselia, -Spectrier, -Terapagos, -Volcarona, -Dragonite, -Latias, -Latios, -Raging Bolt, -Gliscor, -Heat Rock, -Icy Rock\n.official"
 },
 {
     "Tour": "Ubers",
-    "Code": "/tour new gen9ubers, elim,,,Ubers Monotype\n/tour autodq 5\n/tour rules Same Type Clause, terastalclause, Evasion Abilities Clause, -Calyrex-Ice, -Koraidon, -Miraidon, -Zacian-Crowned, -Quick Claw\n.official"
+    "Code": "/tour new gen9ubers, elim,,,Ubers Monotype\n/tour autodq 3\n/tour rules Same Type Clause, terastalclause, Evasion Abilities Clause, -Calyrex-Ice, -Koraidon, -Miraidon, -Zacian-Crowned, -Quick Claw\n.official"
 },
 {
     "Tour": "CAP",
-    "Code": "/tour new gen9monotype, elim,,,Mono CAP\n/tour rules +CAP, -Cawmodore, -Fidgit, -Crucibellite, -Heat Rock\n/tour scouting off\n/tour autodq 5\n.official"
+    "Code": "/tour new gen9monotype, elim,,,Mono CAP\n/tour rules +CAP, -Cawmodore, -Chuggalong, -Fidgit, -Crucibellite, -Heat Rock\n/tour scouting off\n/tour autodq 3\n.official"
 },
 {
     "Tour": "Monotype-Wildcard",
-    "Code": "/tour new gen9monotype,elim,,,Monotype Wildcard\n/tour autodq 5\n/tour rules !Same Type Clause, -Heat Rock, -Smeargle \n/wall Gholdengo is restricted to its actual types!\n.official\n/tour scouting off"
+    "Code": "/tour new gen9monotype,elim,,,Monotype Wildcard\n/tour autodq 3\n/tour rules !Same Type Clause, -Heat Rock, -Smeargle \n/wall Gholdengo is restricted to its actual types!\n.official\n/tour scouting off"
 },
 {
     "Tour": "ZA",
