@@ -27,8 +27,7 @@ async def handle_pmmessages(ws, USERNAME, msg):
                 if "meow show set" in message.lower():
                     sets_output = parse_command_and_get_sets(message)
                     if sets_output:
-                        for line in sets_output.split('\n'):
-                            pm_response = f"|/pm {from_user}, {line}"
+                            pm_response = f"|/pm {from_user}, {sets_output}"
                             await ws.send(pm_response)
                             pm_response = f"|/pm {from_user}, Meow sent the set info!"
                             await ws.send(pm_response)
