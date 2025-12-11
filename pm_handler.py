@@ -1,5 +1,5 @@
 import aiohttp
-
+from set_handler import parse_command_and_get_sets
 async def get_random_cat_url():
     url = "https://api.thecatapi.com/v1/images/search"
     async with aiohttp.ClientSession() as session:
@@ -23,6 +23,18 @@ async def handle_pmmessages(ws, USERNAME, msg):
                 # Skip if the PM is from ourselves
                 if from_user.lower() == USERNAME.lower():
                     return
+                
+                if "meow show set" in message.lower():
+                    sets_output = parse_command_and_get_sets(message)
+                    if sets_output:
+                        for line in sets_output.split('\n'):
+                            pm_response = f"|/pm {from_user}, {line}"
+                            await ws.send(pm_response)
+                            pm_response = f"|/pm {from_user}, Meow sent the set info!"
+                            await ws.send(pm_response)
+                    else:
+                        pm_response = f"|/pm {from_user}, Meow couldn't find any sets this mon, sorry ;w;. Usage: meow show set <pokemon> [format] [set filter] [extra filters]"
+                        await ws.send(pm_response)
 
                 if "meow" in message.lower():
                     print(f"Received Meow PM from {from_user}: {message}")
