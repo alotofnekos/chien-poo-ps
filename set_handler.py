@@ -182,7 +182,7 @@ def format_moveset(species: str, set_name: str, data: dict, include_header: bool
 
     return "\n".join(lines)
 
-def parse_command_and_get_sets(command_string, room=None):
+def parse_command_and_get_sets(command_string, room=""):
     """
     Parse a command string like 'meow show set Gallade gen9monotype (Psychic)'
     and return formatted movesets.
@@ -221,15 +221,29 @@ def parse_command_and_get_sets(command_string, room=None):
     
     # If no format found, all remaining parts are pokemon name
     if format_idx is None:
-        pokemon = " ".join(remaining_parts)
+        # Check if the last part could be a filter instead of part of pokemon name
+        if len(pokemon_parts) > 1:
+            # Check if last part looks like a type filter (capitalized, single word, not a pokemon name component)
+            last_part = pokemon_parts[-1]
+            if last_part[0].isupper() and len(pokemon_parts) > 1:
+                # Treat last part as a potential mono_filter
+                pokemon = " ".join(pokemon_parts[:-1])
+                mono_filter = last_part
+            else:
+                pokemon = " ".join(pokemon_parts)
+                mono_filter = ""
+        else:
+            pokemon = " ".join(pokemon_parts)
+            mono_filter = ""
+        
+        # Determine default format based on room
         if room.lower() == "monotype":
             format_name = "gen9monotype"
-        elif room.lower()=="nationaldexmonotype":
+        elif room.lower() == "nationaldexmonotype":
             format_name = "gen9nationaldexmonotype"
         else:
             format_name = "gen9monotype"
         set_filter = ""
-        mono_filter = ""
     else:
         pokemon = " ".join(pokemon_parts)
         format_name = remaining_parts[format_idx] if format_idx < len(remaining_parts) else "gen9monotype"
@@ -246,6 +260,8 @@ def parse_command_and_get_sets(command_string, room=None):
 
     print(f"[INFO] Using format: {format_name}")
     print(f"[INFO] Searching for: {pokemon}")
+    if mono_filter:
+        print(f"[INFO] Filtering by type: {mono_filter}")
 
     sets_data = fetch_sets_data(format_name)
     if not sets_data:
