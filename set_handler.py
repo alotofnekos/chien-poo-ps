@@ -110,77 +110,65 @@ def format_moveset(species: str, set_name: str, data: dict, include_header: bool
                     parts.append(f"{v} {k.upper()}")
             return " / ".join(parts)
         return str(ev_obj)
-
-    # Items go after species on same line separated by ' / '
+    
     items = data.get("item")
     item_str = ""
     if isinstance(items, list):
         item_str = " / ".join(str(i) for i in items)
     elif isinstance(items, str):
         item_str = items
-
-    lines = []
+    
+    parts = []
+    
     if include_header:
-        lines.append("!code")
+        parts.append("!code")
     
     if item_str:
-        lines.append(f"{species} @ {item_str}")
+        parts.append(f"{species} @ {item_str}")
     else:
-        lines.append(f"{species} ({set_name})")
-
-    # Ability
+        parts.append(f"{species} ({set_name})")
+    
     if data.get("ability"):
-        lines.append(f"Ability: {data['ability']}")
-
-    # EVs
+        parts.append(f"Ability: {data['ability']}")
+    
     evs = data.get("evs", {})
-    ev_lines = []
     if isinstance(evs, list) and evs:
-        # multiple EV spreads
-        for ev in evs:
-            ev_lines.append(fmt_evs(ev))
-        if ev_lines:
-            lines.append(f"EVs: {' OR '.join(ev_lines)}")
+        ev_parts = [fmt_evs(ev) for ev in evs if fmt_evs(ev)]
+        if ev_parts:
+            parts.append(f"EVs: {' OR '.join(ev_parts)}")
     else:
-        ev_line = fmt_evs(evs)
-        if ev_line:
-            lines.append(f"EVs: {ev_line}")
-
-    # Nature
+        ev_str = fmt_evs(evs)
+        if ev_str:
+            parts.append(f"EVs: {ev_str}")
+    
     nature = data.get("nature")
     if nature:
         if isinstance(nature, list):
-            lines.append(" / ".join([f"({n}) Nature" for n in nature]))
+            parts.append(" / ".join([f"({n}) Nature" for n in nature]))
         else:
-            lines.append(f"{nature} Nature")
-
-    # Tera Type
+            parts.append(f"{nature} Nature")
+    
     tera = data.get("teratypes")
     if tera:
         if isinstance(tera, list):
-            lines.append(f"Tera Type: {' / '.join(tera)}")
+            parts.append(f"Tera Type: {' / '.join(tera)}")
         else:
-            lines.append(f"Tera Type: {tera}")
-
-    # IVs
+            parts.append(f"Tera Type: {tera}")
+    
     ivs = data.get("ivs", {})
-    iv_line = ""
     if isinstance(ivs, dict):
-        iv_line = " / ".join(f"{v} {k.upper()}" for k, v in ivs.items() if isinstance(v, int) and v < 31)
-    elif isinstance(ivs, list):
-        iv_line = " / ".join(str(v) for v in ivs)
-    if iv_line:
-        lines.append(f"IVs: {iv_line}")
-
-    # Moves
+        iv_str = " / ".join(f"{v} {k.upper()}" for k, v in ivs.items() if isinstance(v, int) and v < 31)
+        if iv_str:
+            parts.append(f"IVs: {iv_str}")
+    
     moves = data.get("moves", [])
     for m in moves:
         if isinstance(m, list):
-            lines.append("- " + " / ".join(m))
+            parts.append("- " + " / ".join(m))
         else:
-            lines.append(f"- {m}")
-
-    return "\n".join(lines)
+            parts.append(f"- {m}")
+    
+    return '\n'.join(parts)
 
 def parse_command_and_get_sets(command_string, room=""):
     """

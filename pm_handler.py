@@ -27,10 +27,14 @@ async def handle_pmmessages(ws, USERNAME, msg):
                 if "meow show set" in message.lower():
                     sets_output = parse_command_and_get_sets(message)
                     if sets_output:
-                            pm_response = f"|/pm {from_user}, {sets_output}"
+                        # Send each set as a separate message
+                        for set_str in sets_output:
+                            pm_response = f"|/pm {from_user}, {set_str}"
                             await ws.send(pm_response)
-                            pm_response = f"|/pm {from_user}, Meow sent the set info!"
-                            await ws.send(pm_response)
+                        
+                        # Send confirmation message
+                        pm_response = f"|/pm {from_user}, Meow sent the set info!"
+                        await ws.send(pm_response)
                     else:
                         pm_response = f"|/pm {from_user}, Meow couldn't find any sets this mon, sorry ;w;. Usage: meow show set <pokemon> [format] [set filter] [extra filters]"
                         await ws.send(pm_response)

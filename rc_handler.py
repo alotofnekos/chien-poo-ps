@@ -96,10 +96,13 @@ async def listen_for_messages(ws, room_commands_map):
                         elif "meow show set" in msg_text.lower():
                             sets_output = parse_command_and_get_sets(msg_text, current_room)
                             if sets_output:
-                                await ws.send(f"{current_room}| {sets_output}")
-                                await ws.send(f"|{current_room}, Meow sent the set info!")
+                                # Send each set as a separate message
+                                for set_str in sets_output:
+                                    await ws.send(f"{current_room}|{set_str}")
+                                
+                                await ws.send(f"{current_room}|Meow sent the set info!")
                             else:
-                                await ws.send(f"|{current_room}, Meow couldn't find any sets this mon, sorry ;w;. Usage: meow show set <pokemon> [format] [set filter] [extra filters]")
+                                await ws.send(f"{current_room}|Meow couldn't find any sets this mon, sorry ;w;. Usage: meow show set <pokemon> [format] [set filter] [extra filters]")
                         elif msg_text.lower().startswith("meow show lb"):
                             await ws.send(f"{current_room}|/addhtmlbox {get_leaderboard_html(current_room)}")
 
