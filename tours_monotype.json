@@ -5,7 +5,7 @@
 },
 {
     "Tour":"LC",
-    "Code":"/tour new gen9LC, elim,,,Monotype LC\n/tour rules sametypeclause, terastalclause, -Damp Rock, -Icy Rock, -King's Rock, -Quick Claw, -Light Clay, -Minccino, -Meowth, +Diglett-Base, +Porygon, +Vulpix, +Vulpix-Alola, +Magby, +Snivy, +Scraggy, +Voltorb-Hisui, +Sticky Web\n!rfaq LC\n.official\n/tour scouting off"
+    "Code":"/tour new gen9LC, elim,,,Monotype LC\n/tour rules sametypeclause, terastalclause, -Damp Rock, -Icy Rock, -King's Rock, -Quick Claw, -Light Clay, -Minccino, -Meowth, -Vullaby, +Diglett-Base, +Porygon, +Vulpix, +Vulpix-Alola, +Magby, +Snivy, +Scraggy, +Voltorb-Hisui, +Sticky Web\n!rfaq LC\n.official\n/tour scouting off"
 },
 {
     "Tour": "Tera",
