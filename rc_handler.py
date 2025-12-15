@@ -98,7 +98,7 @@ async def listen_for_messages(ws, room_commands_map):
                             if sets_output:
                                 # Send each set as a separate message
                                 for set_str in sets_output:
-                                    await ws.send(f"{current_room}|{set_str}")
+                                    await ws.send(f"{current_room}|/addhtmlbox {set_str}")
                                 
                                 await ws.send(f"{current_room}|Meow sent the set info!")
                             else:

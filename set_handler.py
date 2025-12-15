@@ -101,74 +101,110 @@ def filter_sets(sets_obj, query="", mono_type=""):
 #   FORMAT MOVESET
 def format_moveset(species: str, set_name: str, data: dict, include_header: bool = True):
     def fmt_evs(ev_obj):
-        order = ["hp", "atk", "def", "spa", "spd", "spe"]
+        order = [
+            ("hp", "HP"),
+            ("atk", "Atk"),
+            ("def", "Def"),
+            ("spa", "SpA"),
+            ("spd", "SpD"),
+            ("spe", "Spe"),
+        ]
         if isinstance(ev_obj, dict):
             parts = []
-            for k in order:
-                v = ev_obj.get(k)
+            for key, label in order:
+                v = ev_obj.get(key)
                 if isinstance(v, int) and v > 0:
-                    parts.append(f"{v} {k.upper()}")
+                    parts.append(f"{v} {label}")
             return " / ".join(parts)
         return str(ev_obj)
-    
+    items = data.get("item")
+    slug = species.lower().replace(" ", "-")
+
+    if items and items.endswith("ite"):
+        slug += "-mega"
+
+
     items = data.get("item")
     item_str = ""
     if isinstance(items, list):
         item_str = " / ".join(str(i) for i in items)
     elif isinstance(items, str):
         item_str = items
-    
-    parts = []
-    
+
+    # ---- Sprite + Pokémon header (only once) ----
+    header_html = ""
     if include_header:
-        parts.append("!code")
-    
+        header_html = f"""
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr>
+    <td align="center" style="padding-bottom: .5rem;">
+      <img src="https://www.smogon.com/dex/media/sprites/xy/{slug}.gif"
+           alt="{species}" width="96" height="96">
+    </td>
+  </tr>
+</table>
+""".strip()
+
+    # ---- Set body ----
+    body_parts = []
+
     if item_str:
-        parts.append(f"{species} @ {item_str}")
+        body_parts.append(f"<div><b>{species}</b> @ {item_str}</div>")
     else:
-        parts.append(f"{species} ({set_name})")
-    
+        body_parts.append(f"<div><b>{species}</b></div>")
+
     if data.get("ability"):
-        parts.append(f"Ability: {data['ability']}")
-    
+        body_parts.append(f"<div>Ability: {data['ability']}</div>")
+
     evs = data.get("evs", {})
-    if isinstance(evs, list) and evs:
-        ev_parts = [fmt_evs(ev) for ev in evs if fmt_evs(ev)]
-        if ev_parts:
-            parts.append(f"EVs: {' OR '.join(ev_parts)}")
-    else:
-        ev_str = fmt_evs(evs)
-        if ev_str:
-            parts.append(f"EVs: {ev_str}")
-    
+    ev_str = fmt_evs(evs)
+    if ev_str:
+        body_parts.append(f"<div>EVs: {ev_str}</div>")
+
     nature = data.get("nature")
     if nature:
-        if isinstance(nature, list):
-            parts.append(" / ".join([f"({n}) Nature" for n in nature]))
-        else:
-            parts.append(f"{nature} Nature")
-    
+        body_parts.append(f"<div>{nature} Nature</div>")
+
     tera = data.get("teratypes")
     if tera:
         if isinstance(tera, list):
-            parts.append(f"Tera Type: {' / '.join(tera)}")
+            body_parts.append(f"<div>Tera Type: {' / '.join(tera)}</div>")
         else:
-            parts.append(f"Tera Type: {tera}")
-    
+            body_parts.append(f"<div>Tera Type: {tera}</div>")
+
     ivs = data.get("ivs", {})
     if isinstance(ivs, dict):
-        iv_str = " / ".join(f"{v} {k.upper()}" for k, v in ivs.items() if isinstance(v, int) and v < 31)
+        iv_str = " / ".join(
+            f"{v} {k.upper()}" for k, v in ivs.items()
+            if isinstance(v, int) and v < 31
+        )
         if iv_str:
-            parts.append(f"IVs: {iv_str}")
-    
+            body_parts.append(f"<div>IVs: {iv_str}</div>")
+
     moves = data.get("moves", [])
-    for m in moves:
-        if isinstance(m, list):
-            parts.append("- " + " / ".join(m))
-        else:
-            parts.append(f"- {m}")
-    
-    return '\n'.join(parts)
+    if moves:
+        for m in moves:
+            if isinstance(m, list):
+                body_parts.append(f"<div>- {' / '.join(m)}</div>")
+            else:
+                body_parts.append(f"<div>- {m}</div>")
+
+    body_html = "\n".join(body_parts)
+
+    # ---- Set container ----
+    set_html = f"""
+<div style="margin-bottom: 1rem;">
+  <div style="border: .125rem solid #000; border-bottom: none; padding: .5rem; font-weight: bold; text-align: center;">
+    {set_name}
+  </div>
+  <div style="border: .125rem solid #000; padding: 1rem;">
+    {body_html}
+  </div>
+</div>
+""".strip()
+
+    return header_html + "\n" + set_html
+
 
 def parse_command_and_get_sets(command_string, room=""):
     """
@@ -282,19 +318,15 @@ def parse_command_and_get_sets(command_string, room=""):
 
 
 def main():
-    if len(sys.argv) < 4:
-        print("Usage: meow show set <pokemon> [format] [set filter] [monotype]")
-        return
+    command_string = "meow show set lopunny gen9nationaldexmonotype"
 
-    # Reconstruct command string from argv
-    command_string = " ".join(sys.argv[1:])
-    
     formatted_sets = parse_command_and_get_sets(command_string)
-    
+
     if formatted_sets:
         for formatted_set in formatted_sets:
             print(formatted_set)
             print()
-
+    else:
+        print("No sets found.")
 if __name__ == "__main__":
     main()
