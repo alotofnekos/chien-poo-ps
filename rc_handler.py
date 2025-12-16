@@ -94,6 +94,10 @@ async def listen_for_messages(ws, room_commands_map):
                         elif msg_text.lower().startswith("meow show potd"):
                             await send_potd(ws, current_room)
                         elif "meow show set" in msg_text.lower():
+                            # Check if message is a past one
+                            if time.time() - ts > 5:
+                                continue  # Ignore messages greater than 5 seconds old
+                            
                             sets_output = parse_command_and_get_sets(msg_text, current_room)
                             if sets_output:
                                 # Send each set as a separate message
@@ -102,7 +106,8 @@ async def listen_for_messages(ws, room_commands_map):
                                 
                                 await ws.send(f"{current_room}|Meow sent the set info!")
                             else:
-                                await ws.send(f"{current_room}|Meow couldn't find any sets this mon, sorry ;w;. Usage: meow show set <pokemon> [format] [set filter] [extra filters]")
+                                await ws.send(f"{current_room}|Meow couldn't find any sets this mon, sorry ;w;. Usage: meow show set <pokemon> [format] (type/item/move [optional])")
+                                await asyncio.sleep(4)
                         elif msg_text.lower().startswith("meow show lb"):
                             await ws.send(f"{current_room}|/addhtmlbox {get_leaderboard_html(current_room)}")
 

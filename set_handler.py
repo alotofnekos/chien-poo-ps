@@ -87,15 +87,75 @@ def iterate_sets(species: str, sets_obj):
             yield name, data
 
 #   FILTER SETS
-def filter_sets(sets_obj, query="", mono_type=""):
+def filter_sets(sets_obj, query="", mono_type="", paren_filter=""):
+    """
+    Filter sets by query, mono_type, and/or paren_filter.
+    - query: matches set name (without parentheses, case-insensitive)
+    - mono_type: matches type in parentheses like "(Psychic)"
+    - paren_filter: matches ability, item, moves, set name, or parentheses content
+    """
     q = query.lower()
     mt = mono_type.lower().strip()
+    pf = paren_filter.lower().strip()
+    
     for name, data in iterate_sets("species", sets_obj):
         lname = name.lower()
+        
+        # Check query match (non-parentheses part)
         if q and q not in lname:
             continue
+        
+        # Check mono_type match (specific type filter)
         if mt and f"({mt})" not in lname:
             continue
+        
+        # Check paren_filter match (set name, ability, item, moves, or parentheses content)
+        if pf:
+            match_found = False
+            
+            # Check set name
+            if pf in lname:
+                match_found = True
+            
+            # Check ability
+            if not match_found and data.get("ability"):
+                ability = str(data["ability"]).lower()
+                if pf in ability:
+                    match_found = True
+            
+            # Check item
+            if not match_found and data.get("item"):
+                item = data["item"]
+                if isinstance(item, list):
+                    item_str = " ".join(str(i) for i in item).lower()
+                else:
+                    item_str = str(item).lower()
+                if pf in item_str:
+                    match_found = True
+            
+            # Check moves
+            if not match_found and data.get("moves"):
+                moves = data["moves"]
+                for move in moves:
+                    if isinstance(move, list):
+                        move_str = " ".join(str(m) for m in move).lower()
+                    else:
+                        move_str = str(move).lower()
+                    if pf in move_str:
+                        match_found = True
+                        break
+            
+            # Check parentheses content in set name
+            if not match_found:
+                paren_match = re.search(r'\(([^)]+)\)', lname)
+                if paren_match:
+                    paren_content = paren_match.group(1).lower()
+                    if pf in paren_content:
+                        match_found = True
+            
+            if not match_found:
+                continue
+        
         yield name, data
 
 #   FORMAT MOVESET
@@ -208,11 +268,15 @@ def format_moveset(species: str, set_name: str, data: dict, include_header: bool
 
 def parse_command_and_get_sets(command_string, room=""):
     """
-    Parse a command string like 'meow show set Gallade gen9monotype (Psychic)'
-    and return formatted movesets.
+    Parse a command string like:
+    - 'meow show set Gallade gen9monotype (Psychic)'
+    - 'meow show set Latias gen9monotype (Scarf)'
+    
+    Only filters in parentheses are accepted (aside from format).
     
     Args:
         command_string (str): The full command string to parse
+        room (str): The room name for default format selection
         
     Returns:
         list: List of formatted moveset strings, or None if error
@@ -245,20 +309,7 @@ def parse_command_and_get_sets(command_string, room=""):
     
     # If no format found, all remaining parts are pokemon name
     if format_idx is None:
-        # Check if the last part could be a filter instead of part of pokemon name
-        if len(pokemon_parts) > 1:
-            # Check if last part looks like a type filter (capitalized, single word, not a pokemon name component)
-            last_part = pokemon_parts[-1]
-            if last_part[0].isupper() and len(pokemon_parts) > 1:
-                # Treat last part as a potential mono_filter
-                pokemon = " ".join(pokemon_parts[:-1])
-                mono_filter = last_part
-            else:
-                pokemon = " ".join(pokemon_parts)
-                mono_filter = ""
-        else:
-            pokemon = " ".join(pokemon_parts)
-            mono_filter = ""
+        pokemon = " ".join(pokemon_parts)
         
         # Determine default format based on room
         if room.lower() == "monotype":
@@ -267,25 +318,41 @@ def parse_command_and_get_sets(command_string, room=""):
             format_name = "gen9nationaldexmonotype"
         else:
             format_name = "gen9monotype"
-        set_filter = ""
+        mono_filter = ""
+        paren_filter = ""
     else:
         pokemon = " ".join(pokemon_parts)
         format_name = remaining_parts[format_idx] if format_idx < len(remaining_parts) else "gen9monotype"
         
-        set_filter = ""
         mono_filter = ""
+        paren_filter = ""
         
-        # detect additional filters after format
+        # detect filters in parentheses after format
         for arg in remaining_parts[format_idx + 1:]:
             if arg.startswith("(") and arg.endswith(")"):
-                mono_filter = arg.strip("()")
-            else:
-                set_filter = arg
+                # Content in parentheses - could be type OR set filter
+                filter_content = arg.strip("()")
+                
+                # List of known Pokemon types for monotype filtering
+                known_types = [
+                    "normal", "fire", "water", "electric", "grass", "ice",
+                    "fighting", "poison", "ground", "flying", "psychic", "bug",
+                    "rock", "ghost", "dragon", "dark", "steel", "fairy"
+                ]
+                
+                # Check if it's a type (case-insensitive match)
+                if filter_content.lower() in known_types:
+                    mono_filter = filter_content
+                else:
+                    # Otherwise treat as general set filter
+                    paren_filter = filter_content
 
     print(f"[INFO] Using format: {format_name}")
     print(f"[INFO] Searching for: {pokemon}")
     if mono_filter:
         print(f"[INFO] Filtering by type: {mono_filter}")
+    if paren_filter:
+        print(f"[INFO] Filtering by parentheses content: {paren_filter}")
 
     sets_data = fetch_sets_data(format_name)
     if not sets_data:
@@ -304,7 +371,7 @@ def parse_command_and_get_sets(command_string, room=""):
     if url:
         print(f"Smogon URL: {url}\n")
 
-    matched = list(filter_sets(sets_obj, query=set_filter, mono_type=mono_filter))
+    matched = list(filter_sets(sets_obj, query="", mono_type=mono_filter, paren_filter=paren_filter))
     if not matched:
         print("[ERROR] No matching sets with given filters.")
         return None
@@ -318,15 +385,28 @@ def parse_command_and_get_sets(command_string, room=""):
 
 
 def main():
-    command_string = "meow show set lopunny gen9nationaldexmonotype"
+    # Test with different filter styles
+    test_commands = [
+        "meow show set sandslash-alola gen9monotype (slush rush)",
+        "meow show set sandslash-alola gen9monotype (boots)",
+        "meow show set sandslash-alola gen9monotype (rapid spin)",
+        "meow show set latias gen9monotype (scarf)",
+        "meow show set gallade gen9monotype (Psychic)"
+    ]
+    
+    for command_string in test_commands:
+        print(f"\n{'='*60}")
+        print(f"Testing: {command_string}")
+        print('='*60)
+        
+        formatted_sets = parse_command_and_get_sets(command_string)
 
-    formatted_sets = parse_command_and_get_sets(command_string)
+        if formatted_sets:
+            for formatted_set in formatted_sets:
+                print(formatted_set)
+                print()
+        else:
+            print("No sets found.")
 
-    if formatted_sets:
-        for formatted_set in formatted_sets:
-            print(formatted_set)
-            print()
-    else:
-        print("No sets found.")
 if __name__ == "__main__":
     main()
