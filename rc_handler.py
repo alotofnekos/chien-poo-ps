@@ -94,19 +94,18 @@ async def listen_for_messages(ws, room_commands_map):
                         elif msg_text.lower().startswith("meow show potd"):
                             await send_potd(ws, current_room)
                         elif "meow show set" in msg_text.lower():
-                            # Create a unique message ID based on room, user, timestamp, and message
                             msg_id = f"{current_room}:{user}:{ts}:{msg_text}"
                             
-                            # Check if we've already processed this exact message
                             if msg_id in PROCESSED_MESSAGES:
-                                continue  # Skip duplicate processing
+                                continue
                             
-                            # Mark this message as processed
                             PROCESSED_MESSAGES[msg_id] = time.time()
                             
-                            # Clean old entries from the cache (older than 60 seconds)
+                            # Clean old entries without reassignment
                             current_time = time.time()
-                            PROCESSED_MESSAGES = {k: v for k, v in PROCESSED_MESSAGES.items() if current_time - v < 60}
+                            old_keys = [k for k, v in PROCESSED_MESSAGES.items() if current_time - v >= 60]
+                            for k in old_keys:
+                                del PROCESSED_MESSAGES[k]
                             
                             sets_output = parse_command_and_get_sets(msg_text, current_room)
                             if sets_output:
