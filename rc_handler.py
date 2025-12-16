@@ -16,7 +16,7 @@ USERNAME = os.getenv("PS_USERNAME")
 CURRENT_TOUR_EXISTS = {}  
 TRACK_OFFICIAL_TOUR = {}  
 TOURNAMENT_STATE = {}     
-
+PROCESSED_MESSAGES = {}
 async def listen_for_messages(ws, room_commands_map):
     """Listens for and processes ALL messages from the WebSocket, dispatching by room."""
     print("Starting global message listener...")
@@ -94,9 +94,19 @@ async def listen_for_messages(ws, room_commands_map):
                         elif msg_text.lower().startswith("meow show potd"):
                             await send_potd(ws, current_room)
                         elif "meow show set" in msg_text.lower():
-                            # Check if message is too old (prevent processing old messages)
-                            if time.time() - ts > 3:
-                                continue  # Ignore messages greater than 3 seconds old
+                            # Create a unique message ID based on room, user, timestamp, and message
+                            msg_id = f"{current_room}:{user}:{ts}:{msg_text}"
+                            
+                            # Check if we've already processed this exact message
+                            if msg_id in PROCESSED_MESSAGES:
+                                continue  # Skip duplicate processing
+                            
+                            # Mark this message as processed
+                            PROCESSED_MESSAGES[msg_id] = time.time()
+                            
+                            # Clean old entries from the cache (older than 60 seconds)
+                            current_time = time.time()
+                            PROCESSED_MESSAGES = {k: v for k, v in PROCESSED_MESSAGES.items() if current_time - v < 60}
                             
                             sets_output = parse_command_and_get_sets(msg_text, current_room)
                             if sets_output:

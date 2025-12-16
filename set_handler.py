@@ -271,6 +271,7 @@ def parse_command_and_get_sets(command_string, room=""):
     Parse a command string like:
     - 'meow show set Gallade gen9monotype (Psychic)'
     - 'meow show set Latias gen9monotype (Scarf)'
+    - 'meow show set Latias (Scarf)' - defaults to gen9monotype
     
     Only filters in parentheses are accepted (aside from format).
     
@@ -301,34 +302,50 @@ def parse_command_and_get_sets(command_string, room=""):
     format_idx = None
     
     for i, part in enumerate(remaining_parts):
-        # Check if this part starts with "gen" or is a filter in parentheses
-        if part.lower().startswith("gen") or part.startswith("("):
+        # Check if this part starts with "gen" (format) or is a filter in parentheses
+        if part.lower().startswith("gen"):
+            format_idx = i
+            break
+        elif part.startswith("("):
+            # This is a filter, not part of pokemon name
             format_idx = i
             break
         pokemon_parts.append(part)
     
-    # If no format found, all remaining parts are pokemon name
+    # Extract pokemon name
+    pokemon = " ".join(pokemon_parts)
+    
+    # Determine default format based on room
+    if room.lower() == "monotype":
+        default_format = "gen9monotype"
+    elif room.lower() == "nationaldexmonotype":
+        default_format = "gen9nationaldexmonotype"
+    else:
+        default_format = "gen9monotype"
+    
+    # If no format/filter found, use default
     if format_idx is None:
-        pokemon = " ".join(pokemon_parts)
-        
-        # Determine default format based on room
-        if room.lower() == "monotype":
-            format_name = "gen9monotype"
-        elif room.lower() == "nationaldexmonotype":
-            format_name = "gen9nationaldexmonotype"
-        else:
-            format_name = "gen9monotype"
+        format_name = default_format
         mono_filter = ""
         paren_filter = ""
     else:
-        pokemon = " ".join(pokemon_parts)
-        format_name = remaining_parts[format_idx] if format_idx < len(remaining_parts) else "gen9monotype"
+        # Check if format_idx points to an actual format or a filter
+        first_arg = remaining_parts[format_idx]
+        
+        if first_arg.lower().startswith("gen"):
+            # It's a format
+            format_name = first_arg
+            filter_start_idx = format_idx + 1
+        else:
+            # It's a filter, use default format
+            format_name = default_format
+            filter_start_idx = format_idx
         
         mono_filter = ""
         paren_filter = ""
         
-        # detect filters in parentheses after format
-        for arg in remaining_parts[format_idx + 1:]:
+        # Process all filters in parentheses
+        for arg in remaining_parts[filter_start_idx:]:
             if arg.startswith("(") and arg.endswith(")"):
                 # Content in parentheses - could be type OR set filter
                 filter_content = arg.strip("()")
@@ -390,7 +407,7 @@ def main():
         "meow show set sandslash-alola gen9monotype (slush rush)",
         "meow show set sandslash-alola gen9monotype (boots)",
         "meow show set sandslash-alola gen9monotype (rapid spin)",
-        "meow show set latias gen9monotype (scarf)",
+        "meow show set latias (scarf)",
         "meow show set gallade gen9monotype (Psychic)"
     ]
     
