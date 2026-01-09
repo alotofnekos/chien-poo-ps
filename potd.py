@@ -1,29 +1,27 @@
 import asyncio
 import datetime
-import json
+import os
 import random
 import hashlib
 import re
 from html import unescape
 from zoneinfo import ZoneInfo
-
+from supabase import create_client
 import aiohttp
 
-# ---------- Data loading ----------
-def load_Pokemon(ROOM):
-    """Load Pokemon from local JSON file with fields Name, Type (e.g., 'Bug / Dark')."""
-    with open(f'pokemon_{ROOM}.json', 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    return {p['Name']: p['Type'] for p in data}
 
-# ---------- Daily selection ----------
-def pick_daily_pokemon(pokemon_list, tz="US/Eastern"):
-    """Pick the same Pokémon for the entire day."""
-    today = datetime.datetime.now(ZoneInfo(tz)).date().isoformat()
-    h = hashlib.sha256(today.encode()).hexdigest()
-    index = int(h, 16) % len(pokemon_list)
-    name = list(pokemon_list.keys())[index]
-    return name, pokemon_list[name]
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE")
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+
+# ---------- Data loading ----------
+def get_random_pokemon(room: str):
+    """
+    Get a random Pokémon for a specific room/tier.
+    """
+    resp = supabase.rpc('get_random_monotype_pokemon', {'room_name': room}).execute()
+    return resp.data[0] if resp.data else None
 
 # ---------- Helpers ----------
 def slugify_name(name: str) -> str:
@@ -31,6 +29,7 @@ def slugify_name(name: str) -> str:
     return (
         name.lower()
             .replace(" ", "-")
+            .replace("_", "-")
             .replace("'", "")
             .replace(".", "")
             .replace(":", "")
@@ -59,7 +58,7 @@ def html_to_text(html: str) -> str:
 # ---------- Fetch analysis from data.pkmn.cc ----------
 async def fetch_monotype_sentence(mon_name: str, ROOM) -> str | None:
     """
-    Fetch a random set's first sentence for mon_name from Gen 9 Monotype analyses.
+    Fetch a random set's first sentence for mon_name from analyses.
     Returns None if not available.
     """
     if ROOM == "monotype":
@@ -79,13 +78,15 @@ async def fetch_monotype_sentence(mon_name: str, ROOM) -> str | None:
     if not analysis:
         # Try a couple of simple name variations
         alts = {
-            mon_name.replace("’", "'"),
+            mon_name.replace("'", "'"),
+            mon_name.replace("_", "-"),
             mon_name.replace(" ", "-"),
             mon_name.replace("-Mega", ""),
         }
         for a in alts:
             if a in data:
                 analysis = data[a]
+                mon_name = a  
                 break
 
     if not analysis:
@@ -198,17 +199,15 @@ async def build_potw(Pokemon: str, Type1: str | None, Type2: str | None, type_co
 
 async def send_potd(ws, ROOM):
     """Build and send the POTD card once to a room via ws."""
-    pokemon_list = load_Pokemon(ROOM)
     type_colors = load_type_colors("colors.txt")
 
-    pick, typing = pick_daily_pokemon(pokemon_list, tz="US/Eastern")
-    parts = [p.strip() for p in typing.split("/")]
+    pokemon = get_random_pokemon(ROOM)
+    pokemon['name'] = pokemon['name'].replace("_", " ")
+    type1 = pokemon['type_1'] 
+    type2 = pokemon['type_2'] if pokemon['type_2'] not in [None, '', 'Null'] else None
 
-    Type1 = parts[0] if parts else None
-    Type2 = parts[1] if len(parts) > 1 else None
-
-    html_card = await build_potw(pick, Type1, Type2, type_colors, ROOM)
-    print(f"Sent POTD for {pick} ({Type1}/{Type2}) to {ROOM}")
+    html_card = await build_potw(pokemon['name'], type1, type2, type_colors, ROOM)
+    print(f"Sent POTD for {pokemon} ({type1}/{type2}) to {ROOM}")
 
     await ws.send(f"{ROOM}|/addhtmlbox {html_card}")
 
@@ -219,13 +218,11 @@ async def build_daily_potd(ws, ROOM):
         await asyncio.sleep(2 * 60 * 60)  # wait 2 hours
         await send_potd(ws, ROOM)
 
-import asyncio
-
-import asyncio
-
 if __name__ == "__main__":
     async def main():
-        potd = await build_potw("Suicune", "Water", None, load_type_colors(), "monotype")
+        # Usage
+        pokemon1 = get_random_pokemon('nationaldexmonotype')
+        potd = await build_potw(pokemon1['name'], pokemon1['type_1'], pokemon1['type_2'], load_type_colors(), "nationaldexmonotype")
         print(potd)
 
     asyncio.run(main())
