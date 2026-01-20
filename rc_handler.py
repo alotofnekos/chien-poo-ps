@@ -7,6 +7,7 @@ from potd import send_potd
 import time
 import re
 from tn import generate_monthly_tour_schedule_html,get_next_tournight, get_current_tour_schedule
+from tour_creator import get_tour_bans_for_html, add_tour_bans, remove_tour_bans
 import datetime
 from pm_handler import get_random_cat_url
 from set_handler import parse_command_and_get_sets
@@ -93,6 +94,13 @@ async def listen_for_messages(ws, room_commands_map):
 
                         elif msg_text.lower().startswith("meow show potd"):
                             await send_potd(ws, current_room)
+                        elif msg_text.lower().startswith("meow show bans"):
+                            tn = msg_text[len("meow show bans"):].strip()
+                            message = get_tour_bans_for_html(current_room, tn)
+                            if message is None:
+                                await ws.send(f"{current_room}|Meow, no bans found for {tn} in {current_room}. Maybe it doesnt exist? ;w;")
+                            else:
+                                await ws.send(f"{current_room}|/addhtmlbox {message}")
                         elif "meow show set" in msg_text.lower():
                             msg_id = f"{current_room}:{user}:{ts}:{msg_text}"
                             
@@ -140,6 +148,43 @@ async def listen_for_messages(ws, room_commands_map):
                             await ws.send(f"{current_room}|Meow, here are the commands! {help_msg}")
 
                         elif prefix in ('%', '@', '#', '~'):
+                            if msg_text.lower().startswith("meow add rule"):
+                                if prefix not in ('#'):
+                                    await ws.send(f"{current_room}|Meow, only room owners can add bans >:3c")
+                                else:
+                                    parts = msg_text[len("meow add rule"):].strip().split(None, 1)
+                                    
+                                    if len(parts) < 2:
+                                        await ws.send(f"{current_room}|Meow, please use: meow add rule <tourname> <bans>. Please note that meow can't discern bans from unbans, so add it as it appears in /tour rules (i.e. -Flutter Mane, +Chien-Pao ) :<")
+                                    else:
+                                        tour_name = parts[0].lower()
+                                        bans_str = parts[1]
+                                        
+                                        # Add the bans
+                                        added = add_tour_bans(current_room, tour_name, bans_str)
+                                        
+                                        if added:
+                                            await ws.send(f"{current_room}|Meow added these rule(s): {', '.join(added)} to {tour_name} >:3")
+                                        else:
+                                            await ws.send(f"{current_room}|Meow, those rules already exist or the tour doesn't exist. Idk meow, I'm just a cat ;w;")
+                            if msg_text.lower().startswith("meow remove rule"):
+                                if prefix not in ('#'):
+                                    await ws.send(f"{current_room}|Meow, only room owners can remove rules ;w;")
+                                else:
+                                    parts = msg_text[len("meow remove rule"):].strip().split(None, 1)
+                                    
+                                    if len(parts) < 2:
+                                        await ws.send(f"{current_room}|Meow, please use: meow remove rule <tourname> <bans> >:c")
+                                    else:
+                                        tour_name = parts[0].lower()
+                                        bans_str = parts[1]
+                                        
+                                        removed = remove_tour_bans(current_room, tour_name, bans_str)
+                                        
+                                        if removed:
+                                            await ws.send(f"{current_room}|Meow removed ban(s): {', '.join(removed)} from {tour_name} >:3")
+                                        else:
+                                            await ws.send(f"{current_room}|Meow, those rules don't exist or the tour doesn't exist. Idk meow, I'm just a cat ;w;")
                             if msg_text.lower().startswith("meow show cat"):
                                 cat = await get_random_cat_url()
                                 print(f"Fetched cat URL: {cat}")

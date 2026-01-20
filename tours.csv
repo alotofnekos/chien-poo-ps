@@ -1,0 +1,257 @@
+UU,monotype,-Garchomp
+UU,monotype,-Ogerpon-wellspring
+UU,monotype,-Tornadus-therian
+UU,monotype,-Gliscor
+UU,monotype,-Cinderace
+UU,monotype,-Terapagos
+UU,monotype,-Hippowdon
+UU,monotype,-Scizor
+UU,monotype,-Spectrier
+UU,monotype,-Dragonite
+UU,monotype,-Kyurem
+UU,monotype,-Archaludon
+UU,monotype,-Iron Hands
+UU,monotype,-Great Tusk
+UU,monotype,-Ceruledge
+UU,monotype,-Corviknight
+UU,monotype,-Meowscarada
+UU,monotype,-Clodsire
+UU,monotype,-Hatterene
+UU,monotype,-Volcarona
+UU,monotype,-Greninja
+UU,monotype,-Flutter Mane
+UU,monotype,-Landorus-Base
+UU,monotype,-Ogerpon-Hearthflame
+UU,monotype,-Dragapult
+UU,monotype,-Iron Valiant
+UU,monotype,-Heatran
+UU,monotype,-Skarmory
+UU,monotype,-Iron Treads
+UU,monotype,-Sneasler
+UU,monotype,-Gholdengo
+UU,monotype,-Goodra-Hisui
+UU,monotype,-Toxapex
+UU,monotype,-Latios
+UU,monotype,-Urshifu*
+UU,monotype,-Ting-Lu
+UU,monotype,-Gallade
+UU,monotype,-Samurott-Hisui
+UU,monotype,-Pelipper
+UU,monotype,-Politoed
+UU,monotype,-Darkrai
+UU,monotype,-Mamoswine
+UU,monotype,-Roaring Moon
+UU,monotype,-Excadrill
+UU,monotype,-Araquanid
+UU,monotype,-Weezing-galar
+UU,monotype,-Swampert
+UU,monotype,-Raging Bolt
+UU,monotype,-Hoopa-Unbound
+UU,monotype,-Kleavor
+UU,monotype,-Ninetales
+UU,monotype,-Pecharunt
+UU,monotype,-Sableye
+LC,monotype,sametypeclause
+LC,monotype,terastalclause
+LC,monotype,-Damp Rock
+LC,monotype,-Icy Rock
+LC,monotype,-King's Rock
+LC,monotype,-Quick Claw
+LC,monotype,-Light Clay
+LC,monotype,-Minccino
+LC,monotype,-Meowth
+LC,monotype,-Vullaby
+LC,monotype,+Diglett-Base
+LC,monotype,+Porygon
+LC,monotype,+Vulpix
+LC,monotype,+Vulpix-Alola
+LC,monotype,+Magby
+LC,monotype,+Snivy
+LC,monotype,+Scraggy
+LC,monotype,+Voltorb-Hisui
+LC,monotype,+Sticky Web
+Tera,monotype,!terastalclause
+Tera,monotype,-Flutter Mane
+Tera,monotype,-Ogerpon-Hearthflame
+Tera,monotype,-Sneasler
+Tera,monotype,-Cresselia
+Tera,monotype,-Spectrier
+Tera,monotype,-Terapagos
+Tera,monotype,-Volcarona
+Tera,monotype,-Dragonite
+Tera,monotype,-Latias
+Tera,monotype,-Latios
+Tera,monotype,-Raging Bolt
+Tera,monotype,-Gliscor
+Tera,monotype,-Heat Rock
+Tera,monotype,-Icy Rock
+Monothreat Bug,monotype,Force Monotype = Bug
+Monothreat Dark,monotype,Force Monotype = Dark
+Monothreat Dragon,monotype,Force Monotype = Dragon
+Monothreat Electric,monotype,Force Monotype = Electric
+Monothreat Fairy,monotype,Force Monotype = Fairy
+Monothreat Fighting,monotype,Force Monotype = Fighting
+Monothreat Fire,monotype,Force Monotype = Fire
+Monothreat Flying,monotype,Force Monotype = Flying
+Monothreat Ghost,monotype,Force Monotype = Ghost
+Monothreat Grass,monotype,Force Monotype = Grass
+Monothreat Ground,monotype,Force Monotype = Ground
+Monothreat Ice,monotype,Force Monotype = Ice
+Monothreat Normal,monotype,Force Monotype = Normal
+Monothreat Poison,monotype,Force Monotype = Poison
+Monothreat Psychic,monotype,Force Monotype = Psychic
+Monothreat Rock,monotype,Force Monotype = Rock
+Monothreat Steel,monotype,Force Monotype = Steel
+Monothreat Water,monotype,Force Monotype = Water
+Z-less,nationaldexmonotype,+Darkrai
+Z-less,nationaldexmonotype,+Dragapult
+Z-less,nationaldexmonotype,+Flutter Mane
+Z-less,nationaldexmonotype,+Gouging Fire
+Z-less,nationaldexmonotype,+Hoopa-Unbound
+Z-less,nationaldexmonotype,+Spectrier
+Z-less,nationaldexmonotype,+Zamazenta
+Z-less,nationaldexmonotype,Z-Move Clause
+Ubers,nationaldexmonotype,-Calyrex-Shadow
+Ubers,nationaldexmonotype,Dynamax Clause
+Ubers,nationaldexmonotype,-Focus Band
+Ubers,nationaldexmonotype,-Gengarite
+Ubers,nationaldexmonotype,-King's Rock
+Ubers,nationaldexmonotype,-Marshadow
+Ubers,nationaldexmonotype,-Miraidon
+Ubers,nationaldexmonotype,+Shedinja
+Ubers,nationaldexmonotype,-Xerneas
+Ubers,nationaldexmonotype,Terastal Clause
+Ubers,nationaldexmonotype,Moody Clause
+Ubers,nationaldexmonotype,-Quick Claw
+Ubers,nationaldexmonotype,Same Type Clause
+Ubers,nationaldexmonotype,-Ultranecrozium Z
+Ubers,nationaldexmonotype,-Zacian-Crowned
+RU,nationaldexmonotype,Same Type Clause
+RU,nationaldexmonotype,+Drizzle
+RU,nationaldexmonotype,+Drought
+RU,nationaldexmonotype,-Terrain Extender
+RU,nationaldexmonotype,+Light Clay
+RU,nationaldexmonotype,-Booster Energy
+RU,nationaldexmonotype,-Icy Rock
+RU,nationaldexmonotype,-Pidgeotite
+RU,nationaldexmonotype,-Sablenite
+RU,nationaldexmonotype,-Swampertite
+RU,nationaldexmonotype,-Barraskewda
+RU,nationaldexmonotype,-Basculegion
+RU,nationaldexmonotype,-Basculegion-F
+RU,nationaldexmonotype,-Latias
+RU,nationaldexmonotype,+Golisopod
+RU,nationaldexmonotype,+Grafaiai
+RU,nationaldexmonotype,+Talonflame
+RU,nationaldexmonotype,+Grimmsnarl
+RU,nationaldexmonotype,-Blacephalon
+RU,nationaldexmonotype,-Cloyster
+RU,nationaldexmonotype,-Deoxys-Defense
+RU,nationaldexmonotype,-Damp Rock
+RU,nationaldexmonotype,-Smooth Rock
+RU,nationaldexmonotype,-Heat Rock
+ZA,nationaldexmonotype,+clefablite
+ZA,nationaldexmonotype,+victreebelite
+ZA,nationaldexmonotype,+starminite
+ZA,nationaldexmonotype,+dragoninite
+ZA,nationaldexmonotype,+meganiumite
+ZA,nationaldexmonotype,+feraligite
+ZA,nationaldexmonotype,+skarmorite
+ZA,nationaldexmonotype,+emboarite
+ZA,nationaldexmonotype,+excadrite
+ZA,nationaldexmonotype,+scolipite
+ZA,nationaldexmonotype,+scraftinite
+ZA,nationaldexmonotype,+eelektrossite
+ZA,nationaldexmonotype,+chandelurite
+ZA,nationaldexmonotype,+chesnaughtite
+ZA,nationaldexmonotype,+delphoxite
+ZA,nationaldexmonotype,+greninjite
+ZA,nationaldexmonotype,+pyroarite
+ZA,nationaldexmonotype,+floettite
+ZA,nationaldexmonotype,+malamarite
+ZA,nationaldexmonotype,+barbaracite
+ZA,nationaldexmonotype,+dragalgite
+ZA,nationaldexmonotype,+hawluchanite
+ZA,nationaldexmonotype,+drampanite
+ZA,nationaldexmonotype,+falinksite
+ZA,nationaldexmonotype,+Absolite-Z
+ZA,nationaldexmonotype,+Baxcalibrite
+ZA,nationaldexmonotype,+Chimechite
+ZA,nationaldexmonotype,+Crabominite
+ZA,nationaldexmonotype,+Darkranite
+ZA,nationaldexmonotype,+Glimmoranite
+ZA,nationaldexmonotype,+Golisopite
+ZA,nationaldexmonotype,+Golurkite
+ZA,nationaldexmonotype,+Heatranite
+ZA,nationaldexmonotype,+Lucarionite-Z
+ZA,nationaldexmonotype,+Garchompite
+ZA,nationaldexmonotype,+Magearnite
+ZA,nationaldexmonotype,+Meowsticite
+ZA,nationaldexmonotype,+Scovillainite
+ZA,nationaldexmonotype,+Staraptite
+ZA,nationaldexmonotype,+Zeraorite
+ZA,nationaldexmonotype,+Tatsugirinite
+ZA,nationaldexmonotype,+Raichunite-X
+ZA,nationaldexmonotype,+Raichunite-Y
+ZA,nationaldexmonotype,+floette-eternal
+ZA,nationaldexmonotype,+clefable-mega
+ZA,nationaldexmonotype,+victreebel-mega
+ZA,nationaldexmonotype,+starmie-mega
+ZA,nationaldexmonotype,+dragonite-mega
+ZA,nationaldexmonotype,+meganium-mega
+ZA,nationaldexmonotype,+feraligatr-mega
+ZA,nationaldexmonotype,+skarmory-mega
+ZA,nationaldexmonotype,+emboar-mega
+ZA,nationaldexmonotype,+excadrill-mega
+ZA,nationaldexmonotype,+scolipede-mega
+ZA,nationaldexmonotype,+scrafty-mega
+ZA,nationaldexmonotype,+eelektross-mega
+ZA,nationaldexmonotype,+chandelure-mega
+ZA,nationaldexmonotype,+chesnaught-mega
+ZA,nationaldexmonotype,+delphox-mega
+ZA,nationaldexmonotype,+greninja-mega
+ZA,nationaldexmonotype,+pyroar-mega
+ZA,nationaldexmonotype,+floette-mega
+ZA,nationaldexmonotype,+malamar-mega
+ZA,nationaldexmonotype,+barbaracle-mega
+ZA,nationaldexmonotype,+dragalge-mega
+ZA,nationaldexmonotype,+hawlucha-mega
+ZA,nationaldexmonotype,+drampa-mega
+ZA,nationaldexmonotype,+falinks-mega
+ZA,nationaldexmonotype,+absol-mega-z
+ZA,nationaldexmonotype,+zeraora-mega
+ZA,nationaldexmonotype,+baxcalibur-mega
+ZA,nationaldexmonotype,+chimecho-mega
+ZA,nationaldexmonotype,+crabominable-mega
+ZA,nationaldexmonotype,+darkrai-mega
+ZA,nationaldexmonotype,+glimmora-mega
+ZA,nationaldexmonotype,+golisopod-mega
+ZA,nationaldexmonotype,+golurk-mega
+ZA,nationaldexmonotype,+heatran-mega
+ZA,nationaldexmonotype,+lucario-mega-z
+ZA,nationaldexmonotype,+garchomp-mega-z
+ZA,nationaldexmonotype,+magearna-mega
+ZA,nationaldexmonotype,+meowstic-mega
+ZA,nationaldexmonotype,+scovillain-mega
+ZA,nationaldexmonotype,+staraptor-mega
+ZA,nationaldexmonotype,+tatsugiri-mega
+ZA,nationaldexmonotype,+raichu-mega-x
+ZA,nationaldexmonotype,+raichu-mega-y
+Monothreat Bug,nationaldexmonotype,Force Monotype = Bug
+Monothreat Dark,nationaldexmonotype,Force Monotype = Dark
+Monothreat Dragon,nationaldexmonotype,Force Monotype = Dragon
+Monothreat Electric,nationaldexmonotype,Force Monotype = Electric
+Monothreat Fairy,nationaldexmonotype,Force Monotype = Fairy
+Monothreat Fighting,nationaldexmonotype,Force Monotype = Fighting
+Monothreat Fire,nationaldexmonotype,Force Monotype = Fire
+Monothreat Flying,nationaldexmonotype,Force Monotype = Flying
+Monothreat Ghost,nationaldexmonotype,Force Monotype = Ghost
+Monothreat Grass,nationaldexmonotype,Force Monotype = Grass
+Monothreat Ground,nationaldexmonotype,Force Monotype = Ground
+Monothreat Ice,nationaldexmonotype,Force Monotype = Ice
+Monothreat Normal,nationaldexmonotype,Force Monotype = Normal
+Monothreat Poison,nationaldexmonotype,Force Monotype = Poison
+Monothreat Psychic,nationaldexmonotype,Force Monotype = Psychic
+Monothreat Rock,nationaldexmonotype,Force Monotype = Rock
+Monothreat Steel,nationaldexmonotype,Force Monotype = Steel
+Monothreat Water,nationaldexmonotype,Force Monotype = Water

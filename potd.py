@@ -1,13 +1,15 @@
 import asyncio
 import datetime
+import json
 import os
 import random
 import hashlib
 import re
 from html import unescape
 from zoneinfo import ZoneInfo
-from supabase import create_client
+
 import aiohttp
+from supabase import create_client
 
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -58,7 +60,7 @@ def html_to_text(html: str) -> str:
 # ---------- Fetch analysis from data.pkmn.cc ----------
 async def fetch_monotype_sentence(mon_name: str, ROOM) -> str | None:
     """
-    Fetch a random set's first sentence for mon_name from analyses.
+    Fetch a random set's first sentence for mon_name from Gen 9 Monotype analyses.
     Returns None if not available.
     """
     if ROOM == "monotype":
