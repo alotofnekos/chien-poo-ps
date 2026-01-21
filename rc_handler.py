@@ -57,7 +57,7 @@ async def listen_for_messages(ws):
                     if ts < listener_start_time:
                         continue
 
-                    if "meow" in msg_text.lower() and prefix in ('+','%', '@', '#', '~', '*'):
+                    if "meow" in msg_text.lower() and prefix in ('+','%', '@', '#', '~'):
                         print(f"Received from {user} in {current_room}: {msg_text}")
                         if msg_text.lower().startswith("meow official"):
                             if CURRENT_TOUR_EXISTS.get(current_room, False):
