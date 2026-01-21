@@ -8,7 +8,7 @@ import aiohttp
 from aiohttp import web
 import random
 from websockets.exceptions import ConnectionClosed
-from tn import scheduled_tours, load_tour_data
+from tn import scheduled_tours
 from potd import build_daily_potd
 from pm_handler import get_random_cat_url
 from rc_handler import listen_for_messages
@@ -213,10 +213,9 @@ async def main_bot_logic():
                 # Join rooms and start background tasks
                 for room in ROOMS:
                     await room_logic(ws, room)
-                room_commands_map = {room: load_tour_data(room) for room in ROOMS}
 
                 # Start the listener
-                listener_task = asyncio.create_task(listen_for_messages(ws, room_commands_map))
+                listener_task = asyncio.create_task(listen_for_messages(ws))
 
                 connection_status = "Connected to Pokemon Showdown!"
                 backoff = RECONNECT_DELAY

@@ -7,7 +7,7 @@ from potd import send_potd
 import time
 import re
 from tn import generate_monthly_tour_schedule_html,get_next_tournight, get_current_tour_schedule
-from tour_creator import get_tour_bans_for_html, add_tour_bans, remove_tour_bans
+from tour_creator import get_tour_bans_for_html, add_tour_bans, remove_tour_bans, get_tour_info, build_tour_code, get_all_tours   
 import datetime
 from pm_handler import get_random_cat_url
 from set_handler import parse_command_and_get_sets
@@ -18,7 +18,7 @@ CURRENT_TOUR_EXISTS = {}
 TRACK_OFFICIAL_TOUR = {}  
 TOURNAMENT_STATE = {}     
 PROCESSED_MESSAGES = {}
-async def listen_for_messages(ws, room_commands_map):
+async def listen_for_messages(ws):
     """Listens for and processes ALL messages from the WebSocket, dispatching by room."""
     print("Starting global message listener...")
     listener_start_time = int(time.time())
@@ -59,8 +59,6 @@ async def listen_for_messages(ws, room_commands_map):
 
                     if "meow" in msg_text.lower() and prefix in ('+','%', '@', '#', '~', '*'):
                         print(f"Received from {user} in {current_room}: {msg_text}")
-
-                        TOUR_COMMANDS = room_commands_map.get(current_room, {})
                         if msg_text.lower().startswith("meow official"):
                             if CURRENT_TOUR_EXISTS.get(current_room, False):
                                 await ws.send(f"{current_room}|Tracking official tour in {current_room}, Nya >:3")
@@ -76,22 +74,42 @@ async def listen_for_messages(ws, room_commands_map):
 
                         elif msg_text.lower().startswith("meow start"):
                             tour_name = msg_text[len("meow start"):].strip()
-
-                            lower_map = {k.lower(): k for k in TOUR_COMMANDS.keys()}
-                            if tour_name.lower() in lower_map:
-                                lookup_key = lower_map[tour_name.lower()]
-                                tour_commands = TOUR_COMMANDS[lookup_key].split('\n')
-                                for command in tour_commands:
-                                    await ws.send(f"{current_room}|{command.strip()}")
-                                if "Monotype" in lookup_key or "Monothreat" in lookup_key:
-                                    await ws.send(f"{current_room}|/tour name {lookup_key}")
-                                else:
-                                    await ws.send(f"{current_room}|/tour name {lookup_key} {current_room.title()}")
+                            
+                            if not tour_name:
+                                await ws.send(f"{current_room}|Meow, please specify a tour to start! Usage: meow start <tourname>")
                             else:
-                                available = ", ".join(TOUR_COMMANDS.keys())
-                                await ws.send(f"{current_room}|Meow couldn’t find '{tour_name}'. "
-                                              f"Available tours: {available}")
-
+                                # Get tour code from database
+                                tour_code = build_tour_code(current_room, tour_name.lower())
+                                tour_info = get_tour_info(current_room, tour_name.lower())
+                                
+                                if not tour_code or not tour_info:
+                                    # Get list of available tours
+                                    from tour_creator import get_all_tours
+                                    available_tours = get_all_tours(current_room)
+                                    
+                                    if available_tours:
+                                        tours_list = ", ".join(available_tours)
+                                        await ws.send(f"{current_room}|Meow couldn't find a tour called '{tour_name}'! Available tours: {tours_list}")
+                                    else:
+                                        await ws.send(f"{current_room}|Meow couldn't find a tour called '{tour_name}' and I can't find any available tours either... ;w;")
+                                else:
+                                    # Send tour commands
+                                    await ws.send(f"{current_room}|/tour end")
+                                    await asyncio.sleep(2)
+                                    
+                                    tour_commands = tour_code.split('\n')
+                                    for command in tour_commands:
+                                        await ws.send(f"{current_room}|{command.strip()}")
+                                    
+                                    # Set tour name
+                                    display_name = tour_info.get('tour_name') or tour_name.replace('-', ' ').title()
+                                    if "Monotype" in display_name or "Monothreat" in display_name or "NatDex" in display_name:
+                                        await ws.send(f"{current_room}|/tour name {display_name}")
+                                    else:
+                                        await ws.send(f"{current_room}|/tour name {display_name} {current_room.title()}")
+                                    
+                                    await ws.send(f"{current_room}|/tour scouting off")
+                                    await ws.send(f"{current_room}|Meow started the {display_name} tour! >:3")
                         elif msg_text.lower().startswith("meow show potd"):
                             await send_potd(ws, current_room)
                         elif msg_text.lower().startswith("meow show bans"):
@@ -138,7 +156,7 @@ async def listen_for_messages(ws, room_commands_map):
                         elif msg_text.lower().startswith("meow next tn"):
                             nx_schedule = get_current_tour_schedule(current_room)
                             next_tour = get_next_tournight(nx_schedule)
-                            await ws.send(f"{current_room}|Meow, the next tournight is {next_tour['name']} at {next_tour['hour']:02d}:{next_tour['minute']:02d} (GMT-4). Its in {next_tour['minutes_until']} minute(s)!")
+                            await ws.send(f"{current_room}|Meow, the next tournight is {next_tour['name'].title()} at {next_tour['hour']:02d}:{next_tour['minute']:02d} (GMT-4). Its in {next_tour['minutes_until']} minute(s)!")
                         elif msg_text.lower().startswith("meow what time"):
                             now = datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=4)
                             await ws.send(f"{current_room}|Meow, the current time is {now.strftime('%Y-%m-%d %H:%M:%S')} (GMT-4)")
@@ -158,7 +176,7 @@ async def listen_for_messages(ws, room_commands_map):
                                         await ws.send(f"{current_room}|Meow, please use: meow add rule <tourname> <bans>. Please note that meow can't discern bans from unbans, so add it as it appears in /tour rules (i.e. -Flutter Mane, +Chien-Pao ) :<")
                                     else:
                                         tour_name = parts[0].lower()
-                                        bans_str = parts[1]
+                                        bans_str = parts[1].lower()
                                         
                                         # Add the bans
                                         added = add_tour_bans(current_room, tour_name, bans_str)
@@ -177,7 +195,7 @@ async def listen_for_messages(ws, room_commands_map):
                                         await ws.send(f"{current_room}|Meow, please use: meow remove rule <tourname> <bans> >:c")
                                     else:
                                         tour_name = parts[0].lower()
-                                        bans_str = parts[1]
+                                        bans_str = parts[1].lower()
                                         
                                         removed = remove_tour_bans(current_room, tour_name, bans_str)
                                         

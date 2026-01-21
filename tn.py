@@ -1,72 +1,71 @@
 import asyncio
 import datetime
 import pytz
-import json
-import os
 from dotenv import load_dotenv
+from tour_creator import build_tour_code, get_tour_info
 import random
 from calendar import monthrange
 load_dotenv()
-last_showcat = {}
-USERNAME = os.getenv("PS_USERNAME")
+
 # Timezone for tour scheduling.
 TIMEZONE = pytz.timezone('US/Eastern')
 
 # The key date for Week A. All odd-numbered weeks after this date are Week B.
 START_DATE = datetime.date(2025, 2, 10)
 
-# Load tour schedules from tours.json.
-def load_tour_data(ROOM):
-    try:
-        with open(f'tours_{ROOM}.json', 'r') as f:
-            data = json.load(f)
-    except FileNotFoundError:
-        print(f"Error: The file tours_{ROOM}.json was not found.")
-        return {}
-    except json.JSONDecodeError:
-        print(f"Error: Could not decode JSON from tours_{ROOM}.json. The file might be corrupted.")
-        return {}
-    tour_schedules = {}
-    for tour in data:
-        tour_schedules[tour['Tour']] = tour['Code']
-    return tour_schedules
-
-
-
 # Tour schedules for Week A and Week B.
-# Day of week (0=Mon, 6=Sun) -> List of (hour, minute, format) tuples
+# Day of week (0=Mon, 6=Sun) -> List of (hour, minute, tour_internal_name) tuples
 
 # MONOTYPE
 TOUR_SCHEDULE_A = {
-    0: [(9, 0, 'SV'), (10, 0, 'Tera'), (11, 0, 'Ubers'), (21, 0, 'LC'), (22, 0, 'BW'), (23, 0, 'Monotype-Wildcard')],
-    4: [(9, 0, 'SV'), (10, 0, 'BW'), (11, 0, 'SS'), (21, 0, 'SM'), (22, 0, 'ORAS'), (23, 0, 'SV')],
-    5: [(9, 0, 'UU'), (10, 0, 'SM'), (11, 0, 'SV'), (21, 0, 'SV'), (22, 0, 'SS'), (23, 0, 'NatDex')],
-    6: [(9, 0, 'CAP'), (10, 0, 'SV'), (11, 0, 'BW'), (21, 0, 'ORAS'), (22, 0, 'SV'), (23, 0, 'Random Monothreat Type')]
+    0: [(9, 0, 'sv'), (10, 0, 'tera'), (11, 0, 'ubers'), (21, 0, 'lc'), (22, 0, 'bw'), (23, 0, 'monotype-wildcard')],
+    4: [(9, 0, 'sv'), (10, 0, 'bw'), (11, 0, 'ss'), (21, 0, 'sm'), (22, 0, 'oras'), (23, 0, 'sv')],
+    5: [(9, 0, 'uu'), (10, 0, 'sm'), (11, 0, 'sv'), (21, 0, 'sv'), (22, 0, 'ss'), (23, 0, 'natdex')],
+    6: [(9, 0, 'cap'), (10, 0, 'sv'), (11, 0, 'bw'), (21, 0, 'oras'), (22, 0, 'sv'), (23, 0, 'random-monothreat')]
 }
 
-
-# September 1 prep
 TOUR_SCHEDULE_B = {
-    0: [(9, 0, 'LC'), (10, 0, 'SM'), (11, 0, 'Monotype-Wildcard'),(21, 0, 'SV'), (22, 0, 'Tera'), (23, 0, 'Ubers')],
-    4: [(9, 0, 'SM'), (10, 0, 'ORAS'), (11, 0, 'SV'), (21, 0, 'SV'), (22, 0, 'BW'), (23, 0, 'SS')],
-    5: [(9, 0, 'SV'), (10, 0, 'SS'), (11, 0, 'NatDex'), (21, 0, 'UU'), (22, 0, 'SM'), (23, 0, 'SV')],
-    6: [(9, 0, 'CAP'), (10, 0, 'SV'), (11, 0, 'BW'), (21, 0, 'ORAS'), (22, 0, 'SV'), (23, 0, 'Random Monothreat Type')]
+    0: [(9, 0, 'lc'), (10, 0, 'sm'), (11, 0, 'monotype-wildcard'),(21, 0, 'sv'), (22, 0, 'tera'), (23, 0, 'ubers')],
+    4: [(9, 0, 'sm'), (10, 0, 'oras'), (11, 0, 'sv'), (21, 0, 'sv'), (22, 0, 'bw'), (23, 0, 'ss')],
+    5: [(9, 0, 'sv'), (10, 0, 'ss'), (11, 0, 'natdex'), (21, 0, 'uu'), (22, 0, 'sm'), (23, 0, 'sv')],
+    6: [(9, 0, 'cap'), (10, 0, 'sv'), (11, 0, 'bw'), (21, 0, 'oras'), (22, 0, 'sv'), (23, 0, 'random-monothreat')]
 }
-
 
 # National Dex Monotype
 TOUR_SCHEDULE_NDM = {
-    0: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
-    1: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
-    2: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
-    3: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
-    4: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
-    5: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
-    6: [(8,0,'NatDex'), (10,0,'Random Monothreat Type'), (12,0,'NatDex'),(14,0,'Z-less'),(16,0,'NatDex'),(18,0,'RU'),(20,0,'NatDex'),(22,0,'SS NatDex'),(0,0,'NatDex'),(2,0,'Ubers')],
+    0: [(8,0,'natdex'), (10,0,'random-monothreat'), (12,0,'natdex'),(14,0,'z-less'),(16,0,'natdex'),(18,0,'ru'),(20,0,'natdex'),(22,0,'ss-natdex'),(0,0,'natdex'),(2,0,'ubers')],
+    1: [(8,0,'natdex'), (10,0,'random-monothreat'), (12,0,'natdex'),(14,0,'z-less'),(16,0,'natdex'),(18,0,'ru'),(20,0,'natdex'),(22,0,'ss-natdex'),(0,0,'natdex'),(2,0,'ubers')],
+    2: [(8,0,'natdex'), (10,0,'random-monothreat'), (12,0,'natdex'),(14,0,'z-less'),(16,0,'natdex'),(18,0,'ru'),(20,0,'natdex'),(22,0,'ss-natdex'),(0,0,'natdex'),(2,0,'ubers')],
+    3: [(8,0,'natdex'), (10,0,'random-monothreat'), (12,0,'natdex'),(14,0,'z-less'),(16,0,'natdex'),(18,0,'ru'),(20,0,'natdex'),(22,0,'ss-natdex'),(0,0,'natdex'),(2,0,'ubers')],
+    4: [(8,0,'natdex'), (10,0,'random-monothreat'), (12,0,'natdex'),(14,0,'z-less'),(16,0,'natdex'),(18,0,'ru'),(20,0,'natdex'),(22,0,'ss-natdex'),(0,0,'natdex'),(2,0,'ubers')],
+    5: [(8,0,'natdex'), (10,0,'random-monothreat'), (12,0,'natdex'),(14,0,'z-less'),(16,0,'natdex'),(18,0,'ru'),(20,0,'natdex'),(22,0,'ss-natdex'),(0,0,'natdex'),(2,0,'ubers')],
+    6: [(8,0,'natdex'), (10,0,'random-monothreat'), (12,0,'natdex'),(14,0,'z-less'),(16,0,'natdex'),(18,0,'ru'),(20,0,'natdex'),(22,0,'ss-natdex'),(0,0,'natdex'),(2,0,'ubers')],
 }
 
-# The queue for storing the random type.
-random_type_queue = asyncio.Queue()
+# Cache for monothreat tours to avoid repeated database queries
+monothreat_tours_cache = {}
+
+def get_monothreat_tours(room: str):
+    """
+    Get all monothreat tour names from the database for random selection.
+    Caches results to avoid repeated queries.
+    """
+    global monothreat_tours_cache
+    
+    if room in monothreat_tours_cache:
+        return monothreat_tours_cache[room]
+    
+    # Query database for all tours that start with 'monothreat-'
+    # You'll need to create this function in tour_creator.py
+    from tour_creator import get_all_tours
+    all_tours = get_all_tours(room)
+    
+    if all_tours:
+        monothreat_tours = [t for t in all_tours if t.startswith('monothreat-')]
+        monothreat_tours_cache[room] = monothreat_tours
+        return monothreat_tours
+    
+    return []
 
 def get_current_tour_schedule(ROOM):
     """Determines if it's Week A or Week B based on the current date."""
@@ -75,13 +74,10 @@ def get_current_tour_schedule(ROOM):
         weeks_passed = (today - START_DATE).days // 7
         
         if weeks_passed % 2 == 0:
-            #print("It's currently Week A.")
             return TOUR_SCHEDULE_A
         else:
-            #print("It's currently Week B.")
             return TOUR_SCHEDULE_B
     elif ROOM == "nationaldexmonotype":
-        #print("NDM schedule is ready")
         return TOUR_SCHEDULE_NDM
     
 def get_next_tournight(schedule, search_horizon_days=7):
@@ -148,14 +144,13 @@ def get_next_tournight(schedule, search_horizon_days=7):
 async def scheduled_tours(ws, ROOM):
     """Checks the time and starts a tour based on the schedule."""
     print(f"Starting tour scheduler for {ROOM}...")
-    TOUR_COMMANDS = load_tour_data(ROOM)
     last_check_minute = -1
+    
     while True:
         now = datetime.datetime.now(TIMEZONE)
         today_weekday = now.weekday()
         current_hour = now.hour
         current_minute = now.minute
-        # print(f"Current time: {now.strftime('%Y-%m-%d %H:%M:%S')} (Weekday: {today_weekday}, Hour: {current_hour}, Minute: {current_minute})")
 
         # Only check once per minute to avoid duplicate triggers
         if current_minute == last_check_minute:
@@ -167,52 +162,62 @@ async def scheduled_tours(ws, ROOM):
         
         if today_weekday in current_schedule:
             for tour_schedule in current_schedule[today_weekday]:
-                tour_hour, tour_minute, tour_name = tour_schedule
+                tour_hour, tour_minute, tour_internal_name = tour_schedule
                 tour_time = tour_hour * 60 + tour_minute
                 current_time = current_hour * 60 + current_minute
+                
+                # 5 minute warning
                 if current_time == tour_time - 5:
-                    await ws.send(f"{ROOM}|Meow, there will be a {tour_name.title()} tour in 5 minutes! Get ready nya!")
-                if (current_hour, current_minute) == (tour_hour, tour_minute):
-                    print(f"It's {tour_hour:02}:{tour_minute:02} on {now.strftime('%A')}. Sending tour commands.")
-
-                    if tour_name == "Random Monothreat Type":
-                        monothreat_keys = [key for key in TOUR_COMMANDS.keys() if key.startswith("Monothreat")]
-                        if monothreat_keys:
-                            lookup_key = random.choice(monothreat_keys)
-                        else:
-                            # fallback if something goes wrong
-                            await ws.send(f"{ROOM}|Meow wasnt able to pick a random type. Please tell Neko that meow did the dumb.")
-                            lookup_key = "Monothreat Fairy"
-
-                        # Double-check the key exists in TOUR_COMMANDS
-                        if lookup_key in TOUR_COMMANDS:
-                            await ws.send(f"{ROOM}|/tour end")
-                            await asyncio.sleep(2)  # Short delay to ensure the tour ends before starting a new one
-                            tour_commands = TOUR_COMMANDS[lookup_key].split('\n')
-                            
-                            for command in tour_commands:
-                                await ws.send(f"{ROOM}|{command.strip()}")
-                            await ws.send(f"{ROOM}|/tour name {lookup_key} Tour Nights")
-                            await ws.send(f"{ROOM}|/tour scouting off")
-                            if ROOM == "nationaldexmonotype":
-                                await ws.send(f"{ROOM}|Meow official")
-                        else:
-                            # Final fallback if even the chosen key isn't valid
-                            await ws.send(f"{ROOM}|Meow wasnt able to get the monothreat commands. Meow cant start the tour, ask an auth to start it meow.")
-                            await ws.send(f"{ROOM}|Also tell this to Neko meow ;w;")
+                    # Get the display name from database
+                    tour_info = get_tour_info(ROOM, tour_internal_name)
+                    if tour_info and tour_info.get('tour_name'):
+                        display_name = tour_info['tour_name']
                     else:
-                        if tour_name in TOUR_COMMANDS:
-                            tour_commands = TOUR_COMMANDS[tour_name].split('\n')
-                            for command in tour_commands:
-                                await ws.send(f"{ROOM}|{command.strip()}")
-                            if "Monotype" in tour_name or "Monothreat" in tour_name or "NatDex" in tour_name:
-                                await ws.send(f"{ROOM}|/tour name {tour_name} Tour Nights")
-                            else:
-                                await ws.send(f"{ROOM}|/tour name {tour_name} {ROOM.title()} Tour Nights")
-                            await ws.send(f"{ROOM}|/tour scouting off")
+                        display_name = tour_internal_name.replace('-', ' ').title()
+                    await ws.send(f"{ROOM}|Meow, there will be a {display_name} tour in 5 minutes! Get ready nya!")
+                                
+                # Start tour
+                if (current_hour, current_minute) == (tour_hour, tour_minute):
+                    print(f"It's {tour_hour:02}:{tour_minute:02} on {now.strftime('%A')}. Starting tour: {tour_internal_name}")
+
+                    # Handle random monothreat
+                    if tour_internal_name == "random-monothreat":
+                        monothreat_tours = get_monothreat_tours(ROOM)
+                        
+                        if monothreat_tours:
+                            selected_tour = random.choice(monothreat_tours)
+                            tour_code = build_tour_code(ROOM, selected_tour)
+                            tour_info = get_tour_info(ROOM, selected_tour)
                         else:
-                            print(f"Error: No command found for '{tour_name}'.")
-                            await ws.send(f"{ROOM}|Meow tried to create a tour for {tour_name}, but I couldnt read it or Neko is being stinky. Please tell this to Neko.")
+                            await ws.send(f"{ROOM}|Meow wasnt able to pick a random type. Please tell Neko that meow did the dumb.")
+                            continue
+                    else:
+                        # Regular tour
+                        tour_code = build_tour_code(ROOM, tour_internal_name)
+                        tour_info = get_tour_info(ROOM, tour_internal_name)
+                    
+                    # Check if we got valid tour data
+                    if not tour_code or not tour_info:
+                        print(f"Error: No tour data found for '{tour_internal_name}' in room '{ROOM}'.")
+                        await ws.send(f"{ROOM}|Meow tried to create a tour for {tour_internal_name}, but I couldnt read it from the database. Please tell this to Neko.")
+                        continue
+                    
+                    # Send tour commands
+                    await ws.send(f"{ROOM}|/tour end")
+                    await asyncio.sleep(2)
+                    
+                    tour_commands = tour_code.split('\n')
+                    for command in tour_commands:
+                        await ws.send(f"{ROOM}|{command.strip()}")
+                    
+                    # Set tour name
+                    display_name = tour_info['tour_name']
+                    if "Monotype" in display_name or "Monothreat" in display_name or "NatDex" in display_name:
+                        await ws.send(f"{ROOM}|/tour name {display_name} Tour Nights")
+                    else:
+                        await ws.send(f"{ROOM}|/tour name {display_name} {ROOM.title()} Tour Nights")
+                    
+                    await ws.send(f"{ROOM}|/tour scouting off")
 
         await asyncio.sleep(58)
 
@@ -222,11 +227,12 @@ def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
     import datetime
 
     color_sets = [
-        ("#F0FFFF", "#E6E6FA"),
-        ("#CCCCFF", "#D3D3D3")
+        ("rgba(240, 255, 255, 0.15)", "rgba(230, 230, 250, 0.15)"),
+        ("rgba(204, 204, 255, 0.15)", "rgba(211, 211, 211, 0.15)")
     ]
-    header_color = "#B0C4DE"
-    text_color = "#0A0A0A"
+    header_color = "rgba(176, 196, 222, 0.2)"
+    border_color = "rgba(128, 128, 128, 0.4)"
+    subheader_bg = "rgba(240, 240, 240, 0.1)"
     num_days = monthrange(year, month)[1]
 
     if room == "monotype":
@@ -234,29 +240,36 @@ def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
     elif room == "nationaldexmonotype":
         schedules = {"NDM": TOUR_SCHEDULE_NDM}
     else:
-        return f"<p style='color:{text_color};'>Invalid room specified</p>"
+        return "<p>Invalid room specified</p>"
+
+    # Get the timezone offset for the given month/year
+    sample_date = datetime.datetime(year, month, 15, 12, 0, tzinfo=TIMEZONE)
+    tz_offset = sample_date.strftime('%z')
+    tz_name = sample_date.tzname()
+    
+    offset_hours = int(tz_offset[:3])
+    tz_display = f"GMT{offset_hours:+d}" if offset_hours != 0 else "GMT"
 
     html = []
 
     # Full-width header
     html.append(
-        f"<div style='width:100%; background:{header_color}; text-align:center; font-weight:bold; padding:5px; color:{text_color};'>"
+        f"<div style='width:100%; background:{header_color}; text-align:center; font-weight:bold; padding:5px;'>"
         f"{room.capitalize()} Events ({datetime.date(year, month, 1).strftime('%B-%Y')})</div>"
     )
     html.append(
-        f"<div style='width:100%; text-align:center; background:#f0f0f0; font-size:12px; padding:3px; color:{text_color};'>"
-        f"Event Information Recorded in: (GMT-4)</div>"
+        f"<div style='width:100%; text-align:center; background:{subheader_bg}; font-size:12px; padding:3px;'>"
+        f"Event Information Recorded in: {tz_display}</div>"
     )
 
-    # Flex container with fixed height
+    # Container with fixed height
     html.append(
-        f"<div style='display:flex; width:100%; border:1px solid #ccc; font-family:Arial; font-size:11px; color:{text_color}; height:390px;'>"
+        f"<div style='width:100%; border:1px solid {border_color}; font-family:Arial; font-size:11px; height:390px; overflow-y:auto;'>"
     )
 
-    # Scrollable table container
-    html.append(f"<div style='overflow-y:auto; width:60%;'>")
+    # Table takes full width
     html.append(
-        f"<table style='border-collapse:collapse; text-align:left; border:1px solid #ccc; color:{text_color}; width:100%;'>"
+        f"<table style='border-collapse:collapse; text-align:left; border:1px solid {border_color}; width:100%;'>"
     )
 
     row_toggle = 0
@@ -278,32 +291,40 @@ def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
         if not events:
             continue
 
-        morning_events = [f"{hour:02}:{minute:02} {tour}" for hour, minute, tour in events if hour <= 12]
-        night_events = [f"{hour:02}:{minute:02} {tour}" for hour, minute, tour in events if hour > 12]
+        # Get display names from database
+        morning_events = []
+        night_events = []
+        
+        for hour, minute, tour_internal_name in events:
+            tour_info = get_tour_info(room, tour_internal_name)
+            
+            if tour_info and tour_info.get('tour_name'):
+                display_name = tour_info['tour_name']
+            else:
+                display_name = tour_internal_name.replace('-', ' ').title()
+            
+            event_str = f"{hour:02}:{minute:02} {display_name}"
+            
+            if hour <= 12:
+                morning_events.append(event_str)
+            else:
+                night_events.append(event_str)
 
         morning_color, night_color = color_sets[row_toggle]
 
         html.append(
             f"<tr>"
-            f"<td style='background:{header_color}; text-align:center; padding:4px; font-weight:bold; width:15%; border:1px solid #ccc; color:{text_color};'>{current_date.strftime('%m/%d')}</td>"
-            f"<td style='background:{morning_color}; padding:4px; width:42.5%; border:1px solid #ccc; color:{text_color};'>{'<br>'.join(morning_events) if morning_events else ''}</td>"
-            f"<td style='background:{night_color}; padding:4px; width:42.5%; border:1px solid #ccc; color:{text_color};'>{'<br>'.join(night_events) if night_events else ''}</td>"
+            f"<td style='background:{header_color}; text-align:center; padding:4px; font-weight:bold; width:15%; border:1px solid {border_color};'>{current_date.strftime('%m/%d')}</td>"
+            f"<td style='background:{morning_color}; padding:4px; width:42.5%; border:1px solid {border_color};'>{'<br>'.join(morning_events) if morning_events else ''}</td>"
+            f"<td style='background:{night_color}; padding:4px; width:42.5%; border:1px solid {border_color};'>{'<br>'.join(night_events) if night_events else ''}</td>"
             f"</tr>"
         )
 
         row_toggle = 1 - row_toggle
 
     html.append("</table>")
-    html.append("</div>")  # close scrollable container
-
-    # Image side stays fixed
-    html.append(
-        f"<div style='width:40%; display:flex; align-items:center; justify-content:center; background:#fafafa; border-left:1px solid #ccc; color:{text_color};'>"
-        f"""<img src="https://i.ibb.co/zh9vQMnH/90.png" height="750" width="900" style="height: auto; width: auto;">"""
-        f"</div>"
-    )
-
-    html.append("</div>")  # close flex container
+    html.append("</div>")
+    
     return "\n".join(html)
 
 async def main(ws, ROOM):
@@ -315,4 +336,4 @@ if __name__ == "__main__":
     print(html_schedule)
     Sched = get_current_tour_schedule("nationaldexmonotype")
     next_tour = get_next_tournight(Sched)
-    print(f"m|Meow, the next tournight is {next_tour['name']} at {next_tour['hour']}:{next_tour['minute']} (GMT-4). Its in {next_tour['minutes_until']} minute(s)!")
+    print(f"Meow, the next tournight is {next_tour['name']} at {next_tour['hour']}:{next_tour['minute']} (GMT-4). Its in {next_tour['minutes_until']} minute(s)!")

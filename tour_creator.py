@@ -15,7 +15,26 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE")
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-
+def get_tour_info(room: str, tour: str):
+    """
+    Get tour information (type, name, misc_commands) for a specific tour.
+    Returns a dict with tour info or None if not found.
+    """
+    try:
+        resp = supabase.rpc(
+            "get_tour_info",
+            {
+                "p_room_name": room,
+                "p_tour_name": tour
+            }
+        ).execute()
+        
+        # RPC returns a list, get first item or None
+        return resp.data[0] if resp.data else None
+    except Exception as e:
+        print(f"Failed to get tour info for '{tour}': {e}")
+        return None
+    
 def get_tour_bans(room: str, tour: str):
     """
     Get tour bans as a comma-separated string
@@ -51,11 +70,10 @@ def add_tour_bans(room: str, tour: str, bans_str: str):
             }
         ).execute()
 
-        # Check if resp.data is truthy (RPC returns True/False)
+        # Check if resp.data is true
         if resp.data:
             added.append(ban)
         else:
-            # RPC failed (likely already exists or some DB error)
             print(f"Failed to add ban '{ban}': {resp.data}")
 
     return added
@@ -101,6 +119,23 @@ def remove_tour_bans(room: str, tour: str, bans_str: str):
 
     return removed
 
+def get_all_tours(room: str):
+    """
+    Get all tour internal names for a room.
+    Returns a list of tour_internalname strings.
+    """
+    try:
+        resp = supabase.rpc(
+            "get_all_tours",
+            {
+                "p_room_name": room
+            }
+        ).execute()
+        
+        return [tour['tour_internalname'] for tour in resp.data] if resp.data else []
+    except Exception as e:
+        print(f"Failed to get all tours for room '{room}': {e}")
+        return []
 
 def get_tour_bans_for_html(room: str, tour: str):
     """
@@ -140,6 +175,8 @@ def get_tour_bans_for_html(room: str, tour: str):
     def render_section(title, items, bg, border):
         if not items:
             return ""
+        # Title case each item in the list
+        titled_items = [item.title() for item in sorted(set(items))]
         return f"""
         <div style="
             margin-bottom: 0.75rem;
@@ -150,7 +187,7 @@ def get_tour_bans_for_html(room: str, tour: str):
         ">
           <strong>{title}</strong><br>
           <div style="margin-top: 0.3rem;">
-            {', '.join(sorted(set(items)))}
+            {', '.join(titled_items)}
           </div>
         </div>
         """
@@ -181,15 +218,48 @@ def get_tour_bans_for_html(room: str, tour: str):
     </div>
     """.strip()
 
-
+def build_tour_code(room: str, tour: str) -> str:
+    """
+    Build the tour code string for a given room and tour.
+    Returns the formatted code string or None if tour not found.
+    """
+    tour_info = get_tour_info(room, tour)
+    if not tour_info:
+        return None
+    
+    bans = get_tour_bans(room, tour)
+    
+    # Build the code string
+    code_parts = []
+    
+    # Line 1: /tour new
+    code_parts.append(
+        f"/tour new {tour_info['tour_type']}, elim,,,{tour_info['tour_name']}"
+    )
+    
+    # Line 2: misc_commands (if exists)
+    if tour_info['misc_commands']:
+        code_parts.append(tour_info['misc_commands'])
+    
+    # Line 3: /tour rules (if bans exist)
+    if bans:
+        code_parts.append(f"/tour rules {bans}")
+    
+    # Line 4: .official
+    code_parts.append(".official")
+    
+    # Join with \n
+    return "\n".join(code_parts)
 
 def main():
     room = "monotype"
-    tour = "ubers"
-    bans = "-Flutter Mane"
-    success = remove_tour_ban(room, tour, bans)
-    print("Ban removed:", success)
-    bans_list = get_tour_bans(room, tour)
+    tour = "monotype-wildcard"
+    success = get_tour_bans_for_html(room, tour)
+    bans = get_tour_bans(room, tour)
+    code = build_tour_code(room, tour)
+    print(success)
+    print(bans)
+    print(code)
 
 if __name__ == "__main__":
     main()
