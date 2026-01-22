@@ -177,14 +177,18 @@ def format_moveset(species: str, set_name: str, data: dict, include_header: bool
                     parts.append(f"{v} {label}")
             return " / ".join(parts)
         return str(ev_obj)
+    
     items = data.get("item")
-    slug = species.lower().replace(" ", "-")
+    slug = species.lower().replace(" ", "-").replace("'", "")
 
-    if items and items.endswith("ite"):
-        slug += "-mega"
+    # Check for Mega evolution - handle both string and list items
+    if items:
+        if isinstance(items, str) and items.endswith("ite"):
+            slug += "-mega"
+        elif isinstance(items, list) and any(item.endswith("ite") for item in items if isinstance(item, str)):
+            slug += "-mega"
 
-
-    items = data.get("item")
+    # Format item string
     item_str = ""
     if isinstance(items, list):
         item_str = " / ".join(str(i) for i in items)
@@ -406,7 +410,7 @@ def parse_command_and_get_sets(command_string, room=""):
 def main():
     # Test with different filter styles
     test_commands = [
-        "meow show set diancie gen8nationaldex",
+        "meow show set darkrai",
         "meow show set sandslash-alola gen9monotype (boots)",
         "meow show set sandslash-alola gen9monotype (rapid spin)",
         "meow show set latias (scarf)",
