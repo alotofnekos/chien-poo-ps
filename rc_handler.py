@@ -148,7 +148,11 @@ async def listen_for_messages(ws):
                         elif msg_text.lower().startswith("meow show schedule"):
                             now = datetime.datetime.now()
                             html_schedule = generate_monthly_tour_schedule_html(now.month, now.year, room=current_room)
-                            await ws.send(f"{current_room}|/addhtmlbox {html_schedule}")
+                            
+                            if html_schedule and "Invalid room" not in html_schedule:
+                                await ws.send(f"{current_room}|/addhtmlbox {html_schedule}")
+                            else:
+                                await ws.send(f"{current_room}|Meow, this room doesn't have scheduled tournights ;w;")
                         
                         elif msg_text.lower().startswith("meow who made you"):
                             await ws.send(f"{current_room}|Meow was made by Neko >:3")    
