@@ -181,13 +181,12 @@ def get_tour_bans_for_html(room: str, tour: str):
     for value in bans_data:
         value = value.strip()
         lower_value = value.lower()
-
-        if "clause" in lower_value:
-            clauses.append(value)
-        elif value.startswith("-"):
+        if value.startswith("-"):
             bans.append(value[1:])
         elif value.startswith("+"):
             unbans.append(value[1:])
+        else:
+            clauses.append(value)
 
     # If absolutely nothing to show, return nothing
     if not clauses and not bans and not unbans:
@@ -276,7 +275,8 @@ def main():
     room = "monotype"
     code = get_monothreat_tours(room)
     selected_tour = random.choice(code)
-    print(selected_tour)
+    get_html=get_tour_bans_for_html(room, selected_tour)
+    print(get_html)
 
 if __name__ == "__main__":
     main()
