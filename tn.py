@@ -2,7 +2,7 @@ import asyncio
 import datetime
 import pytz
 from dotenv import load_dotenv
-from tour_creator import build_tour_code, get_tour_info
+from tour_creator import build_tour_code, get_tour_info, get_monothreat_tours
 import random
 from calendar import monthrange
 load_dotenv()
@@ -41,31 +41,6 @@ TOUR_SCHEDULE_NDM = {
     5: [(8,0,'natdex'), (10,0,'random-monothreat'), (12,0,'natdex'),(14,0,'z-less'),(16,0,'natdex'),(18,0,'ru'),(20,0,'natdex'),(22,0,'ss-natdex'),(0,0,'natdex'),(2,0,'ubers')],
     6: [(8,0,'natdex'), (10,0,'random-monothreat'), (12,0,'natdex'),(14,0,'z-less'),(16,0,'natdex'),(18,0,'ru'),(20,0,'natdex'),(22,0,'ss-natdex'),(0,0,'natdex'),(2,0,'ubers')],
 }
-
-# Cache for monothreat tours to avoid repeated database queries
-monothreat_tours_cache = {}
-
-def get_monothreat_tours(room: str):
-    """
-    Get all monothreat tour names from the database for random selection.
-    Caches results to avoid repeated queries.
-    """
-    global monothreat_tours_cache
-    
-    if room in monothreat_tours_cache:
-        return monothreat_tours_cache[room]
-    
-    # Query database for all tours that start with 'monothreat-'
-    # You'll need to create this function in tour_creator.py
-    from tour_creator import get_all_tours
-    all_tours = get_all_tours(room)
-    
-    if all_tours:
-        monothreat_tours = [t for t in all_tours if t.startswith('monothreat-')]
-        monothreat_tours_cache[room] = monothreat_tours
-        return monothreat_tours
-    
-    return []
 
 def get_current_tour_schedule(ROOM):
     """Determines if it's Week A or Week B based on the current date."""
@@ -157,67 +132,68 @@ async def scheduled_tours(ws, ROOM):
             await asyncio.sleep(1)
             continue
         last_check_minute = current_minute
-
         current_schedule = get_current_tour_schedule(ROOM)
-        
-        if today_weekday in current_schedule:
-            for tour_schedule in current_schedule[today_weekday]:
-                tour_hour, tour_minute, tour_internal_name = tour_schedule
-                tour_time = tour_hour * 60 + tour_minute
-                current_time = current_hour * 60 + current_minute
-                
-                # 5 minute warning
-                if current_time == tour_time - 5:
-                    # Get the display name from database
-                    tour_info = get_tour_info(ROOM, tour_internal_name)
-                    if tour_info and tour_info.get('tour_name'):
-                        display_name = tour_info['tour_name']
-                    else:
-                        display_name = tour_internal_name.replace('-', ' ').title()
-                    await ws.send(f"{ROOM}|Meow, there will be a {display_name} tour in 5 minutes! Get ready nya!")
-                                
-                # Start tour
-                if (current_hour, current_minute) == (tour_hour, tour_minute):
-                    print(f"It's {tour_hour:02}:{tour_minute:02} on {now.strftime('%A')}. Starting tour: {tour_internal_name}")
-
-                    # Handle random monothreat
-                    if tour_internal_name == "random-monothreat":
-                        monothreat_tours = get_monothreat_tours(ROOM)
-                        
-                        if monothreat_tours:
-                            selected_tour = random.choice(monothreat_tours)
-                            tour_code = build_tour_code(ROOM, selected_tour)
-                            tour_info = get_tour_info(ROOM, selected_tour)
-                        else:
-                            await ws.send(f"{ROOM}|Meow wasnt able to pick a random type. Please tell Neko that meow did the dumb.")
-                            continue
-                    else:
-                        # Regular tour
-                        tour_code = build_tour_code(ROOM, tour_internal_name)
+        if current_schedule is None:
+            continue
+        else:
+            if today_weekday in current_schedule:
+                for tour_schedule in current_schedule[today_weekday]:
+                    tour_hour, tour_minute, tour_internal_name = tour_schedule
+                    tour_time = tour_hour * 60 + tour_minute
+                    current_time = current_hour * 60 + current_minute
+                    
+                    # 5 minute warning
+                    if current_time == tour_time - 5:
+                        # Get the display name from database
                         tour_info = get_tour_info(ROOM, tour_internal_name)
-                    
-                    # Check if we got valid tour data
-                    if not tour_code or not tour_info:
-                        print(f"Error: No tour data found for '{tour_internal_name}' in room '{ROOM}'.")
-                        await ws.send(f"{ROOM}|Meow tried to create a tour for {tour_internal_name}, but I couldnt read it from the database. Please tell this to Neko.")
-                        continue
-                    
-                    # Send tour commands
-                    await ws.send(f"{ROOM}|/tour end")
-                    await asyncio.sleep(2)
-                    
-                    tour_commands = tour_code.split('\n')
-                    for command in tour_commands:
-                        await ws.send(f"{ROOM}|{command.strip()}")
-                    
-                    # Set tour name
-                    display_name = tour_info['tour_name']
-                    if "Monotype" in display_name or "Monothreat" in display_name or "NatDex" in display_name:
-                        await ws.send(f"{ROOM}|/tour name {display_name} Tour Nights")
-                    else:
-                        await ws.send(f"{ROOM}|/tour name {display_name} {ROOM.title()} Tour Nights")
-                    
-                    await ws.send(f"{ROOM}|/tour scouting off")
+                        if tour_info and tour_info.get('tour_name'):
+                            display_name = tour_info['tour_name']
+                        else:
+                            display_name = tour_internal_name.replace('-', ' ').title()
+                        await ws.send(f"{ROOM}|Meow, there will be a {display_name} tour in 5 minutes! Get ready nya!")
+                                    
+                    # Start tour
+                    if (current_hour, current_minute) == (tour_hour, tour_minute):
+                        print(f"It's {tour_hour:02}:{tour_minute:02} on {now.strftime('%A')}. Starting tour: {tour_internal_name}")
+
+                        # Handle random monothreat
+                        if tour_internal_name == "random-monothreat":
+                            monothreat_tours = get_monothreat_tours(ROOM)
+                            
+                            if monothreat_tours:
+                                selected_tour = random.choice(monothreat_tours)
+                                tour_code = build_tour_code(ROOM, selected_tour)
+                                tour_info = get_tour_info(ROOM, selected_tour)
+                            else:
+                                await ws.send(f"{ROOM}|Meow wasnt able to pick a random type. Please tell Neko that meow did the dumb.")
+                                continue
+                        else:
+                            # Regular tour
+                            tour_code = build_tour_code(ROOM, tour_internal_name)
+                            tour_info = get_tour_info(ROOM, tour_internal_name)
+                        
+                        # Check if we got valid tour data
+                        if not tour_code or not tour_info:
+                            print(f"Error: No tour data found for '{tour_internal_name}' in room '{ROOM}'.")
+                            await ws.send(f"{ROOM}|Meow tried to create a tour for {tour_internal_name}, but I couldnt read it from the database. Please tell this to Neko.")
+                            continue
+                        
+                        # Send tour commands
+                        await ws.send(f"{ROOM}|/tour end")
+                        await asyncio.sleep(2)
+                        
+                        tour_commands = tour_code.split('\n')
+                        for command in tour_commands:
+                            await ws.send(f"{ROOM}|{command.strip()}")
+                        
+                        # Set tour name
+                        display_name = tour_info['tour_name']
+                        if "Monotype" in display_name or "Monothreat" in display_name or "NatDex" in display_name:
+                            await ws.send(f"{ROOM}|/tour name {display_name} Tour Nights")
+                        else:
+                            await ws.send(f"{ROOM}|/tour name {display_name} {ROOM.title()} Tour Nights")
+                        
+                        await ws.send(f"{ROOM}|/tour scouting off")
 
         await asyncio.sleep(58)
 

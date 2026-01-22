@@ -17,7 +17,7 @@ load_dotenv()
 
 USERNAME = os.getenv("PS_USERNAME")
 PASSWORD = os.getenv("PS_PASSWORD")
-ROOMS = ["monotype", "nationaldexmonotype"]
+ROOMS = ["monotype", "nationaldexmonotype", "nationaldexou"]
 SERVER = "wss://sim3.psim.us/showdown/websocket"
 PORT = int(os.environ.get("PORT", 10000))
 RECONNECT_DELAY = 5  # seconds to wait before reconnecting

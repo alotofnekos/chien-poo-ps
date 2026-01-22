@@ -14,6 +14,8 @@ from supabase import create_client
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE")
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+# Cache for monothreat tours to avoid repeated database queries
+monothreat_tours_cache = {}
 
 def get_tour_info(room: str, tour: str):
     """
@@ -136,6 +138,26 @@ def get_all_tours(room: str):
     except Exception as e:
         print(f"Failed to get all tours for room '{room}': {e}")
         return []
+
+def get_monothreat_tours(room: str):
+    """
+    Get all monothreat tour names from the database for random selection.
+    Caches results to avoid repeated queries.
+    """
+    global monothreat_tours_cache
+    
+    if room in monothreat_tours_cache:
+        return monothreat_tours_cache[room]
+
+    from tour_creator import get_all_tours
+    all_tours = get_all_tours(room)
+    
+    if all_tours:
+        monothreat_tours = [t for t in all_tours if t.startswith('monothreat-')]
+        monothreat_tours_cache[room] = monothreat_tours
+        return monothreat_tours
+    
+    return []
 
 def get_tour_bans_for_html(room: str, tour: str):
     """

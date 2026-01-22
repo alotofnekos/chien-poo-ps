@@ -204,14 +204,16 @@ async def send_potd(ws, ROOM):
     type_colors = load_type_colors("colors.txt")
 
     pokemon = get_random_pokemon(ROOM)
-    pokemon['name'] = pokemon['name'].replace("_", " ")
-    type1 = pokemon['type_1'] 
-    type2 = pokemon['type_2'] if pokemon['type_2'] not in [None, '', 'Null'] else None
 
-    html_card = await build_potw(pokemon['name'], type1, type2, type_colors, ROOM)
-    print(f"Sent POTD for {pokemon} ({type1}/{type2}) to {ROOM}")
+    if pokemon is not None:
+        pokemon['name'] = pokemon['name'].replace("_", " ")
+        type1 = pokemon['type_1'] 
+        type2 = pokemon['type_2'] if pokemon['type_2'] not in [None, '', 'Null'] else None
 
-    await ws.send(f"{ROOM}|/addhtmlbox {html_card}")
+        html_card = await build_potw(pokemon['name'], type1, type2, type_colors, ROOM)
+        print(f"Sent POTD for {pokemon} ({type1}/{type2}) to {ROOM}")
+
+        await ws.send(f"{ROOM}|/addhtmlbox {html_card}")
 
 
 async def build_daily_potd(ws, ROOM):
@@ -223,7 +225,7 @@ async def build_daily_potd(ws, ROOM):
 if __name__ == "__main__":
     async def main():
         # Usage
-        pokemon1 = get_random_pokemon('nationaldexmonotype')
+        pokemon1 = get_random_pokemon('nationaldexou')
         potd = await build_potw(pokemon1['name'], pokemon1['type_1'], pokemon1['type_2'], load_type_colors(), "nationaldexmonotype")
         print(potd)
 

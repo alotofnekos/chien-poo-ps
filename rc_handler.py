@@ -156,7 +156,11 @@ async def listen_for_messages(ws):
                         elif msg_text.lower().startswith("meow next tn"):
                             nx_schedule = get_current_tour_schedule(current_room)
                             next_tour = get_next_tournight(nx_schedule)
-                            await ws.send(f"{current_room}|Meow, the next tournight is {next_tour['name'].title()} at {next_tour['hour']:02d}:{next_tour['minute']:02d} (GMT-4). Its in {next_tour['minutes_until']} minute(s)!")
+                            
+                            if next_tour is None:
+                                await ws.send(f"{current_room}|Meow, there are no scheduled tournights for this room ;w;")
+                            else:
+                                await ws.send(f"{current_room}|Meow, the next tournight is {next_tour['name'].title()} at {next_tour['hour']:02d}:{next_tour['minute']:02d} (GMT-4). Its in {next_tour['minutes_until']} minute(s)!")
                         elif msg_text.lower().startswith("meow what time"):
                             now = datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=4)
                             await ws.send(f"{current_room}|Meow, the current time is {now.strftime('%Y-%m-%d %H:%M:%S')} (GMT-4)")
