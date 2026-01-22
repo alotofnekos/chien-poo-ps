@@ -320,6 +320,8 @@ def parse_command_and_get_sets(command_string, room=""):
         default_format = "gen9monotype"
     elif room.lower() == "nationaldexmonotype":
         default_format = "gen9nationaldexmonotype"
+    elif room.lower() == "nationaldexou":
+        default_format = "gen9nationaldex"
     else:
         default_format = "gen9monotype"
     
@@ -404,7 +406,7 @@ def parse_command_and_get_sets(command_string, room=""):
 def main():
     # Test with different filter styles
     test_commands = [
-        "meow show set sandslash-alola gen9monotype (slush rush)",
+        "meow show set diancie gen8nationaldex",
         "meow show set sandslash-alola gen9monotype (boots)",
         "meow show set sandslash-alola gen9monotype (rapid spin)",
         "meow show set latias (scarf)",
