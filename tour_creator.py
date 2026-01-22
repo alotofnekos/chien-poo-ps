@@ -148,12 +148,11 @@ def get_monothreat_tours(room: str):
     
     if room in monothreat_tours_cache:
         return monothreat_tours_cache[room]
-
-    from tour_creator import get_all_tours
+    
     all_tours = get_all_tours(room)
     
     if all_tours:
-        monothreat_tours = [t for t in all_tours if t.startswith('monothreat-')]
+        monothreat_tours = [t for t in all_tours if t.startswith('monothreat')]
         monothreat_tours_cache[room] = monothreat_tours
         return monothreat_tours
     
@@ -275,13 +274,9 @@ def build_tour_code(room: str, tour: str) -> str:
 
 def main():
     room = "monotype"
-    tour = "monotype-wildcard"
-    success = get_tour_bans_for_html(room, tour)
-    bans = get_tour_bans(room, tour)
-    code = build_tour_code(room, tour)
-    print(success)
-    print(bans)
-    print(code)
+    code = get_monothreat_tours(room)
+    selected_tour = random.choice(code)
+    print(selected_tour)
 
 if __name__ == "__main__":
     main()
