@@ -112,6 +112,13 @@ async def listen_for_messages(ws):
                                     await ws.send(f"{current_room}|Meow started the {display_name} tour! >:3")
                         elif msg_text.lower().startswith("meow show potd"):
                             await send_potd(ws, current_room)
+                        elif msg_text.lower().startswith("meow show tours"):
+                            tours = get_all_tours(current_room)
+                            if tours:
+                                tours_list = ", ".join(tours)
+                                await ws.send(f"{current_room}|Meow, the available tours are: {tours_list} >:3")
+                            else:
+                                await ws.send(f"{current_room}|Meow, there are no available tours in {current_room} ;w;")
                         elif msg_text.lower().startswith("meow show bans"):
                             tn = msg_text[len("meow show bans"):].strip()
                             message = get_tour_bans_for_html(current_room, tn)
@@ -170,7 +177,7 @@ async def listen_for_messages(ws):
                             await ws.send(f"{current_room}|Meow, the current time is {now.strftime('%Y-%m-%d %H:%M:%S')} (GMT-4)")
                         elif msg_text.lower().startswith("meow help"):
                             help_msg = ("'meow start [tour name]', 'meow show potd', "
-                                        "'meow show schedule', 'meow help', 'meow show cat', 'meow uptime', 'meow next tn','meow show set'")
+                                        "'meow show schedule', 'meow help', 'meow show cat', 'meow uptime', 'meow next tn','meow show set', 'meow show bans [tour name]', 'meow show tours'")
                             await ws.send(f"{current_room}|Meow, here are the commands! {help_msg}")
 
                         elif prefix in ('%', '@', '#', '~'):
