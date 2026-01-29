@@ -78,13 +78,10 @@ async def listen_for_messages(ws):
                             if not tour_name:
                                 await ws.send(f"{current_room}|Meow, please specify a tour to start! Usage: meow start <tourname>")
                             else:
-                                # Get tour code from database
                                 tour_code = build_tour_code(current_room, tour_name.lower())
                                 tour_info = get_tour_info(current_room, tour_name.lower())
                                 
                                 if not tour_code or not tour_info:
-                                    # Get list of available tours
-                                    from tour_creator import get_all_tours
                                     available_tours = get_all_tours(current_room)
                                     
                                     if available_tours:
