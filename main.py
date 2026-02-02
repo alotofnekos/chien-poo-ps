@@ -207,7 +207,7 @@ async def main_bot_logic():
                     raise ConnectionRefusedError("Login failed")
 
                 # Set avatar and status
-                await ws.send("|/avatar pokekidf-gen8")
+                await ws.send("|/avatar neko5")
                 await ws.send("|/status Send 'meow' in PMs :3c")
 
                 # Join rooms and start background tasks
