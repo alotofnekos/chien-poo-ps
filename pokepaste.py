@@ -1,0 +1,319 @@
+import requests
+from bs4 import BeautifulSoup
+import re
+
+
+def get_pokepaste_from_url(url, strip_nicknames=False, strip_title=False):
+    """
+    Scrapes Pokemon team data from a Pokepaste URL.
+    """
+    response = requests.get(url)
+    response.raise_for_status()
+    
+    # Pass the URL into the parser so it can be stored in the result
+    data = parse_pokepaste_html(response.text, strip_nicknames=strip_nicknames, strip_title=strip_title)
+    data['pokepaste_url'] = url 
+    return data
+
+
+def get_pokepaste_text(url, strip_nicknames=False):
+    """
+    Gets the formatted team text from a Pokepaste URL.
+    """
+    team_data = get_pokepaste_from_url(url, strip_nicknames=strip_nicknames)
+    return team_data['formatted_text']
+
+
+def parse_pokepaste_html(html, strip_nicknames=False, strip_title=False):
+    """
+    Parses Pokemon team data from Pokepaste HTML content.
+    """
+    soup = BeautifulSoup(html, 'html.parser')
+    
+    # Extract title
+    title = soup.find('h1')
+    title_text = title.get_text(strip=True) if title else "Untitled"
+    if strip_title:
+        title_text = ""
+    
+    # Extract author
+    author = soup.find('h2')
+    author_text = author.get_text(strip=True).replace('by ', '') if author else "Unknown"
+    
+    # Extract format
+    format_text = "Unknown"
+    for p in soup.find_all('p'):
+        text = p.get_text(strip=True)
+        if text.startswith('Format:'):
+            format_text = text.replace('Format:', '').strip()
+            break
+    
+    # Extract Pokemon data from code blocks (pre tags)
+    pokemon_list = []
+    code_blocks = soup.find_all('pre')
+    
+    for block in code_blocks:
+        pokemon_text = block.get_text()
+        if pokemon_text and pokemon_text.strip():
+            pokemon_list.append(pokemon_text)
+    
+    # Parse each Pokemon
+    parsed_pokemon = []
+    for poke_data in pokemon_list:
+        parsed = parse_pokemon(poke_data, strip_nickname=strip_nicknames)
+        if parsed:
+            parsed_pokemon.append(parsed)
+    
+    # Create the properly formatted output text
+    formatted_text = format_team_output(parsed_pokemon)
+    
+    return {
+        'title': title_text,
+        'author': author_text,
+        'format': format_text,
+        'pokemon': parsed_pokemon,
+        'formatted_text': formatted_text
+    }
+
+
+def strip_pokemon_nickname(pokemon_name):
+    """
+    Removes nickname from Pokemon name.
+    """
+    pokemon_name = pokemon_name.strip()
+    
+    if '(' not in pokemon_name:
+        return pokemon_name
+    
+    first_paren_idx = pokemon_name.index('(')
+    before_paren = pokemon_name[:first_paren_idx].strip()
+    
+    if not before_paren:
+        return pokemon_name
+    
+    # Check if first parentheses is just a gender marker
+    if re.match(r'^[^(]+\([MF]\)\s*$', pokemon_name):
+        return pokemon_name
+    
+    after_nickname = pokemon_name[first_paren_idx:]
+    
+    match = re.match(r'^\(([^)]+)\)(.*)$', after_nickname)
+    if match:
+        species = match.group(1)
+        rest = match.group(2).strip()
+        return f"{species} {rest}".strip()
+    
+    return pokemon_name
+
+
+def parse_pokemon(text, strip_nickname=False):
+    """
+    Parses a single Pokemon's data 
+    """
+    lines = [line.rstrip() for line in text.split('\n')]
+    lines = [line for line in lines if line]
+    
+    if not lines:
+        return None
+    
+    pokemon_data = {
+        'pokemon': None,
+        'item': None,
+        'ability': None,
+        'tera_type': None,
+        'evs': {},
+        'ivs': {},
+        'nature': None,
+        'moves': []
+    }
+    
+    first_line = lines[0].strip()
+    
+    if '@' in first_line:
+        parts = first_line.split('@')
+        pokemon_name = parts[0].strip()
+        pokemon_data['item'] = parts[1].strip()
+    else:
+        pokemon_name = first_line.strip()
+    
+    if strip_nickname:
+        pokemon_name = strip_pokemon_nickname(pokemon_name)
+    
+    pokemon_data['pokemon'] = pokemon_name
+    
+    for line in lines[1:]:
+        line = line.strip()
+        
+        if line.startswith('Ability:'):
+            pokemon_data['ability'] = line.split('Ability:', 1)[1].strip()
+        elif line.startswith('Tera Type:'):
+            pokemon_data['tera_type'] = line.split('Tera Type:', 1)[1].strip()
+        elif line.startswith('EVs:'):
+            evs_text = line.split('EVs:', 1)[1].strip()
+            pokemon_data['evs'] = parse_stats(evs_text)
+        elif line.startswith('IVs:'):
+            ivs_text = line.split('IVs:', 1)[1].strip()
+            pokemon_data['ivs'] = parse_stats(ivs_text)
+        elif line.endswith('Nature'):
+            pokemon_data['nature'] = line
+        elif line.startswith('-'):
+            move = line[1:].strip()
+            if move:
+                pokemon_data['moves'].append(move)
+    
+    return pokemon_data
+
+
+def parse_stats(stats_text):
+    stats = {}
+    parts = stats_text.split('/')
+    for part in parts:
+        part = part.strip()
+        match = re.match(r'(\d+)\s+(.+)', part)
+        if match:
+            value, stat = match.groups()
+            stats[stat.strip()] = int(value)
+    return stats
+
+
+def _pokemon_sprite_url(name):
+    name = re.sub(r'\s*\([MF]\)\s*$', '', name).strip()
+    FORM_MAP = {
+        '-Hisui': '-hisui', '-Alola': '-alola', '-Galar': '-galar',
+        '-Mega':  '-mega',  '-Mega X': '-megax', '-Mega Y': '-megay', '-Mega Z': '-megaz',
+        '-Hisuian': '-hisui', '-Alolan': '-alola', '-Galarian': '-galar',
+    }
+    suffix = ''
+    for display, sd in FORM_MAP.items():
+        if name.endswith(display):
+            name = name[:-len(display)]
+            suffix = sd
+            break
+    slug = name.lower().replace(' ', '')
+    return f'https://play.pokemonshowdown.com/sprites/gen5/{slug}{suffix}.png'
+
+
+def generate_html(team_data, max_height_px=320):
+    """
+    Compact, scroll-safe HTML fragment.
+    All Pokemon icons link to the Pokepaste URL.
+    **Text box now has forced black text on semi-transparent white background.**
+    """
+    pokemon = team_data.get('pokemon', [])
+    paste_url = team_data.get('pokepaste_url', '#')
+
+    # --- Pokémon cells (single horizontal row) ---
+    mon_cells = ''
+    for p in pokemon:
+        mon_url  = _pokemon_sprite_url(p['pokemon'])
+        name     = p['pokemon']
+        mon_cells += (
+            '<td style="padding:0; vertical-align:bottom; white-space:nowrap;">'
+            f'<a href="{paste_url}" target="_blank" style="text-decoration:none; display:block; padding:4px 5px;">'
+                '<div style="display:flex; align-items:center;">'
+                    f'<img src="{mon_url}" alt="{name}" width="42" height="42" />'
+                '</div>'
+            '</a>'
+            '</td>'
+        )
+
+    mon_row = '<tr>' + mon_cells + '</tr>'
+
+    # --- Scrollable pokepaste content text ---
+    text_row = (
+        '<tr>'
+        '<td colspan="100%" style="padding:6px 8px;">'
+          '<div style="max-height:160px; overflow:auto;'
+                       'border:1px solid #ccc;'
+                       'background:rgba(248, 200, 220, 0.2);'
+                       'font-family:monospace;'
+                       'font-size:12px;'
+                       'white-space:pre-wrap;'
+                       'line-height:1.3;'
+                       'padding:6px;">'
+            + team_data.get('formatted_text', '') +
+          '</div>'
+        '</td>'
+        '</tr>'
+    )
+
+    # --- Optional header ---
+    title  = team_data.get('title', '')
+    author = team_data.get('author', '')
+    fmt    = team_data.get('format', '')
+
+    meta = ' · '.join(x for x in [
+        f'by {author}' if author else '',
+        fmt
+    ] if x)
+
+    header = ''
+    if title or meta:
+        header = (
+            '<tr>'
+            '<td colspan="100%" style="padding:6px 8px; font-family:sans-serif;">'
+              + (f'<strong style="font-size:13px;">{title}</strong> ' if title else '') +
+              (f'<span style="font-size:11px; color:#888;">{meta}</span>' if meta else '') +
+            '</td>'
+            '</tr>'
+        )
+
+    return (
+        '<div style="max-height:' + str(max_height_px) + 'px;'
+                    'overflow:auto;'
+                    'border:1px solid #ccc;'
+                    'border-radius:4px;">'
+          '<table style="border-collapse:collapse; table-layout:fixed; width:auto;">'
+            + header +
+            mon_row +
+            text_row +
+          '</table>'
+        '</div>'
+    )
+
+
+def format_team_output(pokemon_list):
+    """
+    Formats the parsed Pokemon list into the standard Showdown format.
+    """
+    output_lines = []
+    
+    for pokemon in pokemon_list:
+        if pokemon['item']:
+            output_lines.append(f"{pokemon['pokemon']} @ {pokemon['item']}")
+        else:
+            output_lines.append(pokemon['pokemon'])
+        
+        if pokemon['ability']:
+            output_lines.append(f"Ability: {pokemon['ability']}")
+        
+        if pokemon['tera_type']:
+            output_lines.append(f"Tera Type: {pokemon['tera_type']}")
+        
+        if pokemon['evs']:
+            evs_str = ' / '.join([f"{value} {stat}" for stat, value in pokemon['evs'].items()])
+            output_lines.append(f"EVs: {evs_str}")
+        
+        if pokemon['nature']:
+            output_lines.append(pokemon['nature'])
+        
+        if pokemon['ivs']:
+            ivs_str = ' / '.join([f"{value} {stat}" for stat, value in pokemon['ivs'].items()])
+            output_lines.append(f"IVs: {ivs_str}")
+        
+        for move in pokemon['moves']:
+            output_lines.append(f"- {move}")
+        
+        output_lines.append('')
+    
+    return '\n'.join(output_lines)
+
+
+if __name__ == "__main__":
+    url = "https://pokepast.es/0411e4bd9ccd54e8"
+    
+    try:
+        print(generate_html(get_pokepaste_from_url(url, strip_nicknames=True, strip_title=False)))
+        
+    except Exception as e:
+        print(f"Error: {e}")

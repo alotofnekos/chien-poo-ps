@@ -18,14 +18,14 @@ START_DATE = datetime.date(2025, 2, 10)
 
 # MONOTYPE
 TOUR_SCHEDULE_A = {
-    0: [(9, 0, 'sv'), (10, 0, 'tera'), (11, 0, 'ubers'), (21, 0, 'lc'), (22, 0, 'bw'), (23, 0, 'monotype-wildcard')],
+    0: [(9, 0, 'adv'), (10, 0, 'tera'), (11, 0, 'ubers'), (21, 0, 'lc'), (22, 0, 'doubles'), (23, 0, 'monotype-wildcard')],
     4: [(9, 0, 'sv'), (10, 0, 'bw'), (11, 0, 'ss'), (21, 0, 'sm'), (22, 0, 'oras'), (23, 0, 'sv')],
     5: [(9, 0, 'uu'), (10, 0, 'sm'), (11, 0, 'sv'), (21, 0, 'sv'), (22, 0, 'ss'), (23, 0, 'natdex')],
-    6: [(9, 0, 'cap'), (10, 0, 'sv'), (11, 0, 'bw'), (21, 0, 'oras'), (22, 0, 'sv'), (23, 0, 'random-monothreat')]
+    6: [(9, 0, 'oras'), (10, 0, 'sv'), (11, 0, 'random-monothreat'), (21, 0, 'cap'), (22, 0, 'sv'), (23, 0, 'bw')]
 }
 
 TOUR_SCHEDULE_B = {
-    0: [(9, 0, 'lc'), (10, 0, 'sm'), (11, 0, 'monotype-wildcard'),(21, 0, 'sv'), (22, 0, 'tera'), (23, 0, 'ubers')],
+    0: [(9, 0, 'lc'), (10, 0, 'doubles'), (11, 0, 'monotype-wildcard'),(21, 0, 'adv'), (22, 0, 'tera'), (23, 0, 'ubers')],
     4: [(9, 0, 'sm'), (10, 0, 'oras'), (11, 0, 'sv'), (21, 0, 'sv'), (22, 0, 'bw'), (23, 0, 'ss')],
     5: [(9, 0, 'sv'), (10, 0, 'ss'), (11, 0, 'natdex'), (21, 0, 'uu'), (22, 0, 'sm'), (23, 0, 'sv')],
     6: [(9, 0, 'cap'), (10, 0, 'sv'), (11, 0, 'bw'), (21, 0, 'oras'), (22, 0, 'sv'), (23, 0, 'random-monothreat')]
