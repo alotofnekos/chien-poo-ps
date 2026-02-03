@@ -178,6 +178,11 @@ def parse_stats(stats_text):
 
 def _pokemon_sprite_url(name):
     name = re.sub(r'\s*\([MF]\)\s*$', '', name).strip()
+
+    URSHIFU_FORMS = ['urshifu-rapid-strike', 'urshifu-single-strike']
+    if name.lower() in URSHIFU_FORMS:
+        name = 'urshifu'
+
     FORM_MAP = {
         '-Hisui': '-hisui', '-Alola': '-alola', '-Galar': '-galar',
         '-Mega':  '-mega',  '-Mega X': '-megax', '-Mega Y': '-megay', '-Mega Z': '-megaz',
