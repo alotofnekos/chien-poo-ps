@@ -2,6 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 import re
 
+MAX_NAME_LENGTH = 50
+MAX_MOVE_LENGTH = 30
 
 def get_pokepaste_from_url(url, strip_nicknames=False, strip_title=False):
     """
@@ -15,6 +17,44 @@ def get_pokepaste_from_url(url, strip_nicknames=False, strip_title=False):
     data['pokepaste_url'] = url 
     return data
 
+def is_valid_pokemon_line(line):
+    """Check if line matches expected Pokemon name patterns."""
+    # Remove item if present
+    base = line.split('@')[0].strip()
+    
+    # Should only contain: letters, spaces, hyphens, parentheses
+    if not re.match(r'^[A-Za-z\s\-()]+$', base):
+        return False
+    
+    # Check length - minimum 3 characters for a Pokemon name
+    if len(base) < 3 or len(base) > MAX_NAME_LENGTH:
+        return False
+    
+    # Check for repeated characters 
+    if re.search(r'(.)\1{4,}', base):  # 5+ same char in a row
+        return False
+    
+    words = base.split()
+    if len(words) == 1 and len(words[0]) < 4:
+        pass
+    
+    return True
+
+def is_valid_move_line(line):
+    """Check if line matches expected move format."""
+    move = line.strip()
+    
+    # Moves are typically 1-3 words, letters/spaces/hyphens only
+    if not re.match(r'^[A-Za-z\s\-]+$', move):
+        return False
+    
+    if len(move) > MAX_MOVE_LENGTH: 
+        return False
+    
+    if re.search(r'(.)\1{3,}', move):  # 4+ repeated chars
+        return False
+    
+    return True
 
 def get_pokepaste_text(url, strip_nicknames=False):
     """
@@ -61,7 +101,7 @@ def parse_pokepaste_html(html, strip_nicknames=False, strip_title=False):
     parsed_pokemon = []
     for poke_data in pokemon_list:
         parsed = parse_pokemon(poke_data, strip_nickname=strip_nicknames)
-        if parsed:
+        if parsed:  
             parsed_pokemon.append(parsed)
     
     # Create the properly formatted output text
@@ -72,7 +112,8 @@ def parse_pokepaste_html(html, strip_nicknames=False, strip_title=False):
         'author': author_text,
         'format': format_text,
         'pokemon': parsed_pokemon,
-        'formatted_text': formatted_text
+        'formatted_text': formatted_text,
+        'is_valid': len(parsed_pokemon) > 0  
     }
 
 
@@ -108,7 +149,8 @@ def strip_pokemon_nickname(pokemon_name):
 
 def parse_pokemon(text, strip_nickname=False):
     """
-    Parses a single Pokemon's data 
+    Parses a single Pokemon's data with validation to prevent abuse.
+    Returns None if the Pokemon entry doesn't meet minimum valid structure.
     """
     lines = [line.rstrip() for line in text.split('\n')]
     lines = [line for line in lines if line]
@@ -129,18 +171,30 @@ def parse_pokemon(text, strip_nickname=False):
     
     first_line = lines[0].strip()
     
+    # Parse Pokemon name and item
     if '@' in first_line:
         parts = first_line.split('@')
         pokemon_name = parts[0].strip()
         pokemon_data['item'] = parts[1].strip()
     else:
         pokemon_name = first_line.strip()
-    
+
     if strip_nickname:
         pokemon_name = strip_pokemon_nickname(pokemon_name)
     
+    # Validate Pokemon name
+    if not is_valid_pokemon_line(pokemon_name):
+        return None
+    
+    # Additional name validation: must be at least 3 chars and contain at least one vowel
+    # (prevents single letters or pure consonants like "hi", "xx", etc.)
+    clean_name = re.sub(r'[^a-zA-Z]', '', pokemon_name.lower())
+    if len(clean_name) < 3 or not re.search(r'[aeiou]', clean_name):
+        return None
+    
     pokemon_data['pokemon'] = pokemon_name
     
+    # Parse remaining lines
     for line in lines[1:]:
         line = line.strip()
         
@@ -159,7 +213,27 @@ def parse_pokemon(text, strip_nickname=False):
         elif line.startswith('-'):
             move = line[1:].strip()
             if move:
-                pokemon_data['moves'].append(move)
+                # Validate move
+                if is_valid_move_line(move):
+                    pokemon_data['moves'].append(move)
+    
+    # Structure validation: A valid Pokemon should have meaningful data
+    # Must have at least 2 of: moves, ability, EVs, nature, tera type
+    validity_score = 0
+    if pokemon_data['moves']:  # Has at least one move
+        validity_score += 1
+    if pokemon_data['ability']:
+        validity_score += 1
+    if pokemon_data['evs']:  
+        validity_score += 1
+    if pokemon_data['nature']:
+        validity_score += 1
+    if pokemon_data['tera_type']:
+        validity_score += 1
+    
+    # Require at least 2 fields to be filled (or 1 move minimum)
+    if validity_score < 2 and not pokemon_data['moves']:
+        return None
     
     return pokemon_data
 
@@ -207,6 +281,20 @@ def generate_html(team_data, max_height_px=320):
     pokemon = team_data.get('pokemon', [])
     paste_url = team_data.get('pokepaste_url', '#')
 
+    if not team_data.get('is_valid', True):
+        return (
+            '<div style="max-height:' + str(max_height_px) + 'px;'
+                        'overflow:auto;'
+                        'border:1px solid #d33;'
+                        'border-radius:4px;'
+                        'background:rgba(248, 200, 220, 0.2);'
+                        'padding:20px;'
+                        'text-align:center;'
+                        'font-family:sans-serif;">'
+              '<strong style="color:#d33; font-size:14px;">Malformed Paste</strong><br>'
+              '<span style="color:#666; font-size:12px;">Nyo valid Pokémon found. Maybe it isnt a team, meow? ;w; </span>'
+            '</div>'
+        )
     # --- Pokémon cells (single horizontal row) ---
     mon_cells = ''
     for p in pokemon:
