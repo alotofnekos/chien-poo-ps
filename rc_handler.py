@@ -101,7 +101,7 @@ async def listen_for_messages(ws):
                                     
                                     # Set tour name
                                     display_name = tour_info.get('tour_name') or tour_name.replace('-', ' ').title()
-                                    if "Monotype" in display_name or "Monothreat" in display_name or "NatDex" in display_name:
+                                    if "Monotype" in display_name or "Monothreat" in display_name or "NatDex" or "National Dex OU" in display_name:
                                         await ws.send(f"{current_room}|/tour name {display_name}")
                                     else:
                                         await ws.send(f"{current_room}|/tour name {display_name} {current_room.title()}")

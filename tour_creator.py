@@ -266,7 +266,7 @@ def build_tour_code(room: str, tour: str) -> str:
         code_parts.append(f"/tour rules {bans}")
     
     # Line 4: .official
-    if "ndou" not in tour_info['tour_internalname']: #requested by ndou
+    if "National Dex OU" not in tour_info['tour_name']: #requested by ndou
         code_parts.append(".official")
     
     # Join with \n
