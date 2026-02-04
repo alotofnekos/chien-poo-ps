@@ -63,20 +63,27 @@ def add_tour_bans(room: str, tour: str, bans_str: str):
     added = []
 
     for ban in bans_list:
-        resp = supabase.rpc(
-            "add_ban",
-            {
-                "p_room_name": room,
-                "p_tour_name": tour,
-                "p_ban_name": ban
-            }
-        ).execute()
+        try:
+            resp = supabase.rpc(
+                "add_ban",
+                {
+                    "p_room_name": room,
+                    "p_tour_name": tour,
+                    "p_ban_name": ban
+                }
+            ).execute()
 
-        # Check if resp.data is true
-        if resp.data:
-            added.append(ban)
-        else:
-            print(f"Failed to add ban '{ban}': {resp.data}")
+            # Check if resp.data is true
+            if resp.data:
+                added.append(ban)
+            else:
+                print(f"Failed to add ban '{ban}': {resp.data}")
+        except Exception as e:
+            # Catch foreign key violations and other errors
+            if "23503" in str(e) or "foreign key constraint" in str(e).lower():
+                print(f"Error: Tour '{tour}' does not exist in room '{room}'. Cannot add ban '{ban}'.")
+            else:
+                print(f"Failed to add ban '{ban}': {e}")
 
     return added
 
