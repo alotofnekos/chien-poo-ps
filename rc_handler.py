@@ -7,7 +7,7 @@ from pokepaste import generate_html, get_pokepaste_from_url
 from potd import send_potd
 import time
 import re
-from tn import generate_monthly_tour_schedule_html,get_next_tournight, get_current_tour_schedule
+from tn import generate_monthly_tour_schedule_html,get_next_tournight, get_current_tour_schedule, cancel_next_tour, is_tour_cancelled, uncancel_last_cancelled
 from tour_creator import get_tour_bans_for_html, add_tour_bans, remove_tour_bans, get_tour_info, build_tour_code, get_all_tours   
 import datetime
 from pm_handler import get_random_cat_url
@@ -67,6 +67,33 @@ async def listen_for_messages(ws):
                                 TOURNAMENT_STATE[current_room] = []
                             else:
                                 await ws.send(f"{current_room}| Nyo active tournament in {current_room}, ignoring 'meow official'. Stop bullying >:(")
+                        elif msg_text.lower().startswith("meow cancel next tn"):
+                            nx_schedule = get_current_tour_schedule(current_room)
+                            next_tour = get_next_tournight(nx_schedule)
+                                
+                            if next_tour is None:
+                                await ws.send(f"{current_room}|Meow, there are no scheduled tournights for this room ;w;")
+                            else:
+                                cancel_success = cancel_next_tour(current_room)
+                                if cancel_success:
+                                    await ws.send(f"{current_room}|Meow cancelled the next tournight: {next_tour['name'].title()} at {next_tour['hour']:02d}:{next_tour['minute']:02d} (GMT-4).")
+                                else:
+                                     await ws.send(f"{current_room}|Meow, failed to cancel the next tournight. It may have already started or there was an error ;w;")
+
+                        elif msg_text.lower().startswith("meow uncancel next tn"):
+                            nx_schedule = get_current_tour_schedule(current_room)
+                            next_tour = get_next_tournight(nx_schedule)
+                            if next_tour is None:
+                                await ws.send(f"{current_room}|Meow, there are no scheduled tournights for this room ;w;")
+                            else:
+                                if not is_tour_cancelled(current_room, next_tour['hour'], next_tour['minute']):
+                                    await ws.send(f"{current_room}|Meow, the next tournight isn't cancelled ;w;")
+                                else:
+                                    uncancel_success = uncancel_last_cancelled(current_room)
+                                    if uncancel_success:
+                                        await ws.send(f"{current_room}|Meow got it! Will do this next tournight: {next_tour['name'].title()} at {next_tour['hour']:02d}:{next_tour['minute']:02d} (GMT-4)! >:3")
+                                    else:
+                                        await ws.send(f"{current_room}|Meow, failed to uncancel the next tournight. Maybe the time already passed or something, meowdk ;w;")
 
                         elif msg_text.lower().startswith("meow unofficial"):
                             await ws.send(f"{current_room}| Meow stopped tracking this tour in {current_room}")
@@ -175,7 +202,9 @@ async def listen_for_messages(ws):
                             await ws.send(f"{current_room}|Meow, the current time is {now.strftime('%Y-%m-%d %H:%M:%S')} (GMT-4)")
                         elif msg_text.lower().startswith("meow help"):
                             help_msg = ("'meow start [tour name]', 'meow show potd', "
-                                        "'meow show schedule', 'meow help', 'meow show cat', 'meow uptime', 'meow next tn','meow show set', 'meow show bans [tour name]', 'meow show tours', 'meow show paste [pokepaste]', ")
+                                        "'meow show schedule', 'meow help', 'meow show cat', 'meow uptime', 'meow next tn',"
+                                        "'meow show set', 'meow show bans [tour name]', 'meow show tours', 'meow show paste [pokepaste]', "
+                                        "'meow cancel next tn', 'meow uncancel next tn', 'meow add rule [tour name] [bans]', 'meow remove rule [tour name] [bans]'")
                             await ws.send(f"{current_room}|Meow, here are the commands! {help_msg}")
                         elif msg_text.lower().startswith("meow show paste") or msg_text.lower().startswith("meow show pokepaste"):
                             url = msg_text.strip().split()[3]
@@ -186,6 +215,7 @@ async def listen_for_messages(ws):
 
                             except Exception as e:
                                 await ws.send(f"{current_room}| Meow couldn't fetch the pokepaste :<")
+
                         elif prefix in ('%', '@', '#', '~'):
                             if msg_text.lower().startswith("meow add rule"):
                                 if prefix not in ('#'):
@@ -206,7 +236,7 @@ async def listen_for_messages(ws):
                                             await ws.send(f"{current_room}|Meow added these rule(s): {', '.join(added)} to {tour_name} >:3")
                                         else:
                                             await ws.send(f"{current_room}|Meow, those rules already exist or the tour doesn't exist. Idk meow, I'm just a cat ;w;")
-                            if msg_text.lower().startswith("meow remove rule"):
+                            elif msg_text.lower().startswith("meow remove rule"):
                                 if prefix not in ('#'):
                                     await ws.send(f"{current_room}|Meow, only room owners can remove rules ;w;")
                                 else:
@@ -224,7 +254,7 @@ async def listen_for_messages(ws):
                                             await ws.send(f"{current_room}|Meow removed ban(s): {', '.join(removed)} from {tour_name} >:3")
                                         else:
                                             await ws.send(f"{current_room}|Meow, those rules don't exist or the tour doesn't exist. Idk meow, I'm just a cat ;w;")
-                            if msg_text.lower().startswith("meow show cat"):
+                            elif msg_text.lower().startswith("meow show cat"):
                                 cat = await get_random_cat_url()
                                 print(f"Fetched cat URL: {cat}")
                                 if cat:
@@ -247,22 +277,19 @@ async def listen_for_messages(ws):
 
                                     username, pts_str = [a.strip() for a in args.split(",", 1)]
                                     points = int(pts_str)
-
-                                    # Call your helper
                                     new_total = add_points(current_room, username, points)
 
                                     await ws.send(f"{current_room}| Added {points} points to {username} in {current_room}. New total: {new_total}")
                                 except Exception as e:
                                     await ws.send(f"{current_room}| Error adding points: {e} ;w;")
-
-                            elif re.search(r"\bmeow\b", msg_text, re.IGNORECASE):
-                                emotion_bank = [
-                                    ":3", ":3c", ":<", ":c", ";w;", "'w'", "awa", "uwu",
-                                    "owo", "TwT", ">:(", ">:3", ">:3c", ">:c"
-                                ]
-                                emotion = random.choice(emotion_bank)
-                                await ws.send(f"{current_room}|Meow {emotion}")
-
+                        elif re.search(r"\bmeow\b", msg_text, re.IGNORECASE):
+                            emotion_bank = [
+                                ":3", ":3c", ":<", ":c", ";w;", "'w'", "awa", "uwu",
+                                "owo", "TwT", ">:(", ">:3", ">:3c", ">:c", "Mrrp", 
+                                "Meoo", "^w^", "Mrao"
+                            ]
+                            emotion = random.choice(emotion_bank)
+                            await ws.send(f"{current_room}|Meow {emotion}")
                         else:
                             pass
                     if "You cannot have a tournament until" in line:

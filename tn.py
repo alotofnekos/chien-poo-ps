@@ -10,6 +10,9 @@ load_dotenv()
 # Timezone for tour scheduling.
 TIMEZONE = pytz.timezone('US/Eastern')
 
+# Set to track cancelled tours: (room, date, hour, minute)
+CANCELLED_TOURS = set()
+
 # The key date for Week A. All odd-numbered weeks after this date are Week B.
 START_DATE = datetime.date(2025, 2, 10)
 
@@ -41,6 +44,156 @@ TOUR_SCHEDULE_NDM = {
     5: [(8,0,'natdex'), (10,0,'random-monothreat'), (12,0,'natdex'),(14,0,'z-less'),(16,0,'natdex'),(18,0,'ru'),(20,0,'natdex'),(22,0,'ss-natdex'),(0,0,'natdex'),(2,0,'ubers')],
     6: [(8,0,'natdex'), (10,0,'random-monothreat'), (12,0,'natdex'),(14,0,'z-less'),(16,0,'natdex'),(18,0,'ru'),(20,0,'natdex'),(22,0,'ss-natdex'),(0,0,'natdex'),(2,0,'ubers')],
 }
+
+def cancel_next_tour(room):
+    """
+    Cancels the next scheduled tour for a given room.
+    Returns a dict with info about the cancelled tour, or None if no tour found.
+    """
+    schedule = get_current_tour_schedule(room)
+    next_tour = get_next_tournight(schedule)
+    
+    if not next_tour:
+        return None
+    
+    # Create cancellation key
+    scheduled_at = next_tour['scheduled_at']
+    cancel_key = (
+        room,
+        scheduled_at.date(),
+        scheduled_at.hour,
+        scheduled_at.minute
+    )
+    
+    CANCELLED_TOURS.add(cancel_key)
+    
+    return {
+        'name': next_tour['name'],
+        'scheduled_at': scheduled_at,
+        'minutes_until': next_tour['minutes_until']
+    }
+
+def cancel_all_tours_today(room):
+    """
+    Cancels all remaining tours today for a given room.
+    Returns a list of cancelled tour names.
+    """
+    schedule = get_current_tour_schedule(room)
+    if not schedule:
+        return []
+    
+    now = datetime.datetime.now(TIMEZONE)
+    today = now.date()
+    today_weekday = now.weekday()
+    
+    tours = schedule.get(today_weekday, [])
+    cancelled = []
+    
+    for tour_hour, tour_minute, tour_name in tours:
+        tour_time = datetime.datetime(
+            today.year, today.month, today.day,
+            tour_hour, tour_minute, tzinfo=TIMEZONE
+        )
+        
+        # Only cancel future tours
+        if tour_time > now:
+            cancel_key = (room, today, tour_hour, tour_minute)
+            CANCELLED_TOURS.add(cancel_key)
+            
+            tour_info = get_tour_info(room, tour_name)
+            display_name = tour_info['tour_name'] if tour_info and tour_info.get('tour_name') else tour_name
+            cancelled.append({
+                'name': display_name,
+                'time': f"{tour_hour:02}:{tour_minute:02}"
+            })
+    
+    return cancelled
+
+def uncancel_last_cancelled(room=None):
+    """
+    Removes the most recently cancelled tour from the list (like popping a stack).
+    If room is specified, only uncancels from that room.
+    Returns the uncancelled tour info or None if no cancelled tours found.
+    """
+    if not CANCELLED_TOURS:
+        return None
+    
+    # Filter by room if specified
+    if room is not None:
+        room_cancelled = [key for key in CANCELLED_TOURS if key[0] == room]
+        if not room_cancelled:
+            return None
+        # Get the most recent one (sort by date, then time)
+        last_key = sorted(room_cancelled, key=lambda x: (x[1], x[2], x[3]))[-1]
+    else:
+        # Get the most recent across all rooms
+        last_key = sorted(CANCELLED_TOURS, key=lambda x: (x[1], x[2], x[3]))[-1]
+    
+    CANCELLED_TOURS.discard(last_key)
+    
+    return {
+        'room': last_key[0],
+        'date': last_key[1],
+        'hour': last_key[2],
+        'minute': last_key[3],
+        'datetime_str': f"{last_key[1]} {last_key[2]:02}:{last_key[3]:02}"
+    }
+
+def uncancel_tour(room, hour, minute, date=None):
+    """
+    Removes a specific tour from the cancelled list.
+    If date is None, uses today's date.
+    """
+    if date is None:
+        date = datetime.date.today()
+    
+    cancel_key = (room, date, hour, minute)
+    
+    if cancel_key in CANCELLED_TOURS:
+        CANCELLED_TOURS.discard(cancel_key)
+        return True
+    return False
+
+def clear_all_cancellations(room):
+    """
+    Clears all cancelled tours
+    """
+    to_remove = [key for key in CANCELLED_TOURS if key[0] == room]
+    for key in to_remove:
+        CANCELLED_TOURS.discard(key)
+    return len(to_remove)
+
+def is_tour_cancelled(room, hour, minute, date = None):
+    """
+    Check if a specific tour is cancelled.
+    """
+    if date is None:
+        date = datetime.date.today()
+    cancel_key = (room, date, hour, minute)
+    return cancel_key in CANCELLED_TOURS
+
+def get_cancelled_tours(room=None):
+    """
+    Get list of all cancelled tours, optionally filtered by room.
+    Returns list of dicts with tour info.
+    """
+    cancelled_list = []
+    
+    for cancel_key in CANCELLED_TOURS:
+        cancel_room, cancel_date, cancel_hour, cancel_minute = cancel_key
+        
+        if room is not None and cancel_room != room:
+            continue
+        
+        cancelled_list.append({
+            'room': cancel_room,
+            'date': cancel_date,
+            'hour': cancel_hour,
+            'minute': cancel_minute,
+            'datetime_str': f"{cancel_date} {cancel_hour:02}:{cancel_minute:02}"
+        })
+    
+    return sorted(cancelled_list, key=lambda x: (x['date'], x['hour'], x['minute']))
 
 def get_current_tour_schedule(ROOM):
     """Determines if it's Week A or Week B based on the current date."""
@@ -126,6 +279,7 @@ async def scheduled_tours(ws, ROOM):
         today_weekday = now.weekday()
         current_hour = now.hour
         current_minute = now.minute
+        today_date = now.date()
 
         # Only check once per minute to avoid duplicate triggers
         if current_minute == last_check_minute:
@@ -141,6 +295,12 @@ async def scheduled_tours(ws, ROOM):
                     tour_hour, tour_minute, tour_internal_name = tour_schedule
                     tour_time = tour_hour * 60 + tour_minute
                     current_time = current_hour * 60 + current_minute
+                    
+                    # Check if this tour is cancelled
+                    if is_tour_cancelled(ROOM, today_date, tour_hour, tour_minute):
+                        if current_time == tour_time:
+                            await ws.send(f"{ROOM}| Skipping cancelled tour: {tour_internal_name} at {tour_hour:02}:{tour_minute:02}")
+                        continue
                     
                     # 5 minute warning
                     if current_time == tour_time - 5:
