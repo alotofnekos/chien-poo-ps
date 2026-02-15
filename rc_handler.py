@@ -282,7 +282,7 @@ async def listen_for_messages(ws):
                                     await ws.send(f"{current_room}| Added {points} points to {username} in {current_room}. New total: {new_total}")
                                 except Exception as e:
                                     await ws.send(f"{current_room}| Error adding points: {e} ;w;")
-                        elif re.search(r"\bmeow\b", msg_text, re.IGNORECASE):
+                        if re.search(r"\bmeow\b", msg_text, re.IGNORECASE):
                             emotion_bank = [
                                 ":3", ":3c", ":<", ":c", ";w;", "'w'", "awa", "uwu",
                                 "owo", "TwT", ">:(", ">:3", ">:3c", ">:c", "Mrrp", 
