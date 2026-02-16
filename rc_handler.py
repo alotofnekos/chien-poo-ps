@@ -282,7 +282,7 @@ async def listen_for_messages(ws):
                                     await ws.send(f"{current_room}| Added {points} points to {username} in {current_room}. New total: {new_total}")
                                 except Exception as e:
                                     await ws.send(f"{current_room}| Error adding points: {e} ;w;")
-                            else:
+                            elif re.search(r"\bmeow\b", msg_text, re.IGNORECASE):
                                 # Generic meow response if no specific command matched
                                 emotion_bank = [
                                     ":3", ":3c", ":<", ":c", ";w;", "'w'", "awa", "uwu",
@@ -291,7 +291,7 @@ async def listen_for_messages(ws):
                                 ]
                                 emotion = random.choice(emotion_bank)
                                 await ws.send(f"{current_room}|Meow {emotion}")
-                        else:
+                        elif re.search(r"\bmeow\b", msg_text, re.IGNORECASE):
                             # Generic meow response for voice users if no specific command matched
                             emotion_bank = [
                                 ":3", ":3c", ":<", ":c", ";w;", "'w'", "awa", "uwu",
