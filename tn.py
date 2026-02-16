@@ -297,7 +297,7 @@ async def scheduled_tours(ws, ROOM):
                     current_time = current_hour * 60 + current_minute
                     
                     # Check if this tour is cancelled
-                    if is_tour_cancelled(ROOM, today_date, tour_hour, tour_minute):
+                    if is_tour_cancelled(ROOM, tour_hour, tour_minute, today_date):
                         if current_time == tour_time:
                             await ws.send(f"{ROOM}| Skipping cancelled tour: {tour_internal_name} at {tour_hour:02}:{tour_minute:02}")
                         continue
