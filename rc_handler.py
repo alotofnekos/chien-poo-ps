@@ -282,7 +282,17 @@ async def listen_for_messages(ws):
                                     await ws.send(f"{current_room}| Added {points} points to {username} in {current_room}. New total: {new_total}")
                                 except Exception as e:
                                     await ws.send(f"{current_room}| Error adding points: {e} ;w;")
-                        if re.search(r"\bmeow\b", msg_text, re.IGNORECASE):
+                            else:
+                                # Generic meow response if no specific command matched
+                                emotion_bank = [
+                                    ":3", ":3c", ":<", ":c", ";w;", "'w'", "awa", "uwu",
+                                    "owo", "TwT", ">:(", ">:3", ">:3c", ">:c", "Mrrp", 
+                                    "Meoo", "^w^", "Mrao"
+                                ]
+                                emotion = random.choice(emotion_bank)
+                                await ws.send(f"{current_room}|Meow {emotion}")
+                        else:
+                            # Generic meow response for voice users if no specific command matched
                             emotion_bank = [
                                 ":3", ":3c", ":<", ":c", ";w;", "'w'", "awa", "uwu",
                                 "owo", "TwT", ">:(", ">:3", ">:3c", ">:c", "Mrrp", 
@@ -290,11 +300,9 @@ async def listen_for_messages(ws):
                             ]
                             emotion = random.choice(emotion_bank)
                             await ws.send(f"{current_room}|Meow {emotion}")
-                        else:
-                            pass
                     if "You cannot have a tournament until" in line:
                         await ws.send(f">{current_room}|There's a tour going on right meow...")
-
+                    
         except Exception as e:
             print(f"Error in message listener: {e}")
             raise
