@@ -152,6 +152,7 @@ async def login(ws):
 async def room_logic(ws, room_name):
     """Join room and start background tasks for that room."""
     await ws.send(f"|/join {room_name}")
+    await asyncio.sleep(1)
     print(f"Joined room: {room_name}")
 
     # Start background tasks for this room and track them

@@ -22,6 +22,8 @@ def get_tour_info(room: str, tour: str):
     Get tour information (type, name, misc_commands) for a specific tour.
     Returns a dict with tour info or None if not found.
     """
+    if room == "monotypeom":
+        room = "monotype"  # monotypeom shares same tours as monotype
     try:
         resp = supabase.rpc(
             "get_tour_info",
@@ -41,6 +43,8 @@ def get_tour_bans(room: str, tour: str):
     """
     Get tour bans as a comma-separated string
     """
+    if room == "monotypeom":
+        room = "monotype"  # monotypeom shares same tours as monotype
     resp = supabase.rpc(
         'get_bans_for_tour_room',
         {'room_name': room, 'tour_name': tour}
@@ -133,6 +137,8 @@ def get_all_tours(room: str):
     Get all tour internal names for a room.
     Returns a list of tour_internalname strings.
     """
+    if room == "monotypeom":
+        room = "monotype"  # monotypeom shares same tours as monotype
     try:
         resp = supabase.rpc(
             "get_all_tours",
@@ -152,7 +158,8 @@ def get_monothreat_tours(room: str):
     Caches results to avoid repeated queries.
     """
     global monothreat_tours_cache
-    
+    if room == "monotypeom":
+        room = "monotype"  # monotypeom shares same tours as monotype
     if room in monothreat_tours_cache:
         return monothreat_tours_cache[room]
     
@@ -170,7 +177,8 @@ def get_tour_bans_for_html(room: str, tour: str):
     Get tour bans and format as HTML.
     Returns None if the tour does not exist.
     """
-
+    if room == "monotypeom":
+        room = "monotype"  # monotypeom shares same tours as monotype
     bans_data = get_tour_bans(room, tour)
 
     # If tour does not exist → return nothing
@@ -250,6 +258,7 @@ def build_tour_code(room: str, tour: str) -> str:
     Build the tour code string for a given room and tour.
     Returns the formatted code string or None if tour not found.
     """
+    
     tour_info = get_tour_info(room, tour)
     if not tour_info:
         return None
