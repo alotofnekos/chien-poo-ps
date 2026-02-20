@@ -2,6 +2,7 @@ import asyncio
 import random
 import os
 from dotenv import load_dotenv
+from supabase import create_client
 from pm_handler import handle_pmmessages
 from pokepaste import generate_html, get_pokepaste_from_url
 from potd import send_potd
@@ -13,12 +14,30 @@ import datetime
 from pm_handler import get_random_cat_url
 from set_handler import parse_command_and_get_sets
 load_dotenv()
+from supabase import create_client
 from db import save_tournament_results, get_leaderboard_html,process_tourlogs, add_points
 USERNAME = os.getenv("PS_USERNAME")
 CURRENT_TOUR_EXISTS = {}  
 TRACK_OFFICIAL_TOUR = {}  
 TOURNAMENT_STATE = {}     
 PROCESSED_MESSAGES = {}
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE")
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+def record_meow(room, user, msg_text):
+    """Record a meow log in the database."""
+    try:
+        supabase.rpc('add_meow_log', {
+            'p_username': user,
+            'p_content': msg_text,
+            'p_room': room
+        }).execute()
+        print(f"Recorded meow from {user} in {room}")
+    except Exception as e:
+        print(f"Failed to record meow: {e}")
+
 async def listen_for_messages(ws):
     """Listens for and processes ALL messages from the WebSocket, dispatching by room."""
     print("Starting global message listener...")
@@ -59,6 +78,7 @@ async def listen_for_messages(ws):
                         continue
 
                     if "meow" in msg_text.lower() and prefix in ('+','%', '@', '#', '~'):
+                        record_meow(current_room, user, msg_text);
                         print(f"Received from {user} in {current_room}: {msg_text}")
                         if msg_text.lower().startswith("meow official"):
                             if CURRENT_TOUR_EXISTS.get(current_room, False):
