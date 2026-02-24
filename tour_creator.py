@@ -268,14 +268,15 @@ def build_tour_code(room: str, tour: str) -> str:
     # Build the code string
     code_parts = []
     
+
     # Line 1: /tour new
     code_parts.append(
         f"/tour new {tour_info['tour_type']}, elim,,,{tour_info['tour_name']}"
     )
     
     # Line 2: misc_commands (if exists)
-    if tour_info['misc_commands']:
-        code_parts.append(tour_info['misc_commands'])
+    misc = tour_info.get("misc_commands") or []
+    code_parts.extend(misc)
     
     # Line 3: /tour rules (if bans exist)
     if bans:
