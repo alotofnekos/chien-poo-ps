@@ -296,7 +296,7 @@ def parse_command_and_get_sets(command_string, room=""):
     action1 = parts[1].lower()
     action2 = parts[2].lower()
 
-    if cmd != "meow" or action1 != "show" or action2 != "set":
+    if cmd != "meow" or action1 != "show" or action2 not in ["set", "sets"]:
         # Invalid command
         return None
     
