@@ -23,7 +23,7 @@ def is_valid_pokemon_line(line):
     base = line.split('@')[0].strip()
     
     # Should only contain: letters, spaces, hyphens, parentheses
-    if not re.match(r'^[A-Za-z\s\-()]+$', base):
+    if not re.match(r'^[A-Za-z0-9\s\-()]+$', base):
         return False
     
     # Check length - minimum 3 characters for a Pokemon name
@@ -44,8 +44,9 @@ def is_valid_move_line(line):
     """Check if line matches expected move format."""
     move = line.strip()
     
-    # Moves are typically 1-3 words, letters/spaces/hyphens only
-    if not re.match(r'^[A-Za-z\s\-]+$', move):
+    # Moves are typically 1-3 words, letters/spaces/hyphens/brackets only
+    # Brackets needed for moves like Hidden Power [Fire]
+    if not re.fullmatch(r"[A-Za-z0-9 \-\[\]']+", move):
         return False
     
     if len(move) > MAX_MOVE_LENGTH: 
