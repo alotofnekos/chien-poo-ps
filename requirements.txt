@@ -5,3 +5,4 @@ aiohttp
 pytz
 supabase
 beautifulsoup4
+better_profanity

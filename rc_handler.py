@@ -3,7 +3,7 @@ import random
 import os
 from dotenv import load_dotenv
 from supabase import create_client
-from pm_handler import handle_pmmessages
+from pm_handler import get_random_cat_saying, handle_pmmessages
 from pokepaste import generate_html, get_pokepaste_from_url
 from potd import send_potd
 import time
@@ -281,6 +281,13 @@ async def listen_for_messages(ws):
                                     await ws.send(f'{current_room}|/addhtmlbox <img src="{cat}" height="0" width="0" style="max-height: 350px; height: auto; width: auto;">')
                                 else:
                                     await ws.send(f"{current_room}|Meow, couldn't find a cat right meow ;w;")
+                            elif msg_text.lower().startswith("meow say"):
+                                say_message = msg_text[len("meow say"):].strip()
+                                if say_message:
+                                    catmessage = await get_random_cat_saying(say_message)
+                                    await ws.send(f'{current_room}|{catmessage}')
+                                else:
+                                    await ws.send(f"{current_room}|Meow, you didn't tell me what to say! Usage: meow say <message> >:3")
                             elif msg_text.lower().startswith("meow uptime"):
                                 uptime_msg = get_uptime(listener_start_time)
                                 await ws.send(f"{current_room}|{uptime_msg}")

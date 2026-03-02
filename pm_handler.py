@@ -1,14 +1,36 @@
+import re
+
 import aiohttp
 from set_handler import parse_command_and_get_sets
+from better_profanity import profanity
+
 async def get_random_cat_url():
-    url = "https://api.thecatapi.com/v1/images/search"
+    url = "https://cataas.com/cat?json=true"
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             if resp.status == 200:
-                data = await resp.json()
-                return data[0]["url"]  
+                data = await resp.json(content_type=None) 
+                return data["url"]
     return "No cat found :("
 
+async def determine_if_message_is_ok(text):
+    # Check if the message is profane
+    text = text.lower()
+    text = re.sub(r'(.)\1+', r'\1', text)
+    profanity.load_censor_words(whitelist_words=['stinky'])
+    is_profane = profanity.contains_profanity(text)
+    return is_profane
+
+async def get_random_cat_saying(message):
+    if await determine_if_message_is_ok(message) == False:
+        url = f"https://cataas.com/cat/says/{message}?position=center&json=true&font=Impact&fontSize=30&fontColor=%23fff&fontBackground=none"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                if resp.status == 200:
+                    data = await resp.json(content_type=None) 
+                    return f"/addhtmlbox <img src='{data['url']}' height='0' width='0' style='max-height: 350px; height: auto; width: auto;'>"
+    else:
+        return "Meow! I dont think I should say that :3c"
 
 async def handle_pmmessages(ws, USERNAME, msg):
     lines = msg.split('\n')
@@ -54,3 +76,11 @@ async def handle_pmmessages(ws, USERNAME, msg):
                     pm_response = f"|/pm {from_user}, Meow! I'm still in progress!"
                     await ws.send(pm_response)
                     print(f"Sent auto PM response: {pm_response}")
+async def main():
+    print(await get_random_cat_url())
+    print(await get_random_cat_saying("I dont like Flutter Mane"))
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
+
