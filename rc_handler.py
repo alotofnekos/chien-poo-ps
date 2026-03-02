@@ -285,7 +285,10 @@ async def listen_for_messages(ws):
                                 say_message = msg_text[len("meow say"):].strip()
                                 if say_message:
                                     catmessage = await get_random_cat_saying(say_message)
-                                    await ws.send(f'{current_room}|{catmessage}')
+                                    if catmessage.startswith("Meow! I dont think I should say that"):
+                                        await ws.send(f"{current_room}|{catmessage}")
+                                    else:
+                                        await ws.send(f'{current_room}|/addhtmlbox <img src="{catmessage}" height="0" width="0" style="max-height: 350px; height: auto; width: auto;">')
                                 else:
                                     await ws.send(f"{current_room}|Meow, you didn't tell me what to say! Usage: meow say <message> >:3")
                             elif msg_text.lower().startswith("meow uptime"):

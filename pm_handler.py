@@ -27,8 +27,8 @@ async def get_random_cat_saying(message):
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
                 if resp.status == 200:
-                    data = await resp.json(content_type=None) 
-                    return f"/addhtmlbox <img src='{data['url']}' height='0' width='0' style='max-height: 350px; height: auto; width: auto;'>"
+                    data = await resp.json(content_type=None)
+                    return data['url']
     else:
         return "Meow! I dont think I should say that :3c"
 
@@ -78,7 +78,7 @@ async def handle_pmmessages(ws, USERNAME, msg):
                     print(f"Sent auto PM response: {pm_response}")
 async def main():
     print(await get_random_cat_url())
-    print(await get_random_cat_saying("I dont like Flutter Mane"))
+    print(await get_random_cat_saying("hewwo"))
 
 if __name__ == "__main__":
     import asyncio
