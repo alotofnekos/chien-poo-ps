@@ -17,7 +17,8 @@ async def determine_if_message_is_ok(text):
     # Check if the message is profane
     text = text.lower()
     text = re.sub(r'(.)\1+', r'\1', text)
-    profanity.load_censor_words(whitelist_words=['stinky'], blacklist_words=['cnm', 'nmsl', 'sb', 'sao', 'smd', 'sbh', 'sbl', 'sbd', 'sbm', 'sbj', 'sbp', 'sbz', 'sbq'])
+    chinese_badwords = ['cnm', 'nmsl', 'sb', 'sao', 'smd', 'sbh', 'sbl', 'sbd', 'sbm', 'sbj', 'sbp', 'sbz', 'sbq']
+    profanity.load_censor_words(chinese_badwords)
     is_profane = profanity.contains_profanity(text)
     return is_profane
 
