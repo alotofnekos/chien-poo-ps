@@ -222,7 +222,7 @@ async def listen_for_messages(ws):
                             await ws.send(f"{current_room}|Meow, the current time is {now.strftime('%Y-%m-%d %H:%M:%S')} (GMT-4)")
                         elif msg_text.lower().startswith("meow help"):
                             help_msg = ("'meow start [tour name]', 'meow show potd', "
-                                        "'meow show schedule', 'meow help', 'meow show cat', 'meow uptime', 'meow next tn',"
+                                        "'meow show schedule', 'meow help', 'meow show cat', 'meow say [message]', 'meow uptime', 'meow next tn',"
                                         "'meow show set', 'meow show bans [tour name]', 'meow show tours', 'meow show paste [pokepaste]', "
                                         "'meow cancel next tn', 'meow uncancel next tn', 'meow add rule [tour name] [bans]', 'meow remove rule [tour name] [bans]'")
                             await ws.send(f"{current_room}|Meow, here are the commands! {help_msg}")
@@ -235,7 +235,23 @@ async def listen_for_messages(ws):
 
                             except Exception as e:
                                 await ws.send(f"{current_room}| Meow couldn't fetch the pokepaste :<")
-
+                        elif msg_text.lower().startswith("meow show cat"):
+                            cat = await get_random_cat_url()
+                            print(f"Fetched cat URL: {cat}")
+                            if cat:
+                                await ws.send(f'{current_room}|/addhtmlbox <img src="{cat}" height="0" width="0" style="max-height: 350px; height: auto; width: auto;">')
+                            else:
+                                await ws.send(f"{current_room}|Meow, couldn't find a cat right meow ;w;")
+                        elif msg_text.lower().startswith("meow say"):
+                            say_message = msg_text[len("meow say"):].strip()
+                            if say_message:
+                                catmessage = await get_random_cat_saying(say_message)
+                                if catmessage.startswith("Meow! I dont think I should say that"):
+                                    await ws.send(f"{current_room}|{catmessage}")
+                                else:
+                                    await ws.send(f'{current_room}|/addhtmlbox <img src="{catmessage}" height="0" width="0" style="max-height: 350px; height: auto; width: auto;">')
+                            else:
+                                await ws.send(f"{current_room}|Meow, you didn't tell me what to say! Usage: meow say <message> >:3")
                         elif prefix in ('%', '@', '#', '~'):
                             if msg_text.lower().startswith("meow add rule"):
                                 if prefix not in ('#'):
@@ -274,23 +290,6 @@ async def listen_for_messages(ws):
                                             await ws.send(f"{current_room}|Meow removed ban(s): {', '.join(removed)} from {tour_name} >:3")
                                         else:
                                             await ws.send(f"{current_room}|Meow, those rules don't exist or the tour doesn't exist. Idk meow, I'm just a cat ;w;")
-                            elif msg_text.lower().startswith("meow show cat"):
-                                cat = await get_random_cat_url()
-                                print(f"Fetched cat URL: {cat}")
-                                if cat:
-                                    await ws.send(f'{current_room}|/addhtmlbox <img src="{cat}" height="0" width="0" style="max-height: 350px; height: auto; width: auto;">')
-                                else:
-                                    await ws.send(f"{current_room}|Meow, couldn't find a cat right meow ;w;")
-                            elif msg_text.lower().startswith("meow say"):
-                                say_message = msg_text[len("meow say"):].strip()
-                                if say_message:
-                                    catmessage = await get_random_cat_saying(say_message)
-                                    if catmessage.startswith("Meow! I dont think I should say that"):
-                                        await ws.send(f"{current_room}|{catmessage}")
-                                    else:
-                                        await ws.send(f'{current_room}|/addhtmlbox <img src="{catmessage}" height="0" width="0" style="max-height: 350px; height: auto; width: auto;">')
-                                else:
-                                    await ws.send(f"{current_room}|Meow, you didn't tell me what to say! Usage: meow say <message> >:3")
                             elif msg_text.lower().startswith("meow uptime"):
                                 uptime_msg = get_uptime(listener_start_time)
                                 await ws.send(f"{current_room}|{uptime_msg}")
