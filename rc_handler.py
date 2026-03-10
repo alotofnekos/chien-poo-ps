@@ -9,7 +9,7 @@ from potd import send_potd
 import time
 import re
 from tn import generate_monthly_tour_schedule_html,get_next_tournight, get_current_tour_schedule, cancel_next_tour, is_tour_cancelled, uncancel_last_cancelled
-from tour_creator import get_tour_bans_for_html, add_tour_bans, remove_tour_bans, get_tour_info, build_tour_code, get_all_tours   
+from tour_creator import add_misc_commands, get_tour_bans_for_html, add_tour_bans, remove_misc_commands, remove_tour_bans, get_tour_info, build_tour_code, get_all_tours   
 import datetime
 from pm_handler import get_random_cat_url
 from set_handler import parse_command_and_get_sets
@@ -290,6 +290,43 @@ async def listen_for_messages(ws):
                                             await ws.send(f"{current_room}|Meow removed ban(s): {', '.join(removed)} from {tour_name} >:3")
                                         else:
                                             await ws.send(f"{current_room}|Meow, those rules don't exist or the tour doesn't exist. Idk meow, I'm just a cat ;w;")
+                            elif msg_text.lower().startswith("meow add misc command"):
+                                if prefix not in ('@','#'):
+                                    await ws.send(f"{current_room}|Meow, only room owners and mods can add misc commands >:3c")
+                                else:
+                                    parts = msg_text[len("meow add misc command"):].strip().split(None, 1)
+                                    
+                                    if len(parts) < 2:
+                                        await ws.send(f"{current_room}|Meow, please use: meow add misc command <tourname> <commands>. Please note that meow can't discern commands from unbans, so add it as it appears in /tour rules (i.e. -Flutter Mane, +Chien-Pao ) :<")
+                                    else:
+                                        tour_name = parts[0].lower()
+                                        commands_str = parts[1].lower()
+                                        
+                                        # Add the commands
+                                        added = add_misc_commands(current_room, tour_name, commands_str)
+                                        
+                                        if added:
+                                            await ws.send(f"{current_room}|Meow added these misc command(s): {', '.join(added)} to {tour_name} >:3")
+                                        else:
+                                            await ws.send(f"{current_room}|Meow, those misc commands already exist or the tour doesn't exist. Idk meow, I'm just a cat ;w;")
+                            elif msg_text.lower().startswith("meow remove misc command"):
+                                if prefix not in ('@','#'):
+                                    await ws.send(f"{current_room}|Meow, only room owners and mods can remove misc commands ;w;")
+                                else:
+                                    parts = msg_text[len("meow remove misc command"):].strip().split(None, 1)
+                                    
+                                    if len(parts) < 2:
+                                        await ws.send(f"{current_room}|Meow, please use: meow remove misc command <tourname> <commands> >:c")
+                                    else:
+                                        tour_name = parts[0].lower()
+                                        commands_str = parts[1].lower()
+                                        
+                                        removed = remove_misc_commands(current_room, tour_name, commands_str)
+                                        
+                                        if removed:
+                                            await ws.send(f"{current_room}|Meow removed misc command(s): {', '.join(removed)} from {tour_name} >:3")
+                                        else:
+                                            await ws.send(f"{current_room}|Meow, those misc commands don't exist or the tour doesn't exist. Idk meow, I'm just a cat ;w;")
                             elif msg_text.lower().startswith("meow uptime"):
                                 uptime_msg = get_uptime(listener_start_time)
                                 await ws.send(f"{current_room}|{uptime_msg}")

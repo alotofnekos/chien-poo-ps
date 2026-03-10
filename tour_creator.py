@@ -132,6 +132,111 @@ def remove_tour_bans(room: str, tour: str, bans_str: str):
 
     return removed
 
+def add_misc_command(room: str, tour: str, command: str):
+    """
+    Add a misc command to a tour.
+    Returns True if added, False if duplicate or failed.
+    """
+    if not command:
+        return False
+
+    try:
+        resp = supabase.rpc(
+            "add_misc_command",
+            {
+                "p_room_name": room,
+                "p_tour_internalname": tour,
+                "p_misc_command": command
+            }
+        ).execute()
+
+        return resp.data 
+    except Exception as e:
+        print(f"Failed to add misc command '{command}': {e}")
+        return False
+
+def add_misc_commands(room: str, tour: str, commands_str: str):
+    """
+    Add one or multiple misc commands.
+    `commands_str` can be comma-separated.
+    Returns list of successfully added commands.
+    """
+    if not commands_str:
+        return []
+
+    commands = [c.strip() for c in commands_str.split(",") if c.strip()]
+    added = []
+
+    for cmd in commands:
+        if add_misc_command(room, tour, cmd):
+            added.append(cmd)
+        else:
+            print(f"Failed to add misc command '{cmd}'")
+
+    return added
+
+def remove_misc_command(room: str, tour: str, command: str):
+    """
+    Remove a misc command from a tour.
+    Returns True if removed, False if not found.
+    """
+    if not command:
+        return False
+
+    try:
+        resp = supabase.rpc(
+            "remove_misc_command",
+            {
+                "p_room_name": room,
+                "p_tour_internalname": tour,
+                "p_misc_command": command
+            }
+        ).execute()
+
+        return resp.data  # True if removed, False if not found
+    except Exception as e:
+        print(f"Failed to remove misc command '{command}': {e}")
+        return False
+
+def add_misc_commands(room: str, tour: str, commands_str: str):
+    """
+    Add one or multiple misc commands.
+    `commands_str` can be comma-separated.
+    Returns list of successfully added commands.
+    """
+    if not commands_str:
+        return []
+
+    commands = [c.strip() for c in commands_str.split(",") if c.strip()]
+    added = []
+
+    for cmd in commands:
+        if add_misc_command(room, tour, cmd):
+            added.append(cmd)
+        else:
+            print(f"Failed to add misc command '{cmd}'")
+
+    return added
+
+def remove_misc_commands(room: str, tour: str, commands_str: str):
+    """
+    Remove one or multiple misc commands.
+    Returns list of successfully removed commands.
+    """
+    if not commands_str:
+        return []
+
+    commands = [c.strip() for c in commands_str.split(",") if c.strip()]
+    removed = []
+
+    for cmd in commands:
+        if remove_misc_command(room, tour, cmd):
+            removed.append(cmd)
+        else:
+            print(f"Misc command '{cmd}' not found")
+
+    return removed
+
 def get_all_tours(room: str):
     """
     Get all tour internal names for a room.
