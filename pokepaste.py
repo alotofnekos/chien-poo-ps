@@ -261,6 +261,11 @@ def _pokemon_sprite_url(name):
         '-Primal': '-primal', '-Origin': '-origin', '-Therian': '-therian', '-Cornerstone': '-cornerstone', '-Crowned': '-crowned',
         '-Wellspring': '-wellspring', '-Heartflame': '-heartflame', '-West': '-west', '-East': '-east', '-Resolute': '-resolute',
         '-Incarnate': '-incarnate', '-Unbound': '-unbound', '-Black': '-black', '-White': '-white', '-Bond': '-bond',
+        '-Red': '-red', '-Orange': '-orange', '-Yellow': '-yellow', '-Green': '-green', '-Blue': '-blue', '-Indigo': '-indigo', '-Violet': '-violet',
+        '-Normal': '-normal', '-Attack': '-attack', '-Defense': '-defense', '-Speed': '-speed',
+        '-Dark': '-dark', '-Bug': '-bug', '-Dragon': '-dragon', '-Electric': '-electric', '-Fairy': '-fairy', '-Fighting': '-fighting', '-Fire': '-fire', 
+        '-Flying': '-flying', '-Ghost': '-ghost', '-Grass': '-grass', '-Ground': '-ground', '-Ice': '-ice', '-Poison': '-poison', '-Psychic': '-psychic', 
+        '-Rock': '-rock', '-Steel': '-steel', '-Water': '-water'
     }
     suffix = ''
     valid_forms = [k[1:] for k in FORM_MAP.keys()]  # remove leading '-'
