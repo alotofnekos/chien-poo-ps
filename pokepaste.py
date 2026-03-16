@@ -260,7 +260,7 @@ def _pokemon_sprite_url(name):
         '-Hisuian': '-hisui', '-Alolan': '-alola', '-Galarian': '-galar', 
         '-Primal': '-primal', '-Origin': '-origin', '-Therian': '-therian', '-Cornerstone': '-cornerstone', '-Crowned': '-crowned',
         '-Wellspring': '-wellspring', '-Heartflame': '-heartflame', '-West': '-west', '-East': '-east', '-Resolute': '-resolute',
-        '-Incarnate': '-incarnate', 
+        '-Incarnate': '-incarnate', '-Unbound': '-unbound', '-Black': '-black', '-White': '-white', '-Bond': '-bond',
     }
     suffix = ''
     valid_forms = [k[1:] for k in FORM_MAP.keys()]  # remove leading '-'
