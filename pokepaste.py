@@ -1,3 +1,5 @@
+from ast import pattern
+
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -252,18 +254,21 @@ def parse_stats(stats_text):
 
 
 def _pokemon_sprite_url(name):
-    name = re.sub(r'\s*\([MF]\)\s*$', '', name).strip()
-
-    URSHIFU_FORMS = ['urshifu-rapid-strike', 'urshifu-single-strike']
-    if name.lower() in URSHIFU_FORMS:
-        name = 'urshifu'
-
     FORM_MAP = {
         '-Hisui': '-hisui', '-Alola': '-alola', '-Galar': '-galar',
         '-Mega':  '-mega',  '-Mega X': '-megax', '-Mega Y': '-megay', '-Mega Z': '-megaz',
-        '-Hisuian': '-hisui', '-Alolan': '-alola', '-Galarian': '-galar',
+        '-Hisuian': '-hisui', '-Alolan': '-alola', '-Galarian': '-galar', 
+        '-Primal': '-primal', '-Origin': '-origin', '-Therian': '-therian', '-Cornerstone': '-cornerstone', '-Crowned': '-crowned',
+        '-Wellspring': '-wellspring', '-Heartflame': '-heartflame', '-West': '-west', '-East': '-east', '-Resolute': '-resolute',
+        '-Incarnate': '-incarnate', 
     }
     suffix = ''
+    valid_forms = [k[1:] for k in FORM_MAP.keys()]  # remove leading '-'
+    pattern = r'-(?!' + '|'.join(map(re.escape, valid_forms)) + ')'
+    name = re.sub(r'\s*\([MF]\)\s*$|' + pattern, '', name).strip()
+    URSHIFU_FORMS = ['urshifu-rapid-strike', 'urshifu-single-strike']
+    if name.lower() in URSHIFU_FORMS:
+        name = 'urshifu'
     for display, sd in FORM_MAP.items():
         if name.endswith(display):
             name = name[:-len(display)]

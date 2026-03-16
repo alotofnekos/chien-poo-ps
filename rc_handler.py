@@ -9,7 +9,7 @@ from potd import send_potd
 import time
 import re
 from tn import generate_monthly_tour_schedule_html,get_next_tournight, get_current_tour_schedule, cancel_next_tour, is_tour_cancelled, uncancel_last_cancelled
-from tour_creator import add_misc_commands, get_tour_bans_for_html, add_tour_bans, remove_misc_commands, remove_tour_bans, get_tour_info, build_tour_code, get_all_tours   
+from tour_creator import add_misc_commands, get_tour_bans_for_html, add_tour_bans, remove_misc_commands, remove_tour_bans, get_tour_info, build_tour_code, get_all_tours, add_tour, remove_tour   
 import datetime
 from pm_handler import get_random_cat_url
 from set_handler import parse_command_and_get_sets
@@ -164,8 +164,8 @@ async def listen_for_messages(ws):
                                 await ws.send(f"{current_room}|Meow, the available tours are: {tours_list} >:3")
                             else:
                                 await ws.send(f"{current_room}|Meow, there are no available tours in {current_room} ;w;")
-                        elif msg_text.lower().startswith("meow show bans"):
-                            tn = msg_text[len("meow show bans"):].strip()
+                        elif msg_text.lower().startswith("meow show rules"):
+                            tn = msg_text[len("meow show rules"):].strip()
                             message = get_tour_bans_for_html(current_room, tn)
                             if message is None:
                                 await ws.send(f"{current_room}|Meow, no bans found for {tn} in {current_room}. Maybe it doesnt exist? ;w;")
@@ -223,8 +223,10 @@ async def listen_for_messages(ws):
                         elif msg_text.lower().startswith("meow help"):
                             help_msg = ("'meow start [tour name]', 'meow show potd', "
                                         "'meow show schedule', 'meow help', 'meow show cat', 'meow say [message]', 'meow uptime', 'meow next tn',"
-                                        "'meow show set', 'meow show bans [tour name]', 'meow show tours', 'meow show paste [pokepaste]', "
-                                        "'meow cancel next tn', 'meow uncancel next tn', 'meow add rule [tour name] [bans]', 'meow remove rule [tour name] [bans]'")
+                                        "'meow show set', 'meow show rules [tour name]', 'meow show tours', 'meow show paste [pokepaste]', "
+                                        "'meow cancel next tn', 'meow uncancel next tn', 'meow add rule [tour name] [bans]', 'meow remove rule [tour name] [bans]', "
+                                        "'meow add tour [internalname] using [tour type] [as name]', 'meow remove tour [internalname]', 'meow add misc command [tour name] [commands]', "
+                                        "'meow remove misc command [tour name] [commands]'")
                             await ws.send(f"{current_room}|Meow, here are the commands! {help_msg}")
                         elif msg_text.lower().startswith("meow show paste") or msg_text.lower().startswith("meow show pokepaste"):
                             url = msg_text.strip().split()[3]
@@ -253,6 +255,56 @@ async def listen_for_messages(ws):
                             else:
                                 await ws.send(f"{current_room}|Meow, you didn't tell me what to say! Usage: meow say <message> >:3")
                         elif prefix in ('%', '@', '#', '~'):
+                            if msg_text.lower().startswith("meow add tour"):
+                                if prefix not in ('#'):
+                                    await ws.send(f"{current_room}|Meow, only room owners can add tours >:3c")
+                                else:
+                                    remainder = msg_text[len("meow add tour"):].strip()
+                                    # Expected: <internalname> using <type> [as <name>]
+                                    lower_remainder = remainder.lower()
+                                    using_idx = lower_remainder.find(" using ")
+
+                                    if using_idx == -1:
+                                        await ws.send(f"{current_room}|Usage: meow add tour <internalname> using <tour type (i.e. gen9monotype)> [as <name>]")
+                                    else:
+                                        tour_internalname = remainder[:using_idx].strip()
+                                        after_using = remainder[using_idx + len(" using "):].strip()
+
+                                        # Check for optional "as <name>"
+                                        lower_after_using = after_using.lower()
+                                        as_idx = lower_after_using.find(" as ")
+
+                                        if as_idx != -1:
+                                            tour_type = after_using[:as_idx].strip()
+                                            tour_name = after_using[as_idx + len(" as "):].strip()
+                                        else:
+                                            tour_type = after_using.strip()
+                                            tour_name = None
+
+                                        if not tour_internalname or not tour_type:
+                                            await ws.send(f"{current_room}|Usage: meow add tour <internalname> using <type> [as <name>]")
+                                        else:
+                                            success = add_tour(current_room, tour_internalname, tour_type, tour_name)
+
+                                            if success:
+                                                await ws.send(f"{current_room}|Tour '{tour_internalname}' added successfully! Use meow start {tour_internalname} to use it mrrp :3")
+                                            else:
+                                                await ws.send(f"{current_room}|Meow, couldn't add tour '{tour_internalname}', it might be already a thing meow??")
+                            if msg_text.lower().startswith("meow remove tour"):
+                                if prefix not in ('#'):
+                                    await ws.send(f"{current_room}|Meow, only room owners can remove tours >:c")
+                                else:
+                                    tour_internalname = msg_text[len("meow remove tour"):].strip()
+
+                                    if not tour_internalname:
+                                        await ws.send(f"{current_room}|Usage: meow remove tour <internalname>")
+                                    else:
+                                        success = remove_tour(current_room, tour_internalname)
+
+                                        if success:
+                                            await ws.send(f"{current_room}|Tour '{tour_internalname}' removed successfully!")
+                                        else:
+                                            await ws.send(f"{current_room}|Meow, couldn't remove tour '{tour_internalname}'. Maybe it doesn't exist or still has bans, commands, or is part of this room's tour schedule meow? ;w;")       
                             if msg_text.lower().startswith("meow add rule"):
                                 if prefix not in ('#'):
                                     await ws.send(f"{current_room}|Meow, only room owners can add bans >:3c")

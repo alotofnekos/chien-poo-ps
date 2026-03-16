@@ -46,8 +46,12 @@ All commands are prefixed with `meow` (case-insensitive).
 
 | Command | Description | Required Rank |
 |--------|-------------|---------------|
+| `meow add tour [internalname] using [tour type] [as name]` | Adds a tour that meow can create. Take note that you need to use add rules / misc commands separately. Tour type is the main format (i.e. gen9monotype) and internalname is what you want meow to call it through Meow start command | Room Owner Only |
+| `meow remove tour [internalname]` | Removes a tour from Meow. Tour must have no rules / misc commands before being deleted (i.e. use remove rule / remove misc commands first) | Room Owner Only |
 | `meow add rule <tour> <bans>` | Adds bans to a tour. Must follow challenge code format, e.g. `+Chien-Pao, -Flutter Mane` | Room Owner Only |
 | `meow remove rule <tour> <bans>` | Removes bans from a tour | Room Owner Only |
+| `meow add misc command <tour> <command>` | Adds misc commands to a tour| Room Owner + Moderator Only |
+| `meow remove misc command <tour> <command>` | Removes misc commands to a tour| Room Owner + Moderator Only |
 
 ---
 
@@ -59,8 +63,4 @@ All commands are prefixed with `meow` (case-insensitive).
 
 ---
 
-## Notes
 
-- Ban formatting for `add`/`remove rule` must match the challenge code format exactly, e.g. `+Chien-Pao, -Flutter Mane`
-- `meow show set` usage: `meow show set <pokemon> [format] [set filter] [extra filters]`
-- `meow say` will refuse to send messages that are flagged by the profanity filter
