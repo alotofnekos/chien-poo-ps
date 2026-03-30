@@ -88,7 +88,7 @@ async def handle_keep_alive(request):
 
 
 async def start_web_server():
-    app = web.Application()
+    app = web.Application(middlewares=[error_middleware])
     secret = os.environ["SESSION_SECRET"].encode()[:32].ljust(32, b"0")
     #session_setup(app, EncryptedCookieStorage(
     #    secret,
@@ -112,6 +112,16 @@ async def start_web_server():
     print(f"Web server started on port {PORT}")
     await asyncio.Event().wait()
 
+@web.middleware
+async def error_middleware(request, handler):
+    try:
+        return await handler(request)
+    except Exception as e:
+        import traceback
+        print(f"[ERROR] {request.method} {request.path}")
+        traceback.print_exc()
+        return web.json_response({"error": str(e)}, status=500)
+    
 # -----------------------------------------------------------------------------
 # Pokémon Showdown login + room join
 # -----------------------------------------------------------------------------
@@ -230,8 +240,9 @@ async def main_bot_logic():
 
             async with websockets.connect(
                 SERVER,
-                ping_interval=30,
-                ping_timeout=15
+                ping_interval=60,
+                ping_timeout=30,
+                close_timeout=10,
             ) as ws:
                 # Login
                 success = await login(ws)
