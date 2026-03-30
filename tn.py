@@ -283,6 +283,10 @@ async def scheduled_tours(ws, ROOM):
 # ---------------------------------------------------------------------------
 
 def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
+    import datetime
+    from calendar import monthrange
+
+    # --- colors & styles ---
     color_sets   = [
         ("rgba(240, 255, 255, 0.15)", "rgba(230, 230, 250, 0.15)"),
         ("rgba(204, 204, 255, 0.15)", "rgba(211, 211, 211, 0.15)")
@@ -292,17 +296,22 @@ def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
     subheader_bg = "rgba(240, 240, 240, 0.1)"
     num_days     = monthrange(year, month)[1]
 
+    # --- timezone display ---
     sample_date  = datetime.datetime(year, month, 15, 12, 0, tzinfo=TIMEZONE)
     tz_offset    = int(sample_date.strftime('%z')[:3])
     tz_display   = f"GMT{tz_offset:+d}" if tz_offset != 0 else "GMT"
-    
+
+    # --- fetch schedule ---
     try:
         resp = supabase.rpc("get_schedule", {"p_room": room}).execute()
         raw  = resp.data or []
     except Exception as e:
-        return f"<p>No schedule found.</p>"
+        return f"<p>No schedule found: {e}</p>"
 
-    # organize by week and day
+    if not raw:
+        return "<p>No schedule found.</p>"
+
+    # --- organize by week and weekday ---
     schedules = {}
     for row in raw:
         week = row.get("week", 1)
@@ -311,39 +320,38 @@ def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
         schedules[week].setdefault(day, [])
         schedules[week][day].append((row["hour"], 0, row["tour_internalname"]))
 
-    # if nothing found
-    if not schedules:
-        return "<p>No schedule found.</p>"
+    # --- pre-cache tour info to reduce repeated calls ---
+    tour_names = {row["tour_internalname"] for row in raw}
+    tour_info_cache = {}
+    for t in tour_names:
+        info = get_tour_info(room, t) or {}
+        tour_info_cache[t] = info.get("tour_name") or t.replace("-", " ").title()
 
     # --- build HTML ---
-    html = []
-    html.append(
+    html = [
         f"<div style='width:100%; background:{header_color}; text-align:center; font-weight:bold; padding:5px;'>"
-        f"{room.capitalize()} Events ({datetime.date(year, month, 1).strftime('%B-%Y')})</div>"
-    )
-    html.append(
+        f"{room.capitalize()} Events ({datetime.date(year, month, 1).strftime('%B-%Y')})</div>",
         f"<div style='width:100%; text-align:center; background:{subheader_bg}; font-size:12px; padding:3px;'>"
-        f"Event Information Recorded in: {tz_display}</div>"
-    )
-    html.append(
+        f"Event Information Recorded in: {tz_display}</div>",
         f"<div style='width:100%; border:1px solid {border_color}; font-family:Arial; font-size:11px; height:390px; overflow-y:auto;'>"
         f"<table style='border-collapse:collapse; text-align:left; border:1px solid {border_color}; width:100%;'>"
-    )
+    ]
 
     row_toggle = 0
     weeks_sorted = sorted(schedules.keys())
     for day in range(1, num_days + 1):
         current_date = datetime.date(year, month, day)
-        weekday      = current_date.weekday()
+        weekday      = current_date.weekday()  # 0 = Mon, 6 = Sun
 
-        # find which week applies (week 1 default)
-        week_to_use = 1
+        # --- determine which week to use ---
         if 2 in schedules:
             weeks_passed = (current_date - START_DATE).days // 7
             week_to_use = 1 if weeks_passed % 2 == 0 else 2
-        schedule = schedules.get(week_to_use, {})
+        else:
+            week_to_use = 1
 
-        if weekday not in schedule:
+        schedule = schedules.get(week_to_use) or schedules.get(1)
+        if not schedule or weekday not in schedule:
             continue
 
         events = schedule[weekday]
@@ -351,11 +359,9 @@ def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
             continue
 
         morning_events, night_events = [], []
-
-        for hour, minute, tour_internal_name in events:
-            tour_info    = get_tour_info(room, tour_internal_name)
-            display_name = tour_info.get('tour_name') if tour_info and tour_info.get('tour_name') else tour_internal_name.replace('-', ' ').title()
-            event_str    = f"{hour:02}:{minute:02} {display_name}"
+        for hour, minute, t_internal in events:
+            display_name = tour_info_cache.get(t_internal, t_internal)
+            event_str = f"{hour:02}:{minute:02} {display_name}"
             if hour <= 12:
                 morning_events.append(event_str)
             else:
@@ -365,15 +371,14 @@ def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
         html.append(
             f"<tr>"
             f"<td style='background:{header_color}; text-align:center; padding:4px; font-weight:bold; width:15%; border:1px solid {border_color};'>{current_date.strftime('%m/%d')}</td>"
-            f"<td style='background:{morning_color}; padding:4px; width:42.5%; border:1px solid {border_color};'>{'<br>'.join(morning_events) if morning_events else ''}</td>"
-            f"<td style='background:{night_color}; padding:4px; width:42.5%; border:1px solid {border_color};'>{'<br>'.join(night_events) if night_events else ''}</td>"
+            f"<td style='background:{morning_color}; padding:4px; width:42.5%; border:1px solid {border_color};'>{'<br>'.join(morning_events)}</td>"
+            f"<td style='background:{night_color}; padding:4px; width:42.5%; border:1px solid {border_color};'>{'<br>'.join(night_events)}</td>"
             f"</tr>"
         )
         row_toggle = 1 - row_toggle
 
     html.append("</table></div>")
     return "\n".join(html)
-
 
 if __name__ == "__main__":
     html_schedule = generate_monthly_tour_schedule_html(3, 2026, "monotype")
