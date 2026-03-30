@@ -17,6 +17,7 @@ from aiohttp_session import setup as session_setup
 from aiohttp_session.cookie_storage import EncryptedCookieStorage
 from meow_api import setup_routes
 from meow_supabase import supabase
+import psutil, os
 
 load_dotenv()
 USERNAME = os.getenv("PS_USERNAME")
@@ -40,17 +41,24 @@ async def handle_root(request):
     cat = await get_random_cat_url()
     global connection_status, backoff
     refresh_time = max(backoff, 30)
+    
+    process  = psutil.Process(os.getpid())
+    mem_mb   = round(process.memory_info().rss / 1024 / 1024, 1)
+    mem_pct  = round(mem_mb / 512 * 100, 1)  # % of Render's 512MB limit
+    mem_color = "green" if mem_pct < 60 else "orange" if mem_pct < 85 else "red"
+
     html_content = f"""
     <!DOCTYPE html>
     <html>
     <head>
         <title>Meow Bot Status</title>
-        <meta http-equiv="refresh" content="{backoff}">
+        <meta http-equiv="refresh" content="{refresh_time}">
         <style>
             body {{ font-family: sans-serif; text-align: center; margin-top: 50px; }}
             .status {{ font-size: 2em; font-weight: bold; }}
             .connected {{ color: green; }}
             .disconnected {{ color: red; }}
+            .mem {{ font-size: 1em; color: {mem_color}; margin-top: 8px; }}
         </style>
     </head>
     <body>
@@ -59,6 +67,7 @@ async def handle_root(request):
         <p class="status {('connected' if 'Connected' in connection_status else 'disconnected')}">
             {connection_status}
         </p>
+        <p class="mem">Memory: {mem_mb} MB / 512 MB ({mem_pct}%)</p>
         <p>The web server shows the status of Meow. If it's down and this page isn't down, it means the bot has trouble connecting to PS.</p>
         <p>If you can't see this page, contact Neko immediately.</p>
         <p>This page automatically refreshes every {refresh_time} seconds.</p>
@@ -70,7 +79,12 @@ async def handle_root(request):
 
 async def handle_keep_alive(request):
     global connection_status
-    return web.json_response({"status": connection_status})
+    process = psutil.Process(os.getpid())
+    mem_mb  = process.memory_info().rss / 1024 / 1024
+    return web.json_response({
+        "status": connection_status,
+        "memory_mb": round(mem_mb, 1)
+    })
 
 
 async def start_web_server():

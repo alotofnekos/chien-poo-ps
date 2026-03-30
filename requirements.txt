@@ -7,3 +7,4 @@ supabase
 beautifulsoup4
 better_profanity
 aiohttp-session
+psutil
