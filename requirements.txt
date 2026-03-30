@@ -6,4 +6,4 @@ pytz
 supabase
 beautifulsoup4
 better_profanity
-aiohttp-session cryptography
+aiohttp-session
