@@ -197,7 +197,7 @@ async def listen_for_messages(ws):
                             now = datetime.datetime.now()
                             html_schedule = generate_monthly_tour_schedule_html(now.month, now.year, room=current_room)
                             
-                            if html_schedule and "Invalid room" not in html_schedule:
+                            if html_schedule and "Invalid room" not in html_schedule and "No schedule found" not in html_schedule:
                                 await ws.send(f"{current_room}|/addhtmlbox {html_schedule}")
                             else:
                                 await ws.send(f"{current_room}|Meow, this room doesn't have scheduled tournights ;w;")
