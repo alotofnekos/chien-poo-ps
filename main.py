@@ -12,9 +12,13 @@ from tn import scheduled_tours
 from potd import build_daily_potd
 from pm_handler import get_random_cat_url
 from rc_handler import listen_for_messages
+from supabase import create_client
+from aiohttp_session import setup as session_setup
+from aiohttp_session.cookie_storage import EncryptedCookieStorage
+from meow_api import setup_routes
+from meow_supabase import supabase
 
 load_dotenv()
-
 USERNAME = os.getenv("PS_USERNAME")
 PASSWORD = os.getenv("PS_PASSWORD")
 ROOMS = ["monotype", "nationaldexmonotype", "nationaldexou", "monotypeom", "echo"]
@@ -71,15 +75,22 @@ async def handle_keep_alive(request):
 
 async def start_web_server():
     app = web.Application()
+    secret = os.environ["SESSION_SECRET"].encode()[:32].ljust(32, b"0")
+    session_setup(app, EncryptedCookieStorage(
+        secret,
+        samesite="Lax",
+        httponly=True,
+        secure=False  
+    ))
     app.router.add_get('/', handle_root)
     app.router.add_get('/keep-alive', handle_keep_alive)
+    setup_routes(app)
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, '0.0.0.0', PORT)
     await site.start()
     print(f"Web server started on port {PORT}")
     await asyncio.Event().wait()
-
 
 # -----------------------------------------------------------------------------
 # Pokémon Showdown login + room join

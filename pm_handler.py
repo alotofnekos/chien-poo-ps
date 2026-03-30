@@ -1,8 +1,24 @@
 import re
-
 import aiohttp
 from set_handler import parse_command_and_get_sets
 from better_profanity import profanity
+from tour_creator import supabase
+from meow_token import create_token
+
+AUTH_RANKS = {"@", "#", "~"} 
+BASE_URL = "https://chien-poo-ps.onrender.com"
+
+async def room_schedule_editor(room: str, sender: str, rank: str, ws):
+    """
+    meow edit schedule inside a room.
+    PMs the link so only the auth sees it.
+    """
+    if rank not in AUTH_RANKS:
+        return
+
+    token = await create_token(sender, room, supabase)
+    link  = f"{BASE_URL}/auth?token={token}"
+    await ws.send(f"|/pm {sender}, Meow, here's your login link for the schedule (expires 10 mins, one-time use): {link}")
 
 async def get_random_cat_url():
     url = "https://cataas.com/cat?json=true"

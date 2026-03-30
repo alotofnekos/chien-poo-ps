@@ -1,6 +1,6 @@
 import math
 from collections import defaultdict
-from supabase import create_client
+from meow_supabase import supabase
 import os
 import json
 from datetime import datetime
@@ -10,11 +10,6 @@ from datetime import datetime
 # ---------- CONFIG ----------
 BASE_POINTS = 10
 INCREMENT = 2
-
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE")
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-
 
 # ---------- HELPERS ----------
 def round_points(round_number: int) -> int:

@@ -2,7 +2,7 @@ import asyncio
 import random
 import os
 from dotenv import load_dotenv
-from supabase import create_client
+from meow_supabase import supabase
 from pm_handler import get_random_cat_saying, handle_pmmessages
 from pokepaste import generate_html, get_pokepaste_from_url
 from potd import send_potd
@@ -11,20 +11,16 @@ import re
 from tn import generate_monthly_tour_schedule_html,get_next_tournight, get_current_tour_schedule, cancel_next_tour, is_tour_cancelled, uncancel_last_cancelled
 from tour_creator import add_misc_commands, get_tour_bans_for_html, add_tour_bans, remove_misc_commands, remove_tour_bans, get_tour_info, build_tour_code, get_all_tours, add_tour, remove_tour   
 import datetime
-from pm_handler import get_random_cat_url
+from pm_handler import get_random_cat_url, room_schedule_editor
 from set_handler import parse_command_and_get_sets
 load_dotenv()
-from supabase import create_client
+
 from db import save_tournament_results, get_leaderboard_html,process_tourlogs, add_points
 USERNAME = os.getenv("PS_USERNAME")
 CURRENT_TOUR_EXISTS = {}  
 TRACK_OFFICIAL_TOUR = {}  
 TOURNAMENT_STATE = {}     
 PROCESSED_MESSAGES = {}
-
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE")
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def record_meow(room, user, msg_text):
     """Record a meow log in the database."""
@@ -305,6 +301,8 @@ async def listen_for_messages(ws):
                                             await ws.send(f"{current_room}|Tour '{tour_internalname}' removed successfully!")
                                         else:
                                             await ws.send(f"{current_room}|Meow, couldn't remove tour '{tour_internalname}'. Maybe it doesn't exist or still has bans, commands, or is part of this room's tour schedule meow? ;w;")       
+                            if msg_text.lower() == "meow edit schedule":
+                                await room_schedule_editor(current_room, user, prefix, ws)
                             if msg_text.lower().startswith("meow add rule"):
                                 if prefix not in ('#'):
                                     await ws.send(f"{current_room}|Meow, only room owners can add bans >:3c")

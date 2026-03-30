@@ -9,12 +9,7 @@ from html import unescape
 from zoneinfo import ZoneInfo
 
 import aiohttp
-from supabase import create_client
-
-
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE")
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+from meow_supabase import supabase
 
 
 # ---------- Data loading ----------
