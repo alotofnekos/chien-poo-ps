@@ -12,7 +12,6 @@ from tn import scheduled_tours
 from potd import build_daily_potd
 from pm_handler import get_random_cat_url
 from rc_handler import listen_for_messages
-from supabase import create_client
 from aiohttp_session import setup as session_setup
 from aiohttp_session.cookie_storage import EncryptedCookieStorage
 from meow_api import setup_routes
@@ -31,14 +30,17 @@ MAX_RETRIES = 1000
 connection_status = "Disconnected"
 backoff = RECONNECT_DELAY
 
-KEEP_ALIVE_URL = "https://chien-poo-ps.onrender.com"
+KEEP_ALIVE_URL = "https://chien-poo-ps.onrender.com/keep-alive"
 
 room_tasks = []
 # -----------------------------------------------------------------------------
 # Web server endpoints
 # -----------------------------------------------------------------------------
 async def handle_root(request):
-    cat = await get_random_cat_url()
+    try:
+        cat = await get_random_cat_url()
+    except Exception:
+        cat = "https://http.cat/200"  
     global connection_status, backoff
     refresh_time = max(backoff, 30)
     

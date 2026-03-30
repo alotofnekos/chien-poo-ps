@@ -1,27 +1,15 @@
 import asyncio
 from pathlib import Path
-import token
 from aiohttp import web
 from aiohttp_session import get_session
-from supabase._async.client import AsyncClient, create_client as async_create_client
 from meow_token import consume_token
-from tour_creator import supabase as sync_supabase
 from tour_creator import get_all_tours
+from meow_supabase import get_async_supabase, supabase as sync_supabase  # ← import both from here
 import os
 from dotenv import load_dotenv
 load_dotenv()
 
 DIST = Path(__file__).parent / "web" / "dist"
-_supabase_async: AsyncClient | None = None
-
-async def get_async_supabase() -> AsyncClient:
-    global _supabase_async
-    if _supabase_async is None:
-        _supabase_async = await async_create_client(
-            os.environ["SUPABASE_URL"],
-            os.environ["SUPABASE_SERVICE"]
-        )
-    return _supabase_async
 
 
 # ---------------------------------------------------------------------------
@@ -43,8 +31,7 @@ def require_auth(handler):
 
 async def handle_auth(request):
     token  = request.rel_url.query.get("token", "")
-    db = await get_async_supabase()
-    result = await consume_token(token, db)
+    result = await consume_token(token, sync_supabase)
 
     if not result:
         raise web.HTTPFound("/login?error=invalid_token")
