@@ -73,6 +73,15 @@ const css = `
     }
   }
 
+  /* mobile layout for toggle */
+  @media (max-width: 600px) {
+    .toggle-container {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 6px;
+    }
+  }
+
   body {
     background: var(--bg);
     color: var(--text);
@@ -99,8 +108,9 @@ const css = `
     justify-content: space-between;
     padding: 0 20px;
     height: 44px;
-    gap: 16px;
     box-shadow: var(--shadow);
+    flex-wrap: wrap;   
+    gap: 8px;
   }
 
   .navbar-left {
@@ -209,7 +219,10 @@ const css = `
     transition: transform 0.2s;
     pointer-events: none;
   }
-
+  
+  .toggle-container {
+    margin-left: auto;
+  }
   .toggle input:checked ~ .toggle-thumb { transform: translateX(16px); }
 
   /* Week label */
@@ -605,7 +618,7 @@ function Dashboard({ user, room, onLogout }) {
       <style>{css}</style>
       <nav className="navbar">
         <div className="navbar-left">
-          <span className="navbar-title">tour <span>scheduler</span></span>
+          <span className="navbar-title"><span>tour scheduler</span></span>
           <div className="navbar-divider" />
           <div className="navbar-user">
             <span>{user}</span>
@@ -614,15 +627,19 @@ function Dashboard({ user, room, onLogout }) {
             <button className="logout-btn" onClick={handleLogout}>logout</button>
           </div>
         </div>
-        <label className="toggle-wrap">
-          2-week schedule
-          <label className="toggle">
-            <input type="checkbox" checked={isTwoWeek}
-              onChange={e => setIsTwoWeek(e.target.checked)} />
-            <div className="toggle-track" />
-            <div className="toggle-thumb" />
+
+        {/* Move toggle outside of navbar-left so it can go below on mobile */}
+        <div className="toggle-container">
+          <label className="toggle-wrap">
+            2-week schedule
+            <label className="toggle">
+              <input type="checkbox" checked={isTwoWeek}
+                onChange={e => setIsTwoWeek(e.target.checked)} />
+              <div className="toggle-track" />
+              <div className="toggle-thumb" />
+            </label>
           </label>
-        </label>
+        </div>
       </nav>
       <div className="app">
 
