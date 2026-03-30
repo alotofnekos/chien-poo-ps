@@ -118,6 +118,8 @@ async def start_web_server():
 async def error_middleware(request, handler):
     try:
         return await handler(request)
+    except web.HTTPException:
+        raise 
     except Exception as e:
         import traceback
         print(f"[ERROR] {request.method} {request.path}")
