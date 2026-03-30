@@ -76,11 +76,17 @@ async def handle_keep_alive(request):
 async def start_web_server():
     app = web.Application()
     secret = os.environ["SESSION_SECRET"].encode()[:32].ljust(32, b"0")
+    #session_setup(app, EncryptedCookieStorage(
+    #    secret,
+    #    samesite="Lax",
+    #    httponly=True,
+    #    secure=False  
+    #))
     session_setup(app, EncryptedCookieStorage(
         secret,
         samesite="Lax",
         httponly=True,
-        secure=False  
+        secure=True
     ))
     app.router.add_get('/', handle_root)
     app.router.add_get('/keep-alive', handle_keep_alive)
