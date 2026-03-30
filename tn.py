@@ -295,34 +295,27 @@ def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
     sample_date  = datetime.datetime(year, month, 15, 12, 0, tzinfo=TIMEZONE)
     tz_offset    = int(sample_date.strftime('%z')[:3])
     tz_display   = f"GMT{tz_offset:+d}" if tz_offset != 0 else "GMT"
+    
+    try:
+        resp = supabase.rpc("get_schedule", {"p_room": room}).execute()
+        raw  = resp.data or []
+    except Exception as e:
+        return f"<p>No schedule found.</p>"
 
-    # For monotype we need both weeks to show the full month correctly
-    if room == "monotype":
-        # Temporarily fetch both weeks directly from DB (bypass cache week filter)
-        try:
-            resp = supabase.rpc("get_schedule", {"p_room": room}).execute()
-            raw  = resp.data or []
-        except Exception as e:
-            return f"<p>Failed to load schedule: {e}</p>"
+    # organize by week and day
+    schedules = {}
+    for row in raw:
+        week = row.get("week", 1)
+        day  = row.get("day")
+        schedules.setdefault(week, {})
+        schedules[week].setdefault(day, [])
+        schedules[week][day].append((row["hour"], 0, row["tour_internalname"]))
 
-        week_a = {}
-        week_b = {}
-        for row in raw:
-            target = week_a if row["week"] == 1 else week_b
-            day    = row["day"]
-            if day not in target:
-                target[day] = []
-            target[day].append((row["hour"], 0, row["tour_internalname"]))
-        schedules = {1: week_a, 2: week_b}
+    # if nothing found
+    if not schedules:
+        return "<p>No schedule found.</p>"
 
-    elif room == "nationaldexmonotype":
-        sched = get_current_tour_schedule(room)
-        if not sched:
-            return "<p>No schedule found.</p>"
-        schedules = {1: sched}
-    else:
-        return "<p>Invalid room specified.</p>"
-
+    # --- build HTML ---
     html = []
     html.append(
         f"<div style='width:100%; background:{header_color}; text-align:center; font-weight:bold; padding:5px;'>"
@@ -334,22 +327,21 @@ def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
     )
     html.append(
         f"<div style='width:100%; border:1px solid {border_color}; font-family:Arial; font-size:11px; height:390px; overflow-y:auto;'>"
-    )
-    html.append(
         f"<table style='border-collapse:collapse; text-align:left; border:1px solid {border_color}; width:100%;'>"
     )
 
     row_toggle = 0
+    weeks_sorted = sorted(schedules.keys())
     for day in range(1, num_days + 1):
         current_date = datetime.date(year, month, day)
         weekday      = current_date.weekday()
 
-        if room == "monotype":
+        # find which week applies (week 1 default)
+        week_to_use = 1
+        if 2 in schedules:
             weeks_passed = (current_date - START_DATE).days // 7
-            current_week = 1 if weeks_passed % 2 == 0 else 2
-            schedule     = schedules[current_week]
-        else:
-            schedule = schedules[1]
+            week_to_use = 1 if weeks_passed % 2 == 0 else 2
+        schedule = schedules.get(week_to_use, {})
 
         if weekday not in schedule:
             continue
@@ -358,12 +350,11 @@ def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
         if not events:
             continue
 
-        morning_events = []
-        night_events   = []
+        morning_events, night_events = [], []
 
         for hour, minute, tour_internal_name in events:
             tour_info    = get_tour_info(room, tour_internal_name)
-            display_name = tour_info['tour_name'] if tour_info and tour_info.get('tour_name') else tour_internal_name.replace('-', ' ').title()
+            display_name = tour_info.get('tour_name') if tour_info and tour_info.get('tour_name') else tour_internal_name.replace('-', ' ').title()
             event_str    = f"{hour:02}:{minute:02} {display_name}"
             if hour <= 12:
                 morning_events.append(event_str)
@@ -385,7 +376,7 @@ def generate_monthly_tour_schedule_html(month: int, year: int, room: str):
 
 
 if __name__ == "__main__":
-    html_schedule = generate_monthly_tour_schedule_html(10, 2025, "monotype")
+    html_schedule = generate_monthly_tour_schedule_html(3, 2026, "monotype")
     print(html_schedule)
     sched     = get_current_tour_schedule("nationaldexmonotype")
     next_tour = get_next_tournight(sched)
