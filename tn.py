@@ -275,7 +275,7 @@ async def scheduled_tours(ws, ROOM):
 
                     await ws.send(f"{ROOM}|/tour scouting off")
 
-        await asyncio.sleep(58)
+        await asyncio.sleep(29)
 
 
 # ---------------------------------------------------------------------------
