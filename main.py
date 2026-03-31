@@ -32,18 +32,33 @@ backoff = RECONNECT_DELAY
 
 KEEP_ALIVE_URL = "https://chien-poo-ps.onrender.com/keep-alive"
 
-room_tasks = []
+class TaskManager:
+    def __init__(self):
+        self.tasks = set()
 
-async def safe_task(coro_func, name, *args):
+    def create(self, coro):
+        task = asyncio.create_task(coro)
+        self.tasks.add(task)
+        task.add_done_callback(self.tasks.discard)
+        return task
+
+    async def cancel_all(self):
+        for task in list(self.tasks):
+            task.cancel()
+        await asyncio.gather(*self.tasks, return_exceptions=True)
+        self.tasks.clear()
+
+async def safe_task(func, name, *args):
     """Wraps a background task so it restarts if it crashes."""
     while True:
         try:
-            await coro_func(*args)
+            await func(*args)
         except asyncio.CancelledError:
+            print(f"[CANCELLED] {name}")
             raise
         except Exception:
             import traceback
-            print(f"[CRASH] Task '{name}' crashed — restarting in 5s")
+            print(f"[CRASH] {name} crashed - restarting...")
             traceback.print_exc()
             await asyncio.sleep(5)
 
@@ -215,21 +230,10 @@ async def room_logic(ws, room_name):
     print(f"Joined room: {room_name}")
 
     # Start background tasks for this room and track them
-    t1 = asyncio.create_task(safe_task(scheduled_tours, f"tours-{room_name}", ws, room_name))
-    t2 = asyncio.create_task(safe_task(build_daily_potd, f"potd-{room_name}", ws, room_name))
-    room_tasks.extend([t1, t2])
+    asyncio.create_task(safe_task(scheduled_tours, f"tours-{room_name}", ws, room_name))
+    asyncio.create_task(safe_task(build_daily_potd, f"potd-{room_name}", ws, room_name))
 
     print(f"Started tasks for {room_name}")
-
-async def cancel_room_tasks():
-    """Cancel all running room tasks and clear the list."""
-    for task in room_tasks:
-        task.cancel()
-        try:
-            await task
-        except asyncio.CancelledError:
-            pass
-    room_tasks.clear()
 
 # -----------------------------------------------------------------------------
 # Keep-alive pinger
@@ -249,87 +253,54 @@ async def keep_alive_loop(session: aiohttp.ClientSession):
 # -----------------------------------------------------------------------------
 async def main_bot_logic():
     global connection_status, backoff
-    backoff = RECONNECT_DELAY
-    retries = 0
+    while True:
+        manager = TaskManager() 
 
-    while MAX_RETRIES is None or retries < MAX_RETRIES:
         try:
-            print("Attempting connection to Pokemon Showdown...")
-
             async with websockets.connect(
                 SERVER,
                 ping_interval=60,
                 ping_timeout=30,
                 close_timeout=10,
             ) as ws:
-                # Login
+
                 success = await login(ws)
                 if not success:
                     raise ConnectionRefusedError("Login failed")
 
-                # Set avatar and status
                 await ws.send("|/avatar neko5")
                 await ws.send("|/status Send 'meow' in PMs :3c")
 
-                # Join rooms and start background tasks
+                # Room tasks
                 for room in ROOMS:
-                    await room_logic(ws, room)
+                    await ws.send(f"|/join {room}")
+                    await asyncio.sleep(1)
 
-                # Start the listener
-                listener_task = asyncio.create_task(listen_for_messages(ws))
+                    manager.create(
+                        safe_task(scheduled_tours, f"tours-{room}", ws, room)
+                    )
+                    manager.create(
+                        safe_task(build_daily_potd, f"potd-{room}", ws, room)
+                    )
 
-                connection_status = "Connected to Pokemon Showdown!"
-                backoff = RECONNECT_DELAY
-                retries = 0
+                # Listener
+                listener = manager.create(listen_for_messages(ws))
+
+                connection_status = "Connected"
                 print("Connected successfully!")
 
-                # Wait until listener crashes or WS closes
-                done, pending = await asyncio.wait(
-                    {listener_task},
-                    return_when=asyncio.FIRST_EXCEPTION
-                )
-
-                # Cancel background tasks before reconnecting
-                await cancel_room_tasks()
-
-                # Cancel pending tasks too
-                for task in pending:
-                    task.cancel()
-                    try:
-                        await task
-                    except asyncio.CancelledError:
-                        pass
-
-                # Re-raise listener exceptions to trigger reconnect
-                for task in done:
-                    task.result()
-
-        except ConnectionClosed as e:
-            reason = e.reason or "No reason given"
-            if e.reason is None and e.code == 1006:
-                reason = "missed heartbeat (Meow didn't get a response in time?)"
-            print(f"PS closed the connection: code={e.code}, reason={reason}. Retrying in {backoff}s...")
-            connection_status = f"Disconnected: {reason} retrying in {backoff}s..."
-            await asyncio.sleep(backoff)
-            retries += 1
-            backoff = min(backoff * 2, 300) + random.randint(0, 5)
-
-        except (ConnectionRefusedError, TimeoutError) as e:
-            print(f"Connection error: {e}. Retrying in {backoff}s...")
-            connection_status = f"Connection issue: {e}, retrying..."
-            await asyncio.sleep(backoff)
-            retries += 1
-            backoff = min(backoff * 2, 300) + random.randint(0, 5)
+                # Wait until something breaks
+                await listener
 
         except Exception as e:
-            import traceback
-            print(f"Unexpected error: {e}\n{traceback.format_exc()}")
-            connection_status = "Error, reconnecting..."
-            await asyncio.sleep(backoff)
-            retries += 1
-            backoff = min(backoff * 2, 300) + random.randint(0, 5)
+            print(f"[MAIN LOOP ERROR] {e}")
 
-    print("Max retries reached. Stopping bot.")
+        finally:
+            print("Cleaning up connection tasks...")
+            await manager.cancel_all()   
+
+            await asyncio.sleep(backoff)
+            backoff = min(backoff * 2, 300)
 
 
 
