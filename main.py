@@ -33,6 +33,20 @@ backoff = RECONNECT_DELAY
 KEEP_ALIVE_URL = "https://chien-poo-ps.onrender.com/keep-alive"
 
 room_tasks = []
+
+async def safe_task(coro_func, name, *args):
+    """Wraps a background task so it restarts if it crashes."""
+    while True:
+        try:
+            await coro_func(*args)
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            import traceback
+            print(f"[CRASH] Task '{name}' crashed — restarting in 5s")
+            traceback.print_exc()
+            await asyncio.sleep(5)
+
 # -----------------------------------------------------------------------------
 # Web server endpoints
 # -----------------------------------------------------------------------------
@@ -201,8 +215,8 @@ async def room_logic(ws, room_name):
     print(f"Joined room: {room_name}")
 
     # Start background tasks for this room and track them
-    t1 = asyncio.create_task(scheduled_tours(ws, room_name))
-    t2 = asyncio.create_task(build_daily_potd(ws, room_name))
+    t1 = asyncio.create_task(safe_task(scheduled_tours, f"tours-{room_name}", ws, room_name))
+    t2 = asyncio.create_task(safe_task(build_daily_potd, f"potd-{room_name}", ws, room_name))
     room_tasks.extend([t1, t2])
 
     print(f"Started tasks for {room_name}")
@@ -324,10 +338,21 @@ async def main_bot_logic():
 # -----------------------------------------------------------------------------
 async def main():
     async with aiohttp.ClientSession() as session:
-        asyncio.create_task(start_web_server())
-        asyncio.create_task(keep_alive_loop(session))
-        asyncio.create_task(main_bot_logic())
-        await asyncio.Event().wait()
+        tasks = [
+            asyncio.create_task(safe_task(start_web_server, "web_server")),
+            asyncio.create_task(safe_task(keep_alive_loop, "keep_alive", session)),
+            asyncio.create_task(safe_task(main_bot_logic, "bot_logic")),
+        ]
+
+        try:
+            await asyncio.gather(*tasks)
+        except asyncio.CancelledError:
+            print("Main cancelled, shutting down...")
+        finally:
+            for task in tasks:
+                task.cancel()
+
+            await asyncio.gather(*tasks, return_exceptions=True)
 
 
 if __name__ == "__main__":
