@@ -2,6 +2,7 @@ import re
 import aiohttp
 from set_handler import parse_command_and_get_sets
 from better_profanity import profanity
+from tn import get_current_tour_schedule, get_next_tournight
 from tour_creator import supabase
 from meow_token import create_token
 
@@ -77,8 +78,40 @@ async def handle_pmmessages(ws, USERNAME, msg):
                     else:
                         pm_response = f"|/pm {from_user}, Meow couldn't find any sets this mon, sorry ;w;. Usage: meow show set <pokemon> [format] [set filter] [extra filters]"
                         await ws.send(pm_response)
+                elif "meow next tn" in message.lower():
+                    room = message.lower().split("meow next tn")[-1].strip()
+                    if not room:
+                        await ws.send(f"|/pm {from_user}, Meo...could you tell me which room you're asking about? Usage: meow next tn <room>")
+                        continue
 
-                if "meow" in message.lower():
+                    nx_schedule = get_current_tour_schedule(room)
+                    next_tour = get_next_tournight(nx_schedule)
+
+                    if next_tour is None:
+                        await ws.send(f"|/pm {from_user}, Meow, I couldn't find any upcoming tournights for that room right now ;w;")
+                    else:
+                        minutes = next_tour['minutes_until']
+
+                        # Convert minutes into a nicer format
+                        if minutes >= 1440:  # 1 day+
+                            days = minutes // 1440
+                            hours = (minutes % 1440) // 60
+                            time_str = f"{days} day(s) and {hours} hour(s)"
+                        elif minutes >= 120:  # 2 hours+
+                            hours = minutes // 60
+                            time_str = f"{hours} hour(s)"
+                        else:
+                            time_str = f"{minutes} minute(s)"
+
+                        await ws.send(
+                            f"|/pm {from_user}, Meow, the next tournight is {next_tour['name'].title()} "
+                            f"at {next_tour['hour']:02d}:{next_tour['minute']:02d} (GMT-4). "
+                            f"That's in about {time_str}! >:3"
+                        )
+                elif "meow help" in message.lower():
+                    pm_response = f"|/pm {from_user}, Meow! Here are the commands you can use: meow, meow next tn <room>, meow help"
+                    await ws.send(pm_response)
+                elif "meow" in message.lower():
                     print(f"Received Meow PM from {from_user}: {message}")
                     cat_url = await get_random_cat_url()
                     if cat_url:
@@ -90,7 +123,7 @@ async def handle_pmmessages(ws, USERNAME, msg):
                         await ws.send(pm_response)
                         print(f"Sent cat image: {pm_response}")
                 else:
-                    pm_response = f"|/pm {from_user}, Meow! I'm still in progress!"
+                    pm_response = f"|/pm {from_user}, Meow! I don't understand that command yet, but I'm learning new things every day :3c. You can try Meow help maybe?"
                     await ws.send(pm_response)
                     print(f"Sent auto PM response: {pm_response}")
 async def main():
