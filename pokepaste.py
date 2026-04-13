@@ -412,12 +412,30 @@ def format_team_output(pokemon_list):
     
     return '\n'.join(output_lines)
 
+def pokepaste_to_team_string(url, strip_nicknames=True, strip_title=True):
+    """
+    Returns a Showdown-importable TEAM string from a Pokepaste URL
+    """
+    data = get_pokepaste_from_url(
+        url,
+        strip_nicknames=strip_nicknames,
+        strip_title=strip_title
+    )
+    
+    if not data.get("is_valid"):
+        raise ValueError("Invalid or malformed Pokepaste")
+
+    team_text = data["formatted_text"].strip()
+
+    team_text = re.sub(r'\n{3,}', '\n\n', team_text)
+
+    return f'TEAM = """\n{team_text}\n"""'
 
 if __name__ == "__main__":
     url = "https://pokepast.es/0411e4bd9ccd54e8"
     
     try:
-        print(generate_html(get_pokepaste_from_url(url, strip_nicknames=True, strip_title=False)))
+        print(pokepaste_to_team_string(url, strip_nicknames=True, strip_title=False))
         
     except Exception as e:
         print(f"Error: {e}")

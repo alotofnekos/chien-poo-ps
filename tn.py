@@ -38,7 +38,8 @@ def _fetch_schedule_from_db(room: str) -> dict | None:
 
     # Determine which week is active for this room
     if room == "monotype":
-        today        = datetime.date.today()
+        now = datetime.datetime.now(TIMEZONE)
+        today        = now.date() 
         weeks_passed = (today - START_DATE).days // 7
         current_week = 1 if weeks_passed % 2 == 0 else 2
     else:
@@ -64,7 +65,15 @@ def get_current_tour_schedule(room: str) -> dict | None:
     now    = datetime.datetime.now(TIMEZONE)
     cached = _schedule_cache.get(room)
 
-    if cached and (now - cached["fetched_at"]) < CACHE_TTL:
+    if cached:
+        age = now - cached["fetched_at"]
+        # Also invalidate if the week has changed since we last fetched
+        weeks_at_fetch = (cached["fetched_at"].date() - START_DATE).days // 7
+        weeks_now      = (now.date() - START_DATE).days // 7
+        week_changed   = weeks_at_fetch != weeks_now
+
+        if age < CACHE_TTL and not week_changed:
+            return cached["data"]
         return cached["data"]
 
     fresh = _fetch_schedule_from_db(room)
