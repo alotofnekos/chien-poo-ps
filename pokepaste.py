@@ -3,15 +3,27 @@ from ast import pattern
 import requests
 from bs4 import BeautifulSoup
 import re
+import time
+import requests
+
 
 MAX_NAME_LENGTH = 50
 MAX_MOVE_LENGTH = 30
+
+def safe_get(url, retries=3, timeout=10):
+    for i in range(retries):
+        try:
+            return requests.get(url, timeout=timeout)
+        except requests.exceptions.RequestException as e:
+            if i == retries - 1:
+                raise
+            time.sleep(1.5 * (i + 1))
 
 def get_pokepaste_from_url(url, strip_nicknames=False, strip_title=False):
     """
     Scrapes Pokemon team data from a Pokepaste URL.
     """
-    response = requests.get(url)
+    response = safe_get(url, timeout=20)
     response.raise_for_status()
     
     # Pass the URL into the parser so it can be stored in the result

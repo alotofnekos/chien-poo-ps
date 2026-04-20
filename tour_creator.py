@@ -433,8 +433,8 @@ def build_tour_code(room: str, tour: str) -> str:
     return "\n".join(code_parts)
 
 def main():
-    room = "nationaldexmonotype"
-    get_html = build_tour_code(room, "ubers")
+    room = "monotype"
+    get_html = build_tour_code(room, "champions")
     print(get_html)
 
 if __name__ == "__main__":

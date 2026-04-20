@@ -457,31 +457,50 @@ async def meow_remove_tour(msg_text, current_room, ws):
             await ws.send(f"{current_room}|Meow, couldn't remove tour '{tour_internalname}'. Maybe it doesn't exist or still has bans, commands, or is part of this room's tour schedule meow? ;w;")       
 
 async def meow_add_tour(msg_text, current_room, ws):
-    remainder = msg_text[len("meow add tour"):].strip()
-    lower_remainder = remainder.lower()
-    using_idx = lower_remainder.find(" using ")
-    if using_idx == -1:
-        await ws.send(f"{current_room}|Usage: meow add tour <internalname> using <tour type (i.e. gen9monotype)> [as <name>]")
+    prefix = "meow add tour"
+
+    if not msg_text.lower().startswith(prefix):
+        return
+
+    remainder = msg_text[len(prefix):].strip()
+
+    # check for complete params
+    if " using " not in remainder.lower():
+        await ws.send(
+            f"{current_room}|Usage: meow add tour <internalname> using <tour type> as <name>"
+        )
+        return
+
+    parts = remainder.split(" using ", 1)
+    tour_internalname = parts[0].strip()
+    after_using = parts[1].strip()
+
+    if " as " not in after_using.lower():
+        await ws.send(
+            f"{current_room}|Usage: meow add tour <internalname> using <tour type> as <name>"
+        )
+        return
+
+    type_part, name_part = after_using.split(" as ", 1)
+    tour_type = type_part.strip()
+    tour_name = name_part.strip()
+
+    if not tour_internalname or not tour_type or not tour_name:
+        await ws.send(
+            f"{current_room}|Usage: meow add tour <internalname> using <tour type> as <name>"
+        )
+        return
+
+    success = add_tour(current_room, tour_internalname, tour_type, tour_name)
+
+    if success:
+        await ws.send(
+            f"{current_room}|Tour '{tour_internalname}' added successfully! Use meow start {tour_internalname} to use it mrrp :3"
+        )
     else:
-        tour_internalname = remainder[:using_idx].strip()
-        after_using = remainder[using_idx + len(" using "):].strip()
-        lower_after_using = after_using.lower()
-        as_idx = lower_after_using.find(" as ")
-        if as_idx != -1:
-            tour_type = after_using[:as_idx].strip()
-            tour_name = after_using[as_idx + len(" as "):].strip()
-        else:
-            tour_type = after_using.strip()
-            tour_name = None
-        
-        if not tour_internalname or not tour_type:
-            await ws.send(f"{current_room}|Usage: meow add tour <internalname> using <type> [as <name>]")
-        else:
-            success = add_tour(current_room, tour_internalname, tour_type, tour_name)
-            if success:
-                await ws.send(f"{current_room}|Tour '{tour_internalname}' added successfully! Use meow start {tour_internalname} to use it mrrp :3")
-            else:
-                await ws.send(f"{current_room}|Meow, couldn't add tour '{tour_internalname}', it might be already a thing meow??")
+        await ws.send(
+            f"{current_room}|Meow, couldn't add tour '{tour_internalname}', it might already exist??"
+        )
 
 async def show_set(current_room, user, ts, msg_text, ws):
     msg_id = f"{current_room}:{user}:{ts}:{msg_text}"              
