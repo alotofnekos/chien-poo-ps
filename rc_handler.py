@@ -205,13 +205,13 @@ async def listen_for_messages(ws):
                             if msg_text.lower() == "meow edit schedule":
                                 await room_schedule_editor(current_room, user, prefix, ws)
                             if msg_text.lower().startswith("meow add rule"):
-                                if prefix not in ('#'):
-                                    await ws.send(f"{current_room}|Meow, only room owners can add bans >:3c")
+                                if prefix not in ('#', '@'):
+                                    await ws.send(f"{current_room}|Meow, only room owners and mods can add bans >:3c")
                                 else:
                                     await meow_add_rule(msg_text, current_room, ws)
                             elif msg_text.lower().startswith("meow remove rule"):
-                                if prefix not in ('#'):
-                                    await ws.send(f"{current_room}|Meow, only room owners can remove rules ;w;")
+                                if prefix not in ('#', '@'):
+                                    await ws.send(f"{current_room}|Meow, only room owners and mods can remove rules ;w;")
                                 else:
                                     await meow_remove_rule(msg_text, current_room, ws)
                             elif msg_text.lower().startswith("meow add misc command"):
