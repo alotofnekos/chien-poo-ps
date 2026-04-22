@@ -33,10 +33,16 @@ async def get_random_cat_url():
 async def determine_if_message_is_ok(text):
     # Check if the message is profane
     text = text.lower()
-    text = re.sub(r'(.)\1+', r'\1', text)
-    chinese_badwords = ['cnm', 'nmsl', 'sb', 'sao', 'smd', 'sbh', 'sbl', 'sbd', 'sbm', 'sbj', 'sbp', 'sbz', 'sbq']
-    profanity.load_censor_words(chinese_badwords)
+    chinese_badwords = ['cnm', 'nmsl', 'sb', 'sao', 'smd', 'sbh', 'sbl', 'sbd', 'sbm', 'sbj', 'sbp', 'sbz', 'sbq','niga','niger']
     is_profane = profanity.contains_profanity(text)
+    if not is_profane:
+        normalized = re.sub(r'(.)\1{2,}', r'\1\1', text)
+        profanity.add_censor_words(chinese_badwords)
+        is_profane = profanity.contains_profanity(normalized)
+    if not is_profane:
+        normalized_1 = re.sub(r'(.)\1+', r'\1', text)
+        is_profane = profanity.contains_profanity(normalized_1)
+    print(f"Checked message: '{text}' | Profane: {is_profane}")
     return is_profane
 
 async def get_random_cat_saying(message):
@@ -128,7 +134,7 @@ async def handle_pmmessages(ws, USERNAME, msg):
                     print(f"Sent auto PM response: {pm_response}")
 async def main():
     print(await get_random_cat_url())
-    print(await get_random_cat_saying("hewwo"))
+    print(await get_random_cat_saying("fuck"))
 
 if __name__ == "__main__":
     import asyncio
