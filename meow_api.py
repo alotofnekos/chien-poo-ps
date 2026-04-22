@@ -77,8 +77,8 @@ async def handle_confirm(request):
     session.pop("pending_room")
     session["user"] = pending
     session["room"] = room
-    session["rank"] = session.pop("pending_rank", "+")  # ← ADD
-    return web.json_response({"ok": True, "user": pending, "room": room, "rank": session["rank"]})  # ← ADD rank to response
+    session["rank"] = session.pop("pending_rank", "+")  
+    return web.json_response({"ok": True, "user": pending, "room": room, "rank": session["rank"]})  
 
 
 async def handle_me(request):
@@ -102,7 +102,7 @@ async def handle_logout(request):
 
 
 # ---------------------------------------------------------------------------
-# Tours list  (existing)
+# Tours list 
 # ---------------------------------------------------------------------------
 
 @require_auth
