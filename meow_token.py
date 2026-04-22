@@ -1,12 +1,14 @@
 import inspect
 
 async def create_token(ps_username: str, room: str, supabase) -> str:
-    query = supabase.rpc("create_auth_token", {
-        "p_ps_username": ps_username[1:],
-        "p_room": room,
-    }).execute()
+    rank = ps_username[0]          # first character
+    username = ps_username[1:]   
 
-    # If async client, await it
+    query = supabase.rpc("create_auth_token", {
+        "p_ps_username": username,
+        "p_room": room,
+        "p_rank": rank,
+    }).execute()
     if inspect.isawaitable(query):
         result = await query
     else:
