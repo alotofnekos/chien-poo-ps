@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import meowLogo from "./assets/meow-logo-temp.png"
-import "./app.css"
+import "./App.css"
 
 // ─── Tour type options ────────────────────────────────────────────────────────
 const TOUR_TYPES = [
