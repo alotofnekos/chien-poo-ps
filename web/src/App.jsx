@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import TourManager from "./TourManager"   
-import "./app.css"
+import "./App.css"
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
