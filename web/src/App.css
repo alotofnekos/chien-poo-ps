@@ -469,9 +469,28 @@ body {
 }
  
 @media (max-width: 700px) {
-  .manager-layout { grid-template-columns: 1fr; }
-  .sidebar { display: none; }
-  .sidebar.open { display: flex; position: fixed; inset: 44px 0 0 0; z-index: 5; }
+  .manager-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    height: auto;
+    overflow: visible;
+  }
+
+  .sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    max-height: 220px;
+  }
+
+  .sidebar-list {
+    max-height: 140px;
+  }
+
+  .editor-panel {
+    height: auto;
+    min-height: 60vh;
+    padding: 16px;
+  }
 }
  
 /* ── sidebar ── */
