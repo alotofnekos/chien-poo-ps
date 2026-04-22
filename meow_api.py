@@ -36,6 +36,15 @@ async def _run(fn, *args):
     loop = asyncio.get_event_loop()
     return await loop.run_in_executor(None, lambda: fn(*args))
 
+async def _log_tour_action(room, tour, action, changed_by, detail=None):
+    db = await get_async_supabase()
+    await db.table("tour_audit_log").insert({
+        "room":       room,
+        "tour":       tour,
+        "action":     action,
+        "changed_by": changed_by,
+        "detail":     detail or {},
+    }).execute()
 
 # ---------------------------------------------------------------------------
 # Auth flow
@@ -44,7 +53,6 @@ async def _run(fn, *args):
 async def handle_auth(request):
     token  = request.rel_url.query.get("token", "")
     result = await consume_token(token, sync_supabase)
-
     if not result:
         raise web.HTTPFound("/login?error=invalid_token")
 
@@ -55,12 +63,10 @@ async def handle_auth(request):
     session["pending_rank"] = result["rank"] 
     raise web.HTTPFound("/confirm")
 
-
 async def handle_confirm(request):
     session = await get_session(request)
     pending = session.get("pending_user")
     room    = session.get("pending_room")
-    print(f"[DEBUG] confirm hit — pending_user={pending}, pending_room={room}")
 
     if not pending or not room:
         return web.json_response({"error": "No pending session"}, status=400)
@@ -173,7 +179,7 @@ async def handle_create_tour(request):
         await _run(add_tour_bans, room, internalname, ", ".join(bans))
     if misc_commands:
         await _run(add_misc_commands, room, internalname, ", ".join(misc_commands))
-
+    await _log_tour_action(room, internalname, "create", session["user"])
     return web.json_response({"ok": True, "tour_internalname": internalname})
 
 
@@ -215,6 +221,10 @@ async def handle_update_tour(request):
     if misc_add:
         await _run(add_misc_commands, room, name, ", ".join(misc_add))
 
+    await _log_tour_action(room, name, "update", session["user"], {
+        "bans_added": to_add, "bans_removed": to_remove,
+        "misc_added": misc_add, "misc_removed": misc_remove,
+    })
     return web.json_response({"ok": True})
 
 
@@ -230,6 +240,7 @@ async def handle_delete_tour(request):
             {"error": f"could not delete '{name}' — it may have dependent schedule rows or doesn't exist"},
             status=409,
         )
+    await _log_tour_action(room, name, "delete", session["user"])
     return web.json_response({"ok": True})
 
 

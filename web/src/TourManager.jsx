@@ -123,7 +123,7 @@ function TourEditor({ tour: initial, isNew, onSave, onDelete, saving, user, room
             <div className="field-label">internal name <span className="required">*</span></div>
             <input className="field-input" value={tour.internalname}
               onChange={e => set("internalname", e.target.value.toLowerCase().replace(/\s+/g, ""))}
-              placeholder="e.g. monogeninf"
+              placeholder="e.g. monocats"
               disabled={!isNew} style={!isNew ? { opacity: 0.5 } : {}}
             />
           </div>
@@ -131,7 +131,7 @@ function TourEditor({ tour: initial, isNew, onSave, onDelete, saving, user, room
             <div className="field-label">display name <span className="required">*</span></div>
             <input className="field-input" value={tour.name}
               onChange={e => set("name", e.target.value)}
-              placeholder="e.g. Mono Gen Infinity"
+              placeholder="e.g. Monotype Cats"
               disabled={!isNew} style={!isNew ? { opacity: 0.5 } : {}}
             />
           </div>
@@ -170,13 +170,13 @@ function TourEditor({ tour: initial, isNew, onSave, onDelete, saving, user, room
         <div className="field">
           <div className="field-label">bans (will be prefixed with <code>-</code>)</div>
           <TagInput tags={tour.bans} tagClass="tag-ban"
-            placeholder="Wobbuffet, Shadow Tag…"
+            placeholder="Flutter Mane, Shadow Tag…"
             onAdd={v => addTag("bans", v)} onRemove={v => removeTag("bans", v)} />
         </div>
         <div className="field">
           <div className="field-label">unbans (will be prefixed with <code>+</code>)</div>
           <TagInput tags={tour.unbans} tagClass="tag-unban"
-            placeholder="Drizzle, Swift Swim…"
+            placeholder="Chien-Pao, Booster Energy…"
             onAdd={v => addTag("unbans", v)} onRemove={v => removeTag("unbans", v)} />
         </div>
       </div>
