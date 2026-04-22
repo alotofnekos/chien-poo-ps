@@ -362,8 +362,6 @@ export default function TourManager({ user, room, rank, onBack }) {
 
   return (
     <div>
-      <style>{css}</style>
-
       <nav className="navbar">
         <div className="navbar-left">
           <span className="navbar-title"><span>tour manager</span></span>

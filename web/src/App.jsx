@@ -53,7 +53,7 @@ function ConfirmPage({ onConfirmed }) {
 
   return (
     <div className="center-page">
-      <style>{css}</style>
+      
       <div className="card">
         <h1>Confirm Identity</h1>
         <p>type your pokémon showdown username to verify it's you.</p>
@@ -164,7 +164,7 @@ function Dashboard({ user, room, onLogout, onNavigate }) {  // ← ADD onNavigat
 
   return (
     <div>
-      <style>{css}</style>
+      
       <nav className="navbar">
         <div className="navbar-left">
           <span className="navbar-title"><span>tour scheduler</span></span>
@@ -240,7 +240,7 @@ export default function App() {
   const handleLogout = () => { setUser(null); setRoom(null); setRank(null); setState("unauthed") }
 
   if (state === "loading") return (
-    <><style>{css}</style><div className="loading">loading...</div></>
+    <div className="loading">loading...</div>
   )
 
   if (state === "confirm") return <ConfirmPage onConfirmed={handleConfirmed} />
@@ -255,7 +255,7 @@ export default function App() {
 
   return (
     <div className="center-page">
-      <style>{css}</style>
+      
       <div className="card">
         <h1>Meow Schedule Editor</h1>
         <p>
