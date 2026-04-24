@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 from meow_supabase import supabase
 from pm_handler import get_random_cat_saying, handle_pmmessages
 from pokepaste import generate_html, get_pokepaste_from_url
-from potd import send_potd
+from potd import send_potd, room_logs
+from collections import deque  
 import time
 import re
 from tn import generate_monthly_tour_schedule_html,get_next_tournight, get_current_tour_schedule, cancel_next_tour, is_tour_cancelled, uncancel_last_cancelled
@@ -70,6 +71,10 @@ async def listen_for_messages(ws):
                     ts = int(parts[2].strip())
                     user = parts[3].strip()
                     msg_text = parts[4].strip()
+                    # Rolling buffer for Potd
+                    if current_room not in room_logs:
+                        room_logs[current_room] = deque(maxlen=20)
+                    room_logs[current_room].append(msg_text)
                     prefix = user[:1]
                     if ts < listener_start_time:
                         continue

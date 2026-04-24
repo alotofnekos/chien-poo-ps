@@ -1,4 +1,5 @@
 import asyncio
+from collections import deque
 import datetime
 import json
 import os
@@ -11,6 +12,7 @@ from zoneinfo import ZoneInfo
 import aiohttp
 from meow_supabase import supabase
 
+room_logs: dict[str, deque] = {}
 
 # ---------- Data loading ----------
 def get_random_pokemon(room: str):
@@ -64,6 +66,8 @@ async def fetch_monotype_sentence(mon_name: str, ROOM) -> str | None:
     elif ROOM == "nationaldexmonotype":
         # Fetch from National Dex Monotype analyses
         url = "https://pkmn.github.io/smogon/data/analyses/gen9nationaldexmonotype.json"
+    else:
+        url = "https://data.pkmn.cc/analyses/gen9ou.json"
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             if resp.status != 200:
@@ -167,7 +171,6 @@ async def build_potw(Pokemon: str, Type1: str | None, Type2: str | None, type_co
 
     final_text = (
         f"{sentence} What other sets do you like using on it? "
-        f"How would you support it on its respective typings?"
     )
 
     slug = slugify_name(Pokemon)
@@ -175,6 +178,8 @@ async def build_potw(Pokemon: str, Type1: str | None, Type2: str | None, type_co
         href = f"https://www.smogon.com/dex/sv/pokemon/{slug}/national-dex-monotype/"
     elif ROOM == "monotype":
         href = f"https://www.smogon.com/dex/sv/pokemon/{slug}/monotype/"
+    else:
+        href = f"https://www.smogon.com/dex/sv/pokemon/{slug}/"
     gradient = get_gradient_for_types(Type1, Type2, type_colors)
     potw = f"""
 <table cellpadding="0" cellspacing="0" width="100%" style="color: #000; background: {gradient}; padding: 1rem; border: .125rem solid transparent; border-radius: .25rem; display: flex;">
@@ -214,7 +219,13 @@ async def send_potd(ws, ROOM):
 async def build_daily_potd(ws, ROOM):
     """Send the POTD card every 2 hours to a room via ws."""
     while True:
-        await asyncio.sleep(2 * 60 * 60)  # wait 2 hours
+        await asyncio.sleep(2 * 60 * 60)
+        
+        recent = room_logs.get(ROOM, [])
+        if any("What other sets do you like using on it?" in msg for msg in recent):
+            print(f"[{ROOM}] Skipping POTD — already in last 20 messages")
+            continue
+            
         await send_potd(ws, ROOM)
 
 if __name__ == "__main__":
