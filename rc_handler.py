@@ -511,7 +511,6 @@ async def show_set(current_room, user, ts, msg_text, ws):
     msg_id = f"{current_room}:{user}:{ts}:{msg_text}"              
     if msg_id not in PROCESSED_MESSAGES:          
         PROCESSED_MESSAGES[msg_id] = time.time()
-        # Clean old entries without reassignment
         current_time = time.time()
         old_keys = [k for k, v in PROCESSED_MESSAGES.items() if current_time - v >= 60]
         for k in old_keys:
@@ -519,10 +518,9 @@ async def show_set(current_room, user, ts, msg_text, ws):
                             
         sets_output = parse_command_and_get_sets(msg_text, current_room)
         if sets_output:
-            # Send each set as a separate message
             for set_str in sets_output:
                 await ws.send(f"{current_room}|/addhtmlbox {set_str}")    
-                await ws.send(f"{current_room}|Meow sent the set info!")
+            await ws.send(f"{current_room}|Meow sent the set info!")
         else:
             await ws.send(f"{current_room}|Meow couldn't find any sets for this mon, sorry ;w;. Usage: meow show set <pokemon> [format] (type/item/move [optional])")
 

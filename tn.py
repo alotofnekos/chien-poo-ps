@@ -37,13 +37,13 @@ def _fetch_schedule_from_db(room: str) -> dict | None:
         return None
 
     # Determine which week is active for this room
-    if room == "monotype":
+    has_alternating_weeks = any(row["week"] == 2 for row in resp.data)
+    if has_alternating_weeks: #remove monotype hardcoding to allow other tiers who might want 2 weeks
         now = datetime.datetime.now(TIMEZONE)
-        today        = now.date() 
-        weeks_passed = (today - START_DATE).days // 7
+        weeks_passed = (now.date() - START_DATE).days // 7
         current_week = 1 if weeks_passed % 2 == 0 else 2
     else:
-        current_week = 1  # NDM and others don't alternate
+        current_week = 1
 
     schedule: dict[int, list] = {}
     for row in resp.data:
@@ -67,14 +67,13 @@ def get_current_tour_schedule(room: str) -> dict | None:
 
     if cached:
         age = now - cached["fetched_at"]
-        # Also invalidate if the week has changed since we last fetched
         weeks_at_fetch = (cached["fetched_at"].date() - START_DATE).days // 7
         weeks_now      = (now.date() - START_DATE).days // 7
         week_changed   = weeks_at_fetch != weeks_now
 
         if age < CACHE_TTL and not week_changed:
             return cached["data"]
-        return cached["data"]
+        # If week changed, fetch again
 
     fresh = _fetch_schedule_from_db(room)
 
@@ -82,7 +81,6 @@ def get_current_tour_schedule(room: str) -> dict | None:
         _schedule_cache[room] = {"data": fresh, "fetched_at": now}
         return fresh
 
-    # DB failed 
     if cached:
         print(f"[schedule] DB unreachable, using stale cache for {room}")
         return cached["data"]
