@@ -54,6 +54,11 @@ SPRITE_FOLDER = {
     9: ("xy",   "gif"),
 }
 
+KNOWN_TYPES = {
+    "normal","fire","water","electric","grass","ice","fighting","poison",
+    "ground","flying","psychic","bug","rock","ghost","dragon","dark","steel","fairy"
+}
+
 
 def get_sprite_url(mon: str, gen: int) -> str:
     """Return smogon dex sprite URL for a given mon and gen."""
@@ -103,6 +108,9 @@ def normalize_format(raw: str, default_tier: str = "monotype") -> str:
 
     if not remainder:
         remainder = default_tier
+
+    if remainder == "mono":
+        remainder = "monotype"
 
     result = resolve_natdex(gen_prefix, remainder, default_tier)
     if result:
@@ -193,13 +201,23 @@ def fetch_sets_data(format_name: str):
 def normalize_mega_name(name: str) -> list[str]:
     candidates = [name]
     lower = name.lower().strip()
+
+    mega_xy = re.match(r"^mega (.+) ([xyz])$", lower)
+    if mega_xy:
+        base = mega_xy.group(1)
+        suffix = mega_xy.group(2)
+        candidates.append(f"{base}-mega-{suffix}")  
+        candidates.append(base)                      
+        return candidates
+
     for prefix in ("mega ", "primal ", "mega-"):
         if lower.startswith(prefix):
             base = name[len(prefix):]
             tag = prefix.strip().strip("-")
-            candidates.append(f"{base}-{tag}")  
-            candidates.append(base)             
+            candidates.append(f"{base}-{tag}")
+            candidates.append(base)
             break
+
     return candidates
 
 
@@ -322,16 +340,20 @@ def format_moveset(species: str, set_name: str, data: dict,
 
     items = data.get("item")
     mon = species.lower().replace(" ", "-").replace("'", "")
-
+    print(f"[DEBUG] items={items!r} mon before={mon!r}")
     if items:
-        if isinstance(items, str) and items.endswith("ite"):
-            mon += "-mega"
-        if isinstance(items, str) and items.endswith("orb"):
-            mon += "-primal"
-        elif isinstance(items, list) and any(
-            isinstance(i, str) and i.endswith("ite") for i in items
-        ):
-            mon += "-mega"
+        item_check = items if isinstance(items, str) else next(
+            (i for i in items if isinstance(i, str) and ("ite" in i.lower() or i.lower().endswith("orb"))), None
+        )
+
+        if item_check and isinstance(item_check, str):
+            xy_match = re.match(r".+ite\s+([xyz])$", item_check, re.I)
+            if xy_match:
+                mon += f"-mega-{xy_match.group(1).lower()}"
+            elif item_check.lower().endswith("ite"):
+                mon += "-mega"
+            elif item_check.lower().endswith("orb"):
+                mon += "-primal"
 
     item_str = " / ".join(str(i) for i in items) if isinstance(items, list) else (items or "")
 
@@ -440,13 +462,6 @@ def format_moveset(species: str, set_name: str, data: dict,
 </div>""".strip()
 
     return "\n".join(filter(None, [header_html, note_html, set_html]))
-
-
-KNOWN_TYPES = {
-    "normal","fire","water","electric","grass","ice","fighting","poison",
-    "ground","flying","psychic","bug","rock","ghost","dragon","dark","steel","fairy"
-}
-
 
 
 def try_peel_format(pokemon: str, default_tier: str = "ou"):
@@ -639,7 +654,10 @@ def parse_command_and_get_sets(command_string, room=""):
 
     gen_match = re.match(r"^gen(\d)", format_name)
     sprite_gen = int(gen_match.group(1)) if gen_match else 9
-
+    #for zard-x
+    mega_xy = re.match(r"^mega .+ ([xyz])$", pokemon.lower().strip())
+    if mega_xy and not paren_filter:
+        paren_filter = f"ite {mega_xy.group(1)}"
     matched = list(filter_sets(sets_obj, monotype=mono_filter, paren_filter=paren_filter))
     if not matched:
         #print("[WARN] Nyo sets matched filters. Returning all sets.")
@@ -673,7 +691,7 @@ def main():
         # Filter by move
         "meow show set sandslash-alola gen9monotype (rapid spin)",
         #nd
-        "meow show set mega gallade nd monotype",
+        "meow show set mega charizard x nd monotype",
         "meow show set tapu lele ssndou",
         #sm
         "meow show set mega gallade sm monotype",
