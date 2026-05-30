@@ -254,8 +254,8 @@ async def main_bot_logic():
         try:
             async with websockets.connect(
                 SERVER,
-                ping_interval=60,
-                ping_timeout=30,
+                ping_interval=20,
+                ping_timeout=60,
                 close_timeout=10,
             ) as ws:
 
@@ -271,10 +271,10 @@ async def main_bot_logic():
                     await ws.send(f"|/join {room}")
                     await asyncio.sleep(1)
 
-                    manager.create(
+                    #manager.create(
                         safe_task(scheduled_tours, f"tours-{room}", ws, room)
                     )
-                    manager.create(
+                    #manager.create(
                         safe_task(build_daily_potd, f"potd-{room}", ws, room)
                     )
 
