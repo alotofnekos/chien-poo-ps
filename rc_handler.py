@@ -186,7 +186,7 @@ async def listen_for_messages(ws):
                                 await ws.send(f'{current_room}|/addhtmlbox <img src="{cat}" height="0" width="0" style="max-height: 350px; height: auto; width: auto;">')
                             else:
                                 await ws.send(f"{current_room}|Meow, couldn't find a cat right meow ;w;")
-                        elif msg_text.lower().startswith("meow say"):
+                        elif msg_text.lower().startswith("meow say") and prefix != "+":
                             say_message = msg_text[len("meow say"):].strip()
                             if say_message:
                                 catmessage = await get_random_cat_saying(say_message)
