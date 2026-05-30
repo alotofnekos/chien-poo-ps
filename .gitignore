@@ -18,3 +18,4 @@ test_cases/
 *.nuget.cache 
 "test_cases/" 
 battle/
+battle-LSTM/
