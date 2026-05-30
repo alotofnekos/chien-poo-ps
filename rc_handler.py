@@ -4,7 +4,8 @@ import random
 import os
 from dotenv import load_dotenv
 from meow_supabase import supabase
-from pm_handler import get_random_cat_saying, handle_pmmessages
+#from pm_handler import get_random_cat_saying, handle_pmmessages
+from pm_handler import handle_pmmessages
 from pokepaste import generate_html, get_pokepaste_from_url
 from potd import send_potd, room_logs
 from collections import deque  
