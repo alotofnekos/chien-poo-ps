@@ -22,12 +22,12 @@ async def room_schedule_editor(room: str, sender: str, rank: str, ws):
     await ws.send(f"|/pm {sender}, Meow, here's your login link for the schedule (expires 10 mins, one-time use): {link}")
 
 async def get_random_cat_url():
-    url = "https://cataas.com/cat?json=true"
+    url = "https://api.thecatapi.com/v1/images/search"
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             if resp.status == 200:
-                data = await resp.json(content_type=None) 
-                return data["url"]
+                data = await resp.json()
+                return data[0]["url"]
     return "No cat found :("
 
 async def determine_if_message_is_ok(text):
@@ -45,7 +45,7 @@ async def determine_if_message_is_ok(text):
     print(f"Checked message: '{text}' | Profane: {is_profane}")
     return is_profane
 
-async def get_random_cat_saying(message):
+'''async def get_random_cat_saying(message):
     if await determine_if_message_is_ok(message) == False:
         url = f"https://cataas.com/cat/says/{message}?position=center&json=true&font=Impact&fontSize=30&fontColor=%23fff&fontBackground=none"
         async with aiohttp.ClientSession() as session:
@@ -54,7 +54,7 @@ async def get_random_cat_saying(message):
                     data = await resp.json(content_type=None)
                     return data['url']
     else:
-        return "Meow! I dont think I should say that :3c"
+        return "Meow! I dont think I should say that :3c"'''
 
 async def handle_pmmessages(ws, USERNAME, msg):
     lines = msg.split('\n')
