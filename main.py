@@ -10,7 +10,7 @@ import random
 from websockets.exceptions import ConnectionClosed
 from tn import scheduled_tours
 from potd import build_daily_potd
-from pm_handler import get_random_cat_url
+from pm_handler import cleanup_cat_images, get_random_cat_url
 from rc_handler import listen_for_messages
 from aiohttp_session import setup as session_setup
 from aiohttp_session.cookie_storage import EncryptedCookieStorage
@@ -308,6 +308,7 @@ async def main():
             asyncio.create_task(safe_task(start_web_server, "web_server")),
             asyncio.create_task(safe_task(keep_alive_loop, "keep_alive", session)),
             asyncio.create_task(safe_task(main_bot_logic, "bot_logic")),
+            asyncio.create_task(safe_task(cleanup_cat_images, "cat_cleanup")),
         ]
 
         try:

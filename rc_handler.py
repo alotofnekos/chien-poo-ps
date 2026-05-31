@@ -4,8 +4,7 @@ import random
 import os
 from dotenv import load_dotenv
 from meow_supabase import supabase
-#from pm_handler import get_random_cat_saying, handle_pmmessages
-from pm_handler import handle_pmmessages
+from pm_handler import get_random_cat_saying, handle_pmmessages
 from pokepaste import generate_html, get_pokepaste_from_url
 from potd import send_potd, room_logs
 from collections import deque  
@@ -187,24 +186,16 @@ async def listen_for_messages(ws):
                                 await ws.send(f'{current_room}|/addhtmlbox <img src="{cat}" height="0" width="0" style="max-height: 350px; height: auto; width: auto;">')
                             else:
                                 await ws.send(f"{current_room}|Meow, couldn't find a cat right meow ;w;")
-                        elif msg_text.lower().startswith("meow say") and prefix != "+":
+                        elif msg_text.lower().startswith("meow say"):
                             say_message = msg_text[len("meow say"):].strip()
-                            #if say_message:
-                            cat = await get_random_cat_url()
-                            print(f"Fetched cat URL: {cat}")
-                            if cat:
-                                await ws.send(f'{current_room}|Meow, the thing that lets me say stuff is broken, but here is a cat picture instead! >:3c')
-                                await ws.send(f'{current_room}|/addhtmlbox <img src="{cat}" height="0" width="0" style="max-height: 350px; height: auto; width: auto;">')
+                            if say_message:
+                                catmessage = await get_random_cat_saying(say_message)
+                                if catmessage.startswith("Meow! I dont think I should say that"):
+                                    await ws.send(f"{current_room}|{catmessage}")
+                                else:
+                                    await ws.send(f'{current_room}|/addhtmlbox <img src="{catmessage}" height="0" width="0" style="max-height: 350px; height: auto; width: auto;">')
                             else:
-                                await ws.send(f"{current_room}|Meow, couldn't find a cat right meow ;w;")
-                                #catmessage = await get_random_cat_saying(say_message)
-                                #if catmessage.startswith("Meow! I dont think I should say that"):
-                                #    await ws.send(f"{current_room}|{catmessage}")
-                                #else:
-                                #    await ws.send(f'{current_room}|Meow, the thing that ;ets me say stuff is broken, but here is a cat picture instead! >:3c')
-                                #    await ws.send(f'{current_room}|/addhtmlbox <img src="{catmessage}" height="0" width="0" style="max-height: 350px; height: auto; width: auto;">')
-                            #else:
-                            #    await ws.send(f"{current_room}|Meow, you didn't tell me what to say! Usage: meow say <message> >:3")
+                                await ws.send(f"{current_room}|Meow, you didn't tell me what to say! Usage: meow say <message> >:3")
                         elif prefix in ('%', '@', '#', '~'):
                             if msg_text.lower().startswith("meow add tour"):
                                 if prefix not in ('#'):
