@@ -55,7 +55,7 @@ def add_bottom_caption(img, text):
         font = ImageFont.load_default(size=font_size)
 
     # Wrap text
-    chars_per_line = max(10, width // (font_size))
+    chars_per_line = max(10, width // (font_size // 1.5))
     wrapped = textwrap.fill(text.upper(), width=chars_per_line)
 
     # Measure text height
