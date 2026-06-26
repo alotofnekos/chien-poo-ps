@@ -367,7 +367,7 @@ def format_moveset(species: str, set_name: str, data: dict,
     <td align="center" style="padding-bottom: .5rem;">
         <a href = {dex_url}>
             <img src="{sprite_url}"
-                alt="{species}" width="96" height="96">
+                alt="{species}" width="96" height="96" style="object-fitz: contain;">
         </a>
     </td>
   </tr>
