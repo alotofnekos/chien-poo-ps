@@ -394,15 +394,16 @@ async def meow_diagnostic(current_room, ws):
 async def meow_add_points(msg_text, current_room, ws):
     # Strip command part
     args = msg_text[len("meow add points"):].strip()
+    await ws.send(f"{current_room}|Meow, I cant add points with this command. Please use ,addp >:3c")
     # Expect format: "username, points"
-    if "," not in args:
-        await ws.send(f"{current_room}|Invalid format meow. Use: meow add points <username>, <points> >:(")
-        raise ValueError(f"{current_room}| Invalid format. Use: meow add points <username>, <points>")
+    #if "," not in args:
+    #    await ws.send(f"{current_room}|Invalid format meow. Use: meow add points <username>, <points> >:(")
+    #    raise ValueError(f"{current_room}| Invalid format. Use: meow add points <username>, <points>")
 
-    username, pts_str = [a.strip() for a in args.split(",", 1)]
-    points = int(pts_str)
-    new_total = add_points(current_room, username, points)
-    await ws.send(f"{current_room}| Added {points} points to {username} in {current_room}. New total: {new_total}")
+    #username, pts_str = [a.strip() for a in args.split(",", 1)]
+    #points = int(pts_str)
+    #new_total = add_points(current_room, username, points)
+    #await ws.send(f"{current_room}| Added {points} points to {username} in {current_room}. New total: {new_total}")
 
 async def meow_remove_misc_command(msg_text, current_room, ws):
     parts = msg_text[len("meow remove misc command"):].strip().split(None, 1)
@@ -646,6 +647,7 @@ async def maybe_schedule_auto_addp(end_line: str, room: str, ws):
  
     placements = process_tournament_end(end_line)
     if not placements or not placements.get("points"):
+        await ws.send(f"{room}|Meow, Neko probably messed up, tell them that meow somehow couldn't knyow who won ;w;")
         print(f"[{room}] No placements extracted from end line, skipping auto-,addp.")
         return
  
