@@ -10,19 +10,26 @@ from potd import send_potd, room_logs
 from collections import deque  
 import time
 import re
+import json
 from tn import generate_monthly_tour_schedule_html,get_next_tournight, get_current_tour_schedule, cancel_next_tour, is_tour_cancelled, uncancel_last_cancelled
 from tour_creator import add_misc_commands, get_tour_bans_for_html, add_tour_bans, remove_misc_commands, remove_tour_bans, get_tour_info, build_tour_code, get_all_tours, add_tour, remove_tour   
 import datetime
 from pm_handler import get_random_cat_url, room_schedule_editor
 from set_handler import parse_command_and_get_sets
+from parse_tour import process_tournament_end
 load_dotenv()
 
-from db import save_tournament_results, get_leaderboard_html,process_tourlogs, add_points
+
 USERNAME = os.getenv("PS_USERNAME")
 CURRENT_TOUR_EXISTS = {}  
 TRACK_OFFICIAL_TOUR = {}  
 TOURNAMENT_STATE = {}     
 PROCESSED_MESSAGES = {}
+LAST_ADDP_USAGE = {}
+ 
+TOUR_NIGHTS_SUFFIX = "Tour Nights"
+AUTO_ADDP_ROOM = "monotype"
+AUTO_ADDP_DELAY_SECONDS = 10 * 60
 
 def record_meow(room, user, msg_text):
     """Record a meow log in the database."""
@@ -58,7 +65,6 @@ async def listen_for_messages(ws):
                 # PMs
                 if line.startswith("|pm|"):
                     await handle_pmmessages(ws, USERNAME, line)
-                
                 elif line.startswith("|tournament|") and current_room:
                     
                     await handle_tournament_message(line, current_room,ws)
@@ -71,6 +77,11 @@ async def listen_for_messages(ws):
                     ts = int(parts[2].strip())
                     user = parts[3].strip()
                     msg_text = parts[4].strip()
+
+                    # NEW: track manual ,addp usage now that msg_text/ts exist
+                    if msg_text.strip().lower().startswith(",addp"):
+                        LAST_ADDP_USAGE[current_room] = ts
+
                     # Rolling buffer for Potd
                     if current_room not in room_logs:
                         room_logs[current_room] = deque(maxlen=20)
@@ -125,9 +136,6 @@ async def listen_for_messages(ws):
 
                         elif msg_text.lower().startswith("meow show set"):
                             await show_set(current_room, user, ts, msg_text, ws)
-
-                        elif msg_text.lower().startswith("meow show lb"):
-                            await ws.send(f"{current_room}|/addhtmlbox {get_leaderboard_html(current_room)}")
 
                         elif msg_text.lower().startswith("meow show schedule"):
                             now = datetime.datetime.now()
@@ -583,44 +591,89 @@ async def cancel_next_tn(current_room: str, ws):
         else:
             await ws.send(f"{current_room}|Meow, failed to cancel the next tournight. It may have already started or there was an error ;w;")
 
-async def handle_tournament_message(line: str, room: str,ws):
+async def handle_tournament_message(line: str, room: str, ws):
     """Logs tournament lines only, between create and end. Processes results if official."""
     if not line.startswith("|tournament|"):
         return  # ignore all non-tournament lines
-
+ 
     # --- Tournament created ---
     if "|tournament|create|" in line:
         if CURRENT_TOUR_EXISTS.get(room, False):
             # Failsafe: reset old unfinished tournament
             print(f"[{room}] Warning: New tournament created before previous ended. Resetting state.")
-
+ 
         CURRENT_TOUR_EXISTS[room] = True
-        TOURNAMENT_STATE[room] = [line]  # reset log storage
+        TOURNAMENT_STATE[room] = [line]  
         print(f"[{room}] Tournament created, logging started.")
         return
-
+ 
     # --- Tournament still active, log lines ---
     if CURRENT_TOUR_EXISTS.get(room, False):
         if room not in TOURNAMENT_STATE:
-            TOURNAMENT_STATE[room] = []  # ensure safe init
+            TOURNAMENT_STATE[room] = []  
         TOURNAMENT_STATE[room].append(line)
-
+ 
         # --- Tournament ended ---
         if "|tournament|end|" in line:
+            print(line)
             if TRACK_OFFICIAL_TOUR.get(room, False):
                 print(f"[{room}] Official tournament ended. Processing results...")
-                logs = TOURNAMENT_STATE.pop(room, [])
-                results = process_tourlogs(room, logs)
-                save_tournament_results(room, logs)
-                await ws.send(f"{room}|/addhtmlbox {get_leaderboard_html(room)}")
+                TOURNAMENT_STATE.pop(room, [])
             else:
                 print(f"[{room}] Unofficial tournament ended. Ignoring results.")
 
-            # Always reset flags
+            await maybe_schedule_auto_addp(line, room, ws)
+ 
             CURRENT_TOUR_EXISTS[room] = False
             TRACK_OFFICIAL_TOUR[room] = False
             print(f"[{room}] Tournament ended, logging stopped.")
 
+async def maybe_schedule_auto_addp(end_line: str, room: str, ws):
+    """Check room + tour name, and if they match, kick off the 10-minute
+    delayed auto-,addp fallback as a background task (non-blocking)."""
+    if room != AUTO_ADDP_ROOM:
+        return
+ 
+    try:
+        tour_json = json.loads(end_line.split("|tournament|end|", 1)[1])
+    except Exception as e:
+        print(f"[{room}] Couldn't parse tournament end JSON for auto-,addp check: {e}")
+        return
+ 
+    tour_name = tour_json.get("format", "") or ""
+    if not tour_name.endswith(TOUR_NIGHTS_SUFFIX):
+        return
+ 
+    placements = process_tournament_end(end_line)
+    if not placements or not placements.get("points"):
+        print(f"[{room}] No placements extracted from end line, skipping auto-,addp.")
+        return
+ 
+    print(f"[{room}] '{tour_name}' qualifies for auto-,addp fallback. Scheduling 10-min check.")
+    tour_end_time = time.time()
+    asyncio.create_task(
+        run_auto_addp_after_delay(room, ws, tour_end_time, placements["points"])
+    )
+ 
+ 
+async def run_auto_addp_after_delay(room: str, ws, tour_end_time: float, points: dict):
+    await asyncio.sleep(AUTO_ADDP_DELAY_SECONDS)
+ 
+    last_used = LAST_ADDP_USAGE.get(room, 0)
+    if last_used >= tour_end_time:
+        print(f"[{room}] Staff already used ,addp after tour end, skipping auto-,addp.")
+        return
+ 
+    print(f"[{room}] No manual ,addp seen in 10 min, auto-sending placements: {points}")
+    await ws.send(f"{room}|Meow, no one added points yet. Dw meow is a good meow, I'll add it in for you meow >:3")
+    for player, pts in points.items():
+        await ws.send(f"{room}|,addp {player}, {pts}")
+        await asyncio.sleep(1) 
+    cat = await get_random_cat_url()
+    if cat:
+        await ws.send(f'{room}|/addhtmlbox <img src="{cat}" height="0" width="0" style="max-height: 350px; height: auto; width: auto;">')
+    else:
+        await ws.send(f"{room}|Meow, couldn't find a cat right meow ;w;")
 
 
 def get_uptime(listener_start_time):

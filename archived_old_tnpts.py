@@ -354,7 +354,7 @@ def save_tournament_results(room: str, log_lines: list[str]):
     scoreboard = process_tourlogs(room, log_lines)
     if scoreboard:
         update_db(scoreboard, room)
-        print(f"✅ Saved tournament results for room {room}")
+        print(f"Saved tournament results for room {room}")
     else:
-        print(f"⚠️ No results to save for room {room}")
+        print(f"No results to save for room {room}")
     return scoreboard
